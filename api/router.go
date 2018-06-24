@@ -11,6 +11,10 @@ import (
 	"github.com/go-chi/chi"
 )
 
+var (
+	apiVersion = "/v1"
+)
+
 type router struct {
 	chi.Router
 }
@@ -45,8 +49,8 @@ var (
 	}
 )
 
-// NewAPIRouter construct a Router interface for Restful API.
-func NewAPIRouter(ctx context.Context) http.Handler {
+// NewRestAPIRouter construct a Router interface for Restful API.
+func NewRESTRouter() http.Handler {
 	rtr := &router{
 		chi.NewRouter(),
 	}
@@ -55,7 +59,7 @@ func NewAPIRouter(ctx context.Context) http.Handler {
 		helper.SetJSONContentResponse,
 	)
 
-	rtr.Route(helper.GetContextValue(ctx, helper.ApiVersion), func(r chi.Router) {
+	rtr.Route(apiVersion, func(r chi.Router) {
 		for _, endpoint := range getEndpoints {
 			r.Group(func(r chi.Router) {
 				r.Get(endpoint.GetPath(), rtr.newGetHandler(endpoint))
@@ -67,7 +71,6 @@ func NewAPIRouter(ctx context.Context) http.Handler {
 				r.Post(endpoint.GetPath(), rtr.newPostHandler(endpoint))
 			})
 		}
-
 	})
 
 	return rtr

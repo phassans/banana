@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 
-	"github.com/banana/helper"
 	"github.com/rs/xlog"
 )
 
@@ -29,7 +28,7 @@ func (r createListingEndpoint) Execute(ctx context.Context, rtr *router, request
 }
 
 func CreateListing(ctx context.Context, name string) error {
-	xlog.Infof("whoohoo logger %s with apiVersion %s", name, helper.GetContextValue(ctx, helper.ApiVersion))
+	xlog.Infof("whoohoo logger naem: %s", name)
 	return nil
 }
 

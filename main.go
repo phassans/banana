@@ -6,27 +6,26 @@ import (
 	"time"
 
 	"github.com/banana/database"
-	"github.com/banana/defaults"
 	"github.com/banana/routes"
 )
 
 func main() {
 	// set up defaults and configs
-	defaults.Config()
+	config()
 
 	// set up DB
 	database.InitializeDatabase()
 
 	// start the server
-	defaults.Server = http.Server{Addr: net.JoinHostPort("", defaults.ServerPort), Handler: routes.WebServerRouter(defaults.Ctx)}
-	go func() { defaults.ServerErrChannel <- defaults.Server.ListenAndServe() }()
+	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler()}
+	go func() { serverErrChannel <- server.ListenAndServe() }()
 
 	// log server start time
-	defaults.Logger.Infof("API server started at %s. time:%s", defaults.Server.Addr, defaults.ServerStartTime)
+	logger.Infof("API server started at %s. time:%s", server.Addr, serverStartTime)
 
 	// wait for any server error
 	select {
-	case err := <-defaults.ServerErrChannel:
-		defaults.Logger.Fatalf("%s service stopped due to error %v with uptime %v", err, time.Since(defaults.ServerStartTime))
+	case err := <-serverErrChannel:
+		logger.Fatalf("%s service stopped due to error %v with uptime %v", err, time.Since(serverStartTime))
 	}
 }

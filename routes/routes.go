@@ -4,21 +4,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"context"
-
 	"github.com/NYTimes/gziphandler"
 	"github.com/banana/api"
-	"github.com/banana/defaults"
-	"github.com/banana/helper"
 	"github.com/go-chi/chi"
 )
 
-func WebServerRouter(ctx context.Context) http.Handler {
-	r := newRouter(ctx)
+func APIServerHandler() http.Handler {
+	r := newAPIRouter()
 	return gziphandler.GzipHandler(r)
 }
 
-func newRouter(ctx context.Context) chi.Router {
+func newAPIRouter() chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +24,7 @@ func newRouter(ctx context.Context) chi.Router {
 		fmt.Fprintln(w, "OK")
 	})
 
-	r.Mount("/", api.NewAPIRouter(helper.WithValue(ctx, helper.ApiVersion, defaults.CurrentApiVersion)))
+	r.Mount("/", api.NewRESTRouter())
 
 	return r
 }
