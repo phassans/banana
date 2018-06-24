@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/afex/hystrix-go/hystrix"
+	"github.com/banana/engine"
 	"github.com/banana/helper"
 	"github.com/go-chi/chi"
 )
@@ -16,6 +17,7 @@ var (
 )
 
 type router struct {
+	engine engine.ListingEngine
 	chi.Router
 }
 
@@ -46,12 +48,14 @@ var (
 	// createEndpoints lists POST endpoints that create records.
 	createEndpoints = []postEndpoint{
 		createListing,
+		createBusiness,
 	}
 )
 
 // NewRestAPIRouter construct a Router interface for Restful API.
-func NewRESTRouter() http.Handler {
+func NewRESTRouter(engine engine.ListingEngine) http.Handler {
 	rtr := &router{
+		engine,
 		chi.NewRouter(),
 	}
 
@@ -84,10 +88,7 @@ func (rtr *router) cleanup(e *error, w http.ResponseWriter) {
 	}
 }
 
-func hystrixName(endpoint endpoint) string {
-	return fmt.Sprintf("%s", endpoint.GetPath())
-}
-
 func hystrixCall(endpoint endpoint, f func() error) error {
-	return hystrix.Do(hystrixName(endpoint), f, nil)
+	name := fmt.Sprintf("%s", endpoint.GetPath())
+	return hystrix.Do(name, f, nil)
 }

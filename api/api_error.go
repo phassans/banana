@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/afex/hystrix-go/hystrix"
+	"github.com/banana/helper"
 )
 
 // APIError is a HTTP result error.
@@ -39,6 +40,8 @@ func GetErrorStatus(err error) int {
 		return http.StatusOK
 	}
 	switch err := err.(type) {
+	case helper.DuplicateEntity:
+		return http.StatusBadRequest
 	case *APIError:
 		return err.Code
 	default:

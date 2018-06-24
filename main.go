@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/banana/database"
+	"github.com/banana/db"
+	engine2 "github.com/banana/engine"
 	"github.com/banana/routes"
+	"github.com/rs/xlog"
 )
 
 func main() {
@@ -14,10 +16,17 @@ func main() {
 	config()
 
 	// set up DB
-	database.InitializeDatabase()
+	roach, err := db.New(db.Config{Host: "localhost", Port: "5432", User: "pshashidhara", Password: "banana123", Database: "banana"})
+	if err != nil {
+		xlog.Fatalf("could not connect to db. errpr %s", err)
+	}
+	xlog.Infof("successfully connected to db")
+
+	// createEngines
+	engine := engine2.NewListingEngine(roach.Db, logger)
 
 	// start the server
-	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler()}
+	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler(engine)}
 	go func() { serverErrChannel <- server.ListenAndServe() }()
 
 	// log server start time
@@ -27,5 +36,6 @@ func main() {
 	select {
 	case err := <-serverErrChannel:
 		logger.Fatalf("%s service stopped due to error %v with uptime %v", err, time.Since(serverStartTime))
+		roach.Close()
 	}
 }
