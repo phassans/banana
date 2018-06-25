@@ -1,0 +1,28 @@
+{
+    "dependencies": {
+        "github.com/NYTimes/gziphandler": {
+            "revision": "22d4470af89e09998fc16b35029df973932df4ae"
+        },
+        "github.com/afex/hystrix-go": {
+            "revision": "39520ddd07a9d9a071d615f7476798659f5a3b89"
+        },
+        "github.com/davecgh/go-spew": {
+            "branch": "master"
+        },
+        "github.com/go-chi/chi": {
+            "branch": "master"
+        },
+        "github.com/lib/pq": {
+            "revision": "2704adc878c21e1329f46f6e56a1c387d788ff94"
+        },
+        "github.com/pkg/errors": {
+            "branch": "master"
+        },
+        "github.com/rs/xlog": {
+            "revision": "a47a2b3ddf12ee2e9e09e548d64dc33752c18e10"
+        },
+        "github.com/umahmood/haversine": {
+            "branch": "master"
+        }
+    }
+}
