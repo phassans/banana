@@ -27,4 +27,4 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 	return result, nil
 }
 
-var createBusiness postEndpoint = createBusinessEndpoint{}
+var addBusiness postEndpoint = createBusinessEndpoint{}

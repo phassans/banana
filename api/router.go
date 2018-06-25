@@ -46,11 +46,11 @@ var (
 	}
 
 	// createEndpoints lists POST endpoints that create records.
-	createEndpoints = []postEndpoint{
-		createListing,
-		createBusiness,
+	addEndpoints = []postEndpoint{
+		addBusiness,
 		addOwner,
 		addBusinessAddress,
+		addListing,
 	}
 )
 
@@ -72,7 +72,7 @@ func NewRESTRouter(engine engine.ListingEngine) http.Handler {
 			})
 		}
 
-		for _, endpoint := range createEndpoints {
+		for _, endpoint := range addEndpoints {
 			r.Group(func(r chi.Router) {
 				r.Post(endpoint.GetPath(), rtr.newPostHandler(endpoint))
 			})

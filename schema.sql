@@ -65,9 +65,9 @@ CREATE TABLE IF NOT EXISTS business_image
 CREATE TABLE IF NOT EXISTS listing
   ( 
      listing_id  SERIAL UNIQUE,
-     name        TEXT NOT NULL,
+     title        TEXT NOT NULL,
      description TEXT, 
-     price       NUMERIC NOT NULL, 
+     price       DECIMAL NOT NULL,
      start_time  TIMESTAMP, 
      end_time    TIMESTAMP,
      business_id INT NOT NULL,
