@@ -4,6 +4,11 @@ import (
 	"database/sql"
 	"time"
 
+	"fmt"
+
+	"net/url"
+
+	"github.com/pshassans/banana/clients"
 	"github.com/pshassans/banana/helper"
 	"github.com/rs/xlog"
 )
@@ -118,6 +123,14 @@ func (l *listingEngine) AddBusinessAddress(line1 string, line2 string, city stri
 
 	l.logger.Infof("successfully added a address with ID: %d for business: %s", addressID, businessName)
 
+	geoAddress := fmt.Sprintf("%s,%s,%s,%s", line1, line2, city, state)
+
+	// add lat, long to database
+	err = l.AddGeoInfo(url.QueryEscape(geoAddress))
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
 	return nil
 }
 
@@ -143,4 +156,9 @@ func (l *listingEngine) AddListing(title string, description string, price float
 	l.logger.Infof("successfully added a listing %s for business: %s", title, businessName)
 
 	return nil
+}
+
+func (l *listingEngine) AddGeoInfo(address string) error {
+	_, err := clients.GetLatLong(address)
+	return err
 }
