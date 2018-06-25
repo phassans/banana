@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/NYTimes/gziphandler"
-	"github.com/banana/api"
-	"github.com/banana/engine"
 	"github.com/go-chi/chi"
+	"github.com/pshassans/banana/api"
+	"github.com/pshassans/banana/engine"
 )
 
 func APIServerHandler(engine engine.ListingEngine) http.Handler {

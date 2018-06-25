@@ -7,9 +7,9 @@ import (
 	"net/url"
 
 	"github.com/afex/hystrix-go/hystrix"
-	"github.com/banana/engine"
-	"github.com/banana/helper"
 	"github.com/go-chi/chi"
+	"github.com/pshassans/banana/engine"
+	"github.com/pshassans/banana/helper"
 )
 
 var (
@@ -49,6 +49,8 @@ var (
 	createEndpoints = []postEndpoint{
 		createListing,
 		createBusiness,
+		addOwner,
+		addBusinessAddress,
 	}
 )
 

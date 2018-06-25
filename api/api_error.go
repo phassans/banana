@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/afex/hystrix-go/hystrix"
-	"github.com/banana/helper"
+	"github.com/pshassans/banana/helper"
 )
 
 // APIError is a HTTP result error.

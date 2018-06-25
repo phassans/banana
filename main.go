@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/banana/db"
-	engine2 "github.com/banana/engine"
-	"github.com/banana/routes"
+	"github.com/pshassans/banana/db"
+	"github.com/pshassans/banana/engine"
+	"github.com/pshassans/banana/routes"
 	"github.com/rs/xlog"
 )
 
@@ -23,7 +23,7 @@ func main() {
 	xlog.Infof("successfully connected to db")
 
 	// createEngines
-	engine := engine2.NewListingEngine(roach.Db, logger)
+	engine := engine.NewListingEngine(roach.Db, logger)
 
 	// start the server
 	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler(engine)}
