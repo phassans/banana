@@ -2,6 +2,7 @@ package engine
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/pshassans/banana/helper"
 	"github.com/rs/xlog"
@@ -17,6 +18,7 @@ type ListingEngine interface {
 	GetBusinessIDFromName(businessName string) (int, error)
 	AddOwner(firstName string, lastName string, phone string, email string, businessName string) error
 	AddBusinessAddress(line1 string, line2 string, city string, postalCode string, state string, country string, businessName string, otherDetails string) error
+	AddListing(title string, description string, price float64, startTime string, endTime string, businessName string) error
 }
 
 func NewListingEngine(psql *sql.DB, logger xlog.Logger) ListingEngine {
@@ -24,7 +26,6 @@ func NewListingEngine(psql *sql.DB, logger xlog.Logger) ListingEngine {
 }
 
 func (l *listingEngine) AddBusiness(businessName string, phone string, website string) (int, error) {
-	// check for unique business name
 	businessID, err := l.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return 0, err
@@ -72,7 +73,6 @@ func (l *listingEngine) GetBusinessIDFromName(businessName string) (int, error) 
 }
 
 func (l *listingEngine) AddOwner(firstName string, lastName string, phone string, email string, businessName string) error {
-	// check for unique business name
 	businessID, err := l.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return err
@@ -97,7 +97,6 @@ func (l *listingEngine) AddOwner(firstName string, lastName string, phone string
 }
 
 func (l *listingEngine) AddBusinessAddress(line1 string, line2 string, city string, postalCode string, state string, country string, businessName string, otherDetails string) error {
-	// check for unique business name
 	businessID, err := l.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return err
@@ -118,6 +117,30 @@ func (l *listingEngine) AddBusinessAddress(line1 string, line2 string, city stri
 	}
 
 	l.logger.Infof("successfully added a address with ID: %d for business: %s", addressID, businessName)
+
+	return nil
+}
+
+func (l *listingEngine) AddListing(title string, description string, price float64, startTime string, endTime string, businessName string) error {
+	businessID, err := l.GetBusinessIDFromName(businessName)
+	if err != nil {
+		return err
+	}
+
+	if businessID == 0 {
+		return helper.BusinessDoesNotExist{BusinessName: businessName}
+	}
+
+	var listingID int
+
+	err = l.sql.QueryRow("INSERT INTO listing(title,description,price,start_time,end_time,business_id) "+
+		"VALUES($1,$2,$3,$4,$5,$6) returning listing_id;",
+		title, description, price, time.Now(), time.Now(), businessID).Scan(&listingID)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	l.logger.Infof("successfully added a listing %s for business: %s", title, businessName)
 
 	return nil
 }
