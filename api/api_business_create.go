@@ -20,7 +20,7 @@ func (r createBusinessEndpoint) HTTPRequest() interface{} { return businessReque
 func (r createBusinessEndpoint) HTTPResult() interface{}  { return businessResult{} }
 func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(businessRequest)
-	err := rtr.engine.CreateBusiness(request.BusinessName)
+	_, err := rtr.engine.CreateBusiness(request.BusinessName)
 	result := businessResult{businessRequest: request, Error: NewAPIError(err)}
 	return result, nil
 }

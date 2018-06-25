@@ -3,4 +3,4 @@
 build: banana
 
 banana:
-       	go build -o $@-
+	go build -o $@

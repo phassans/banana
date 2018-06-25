@@ -13,7 +13,7 @@ type listingEngine struct {
 }
 
 type ListingEngine interface {
-	CreateBusiness(businessName string) error
+	CreateBusiness(businessName string) (int, error)
 	GetBusinessIDFromName(businessName string) ([]int, error)
 }
 
@@ -21,26 +21,26 @@ func NewListingEngine(psql *sql.DB, logger xlog.Logger) ListingEngine {
 	return &listingEngine{psql, logger}
 }
 
-func (l *listingEngine) CreateBusiness(businessName string) error {
+func (l *listingEngine) CreateBusiness(businessName string) (int, error) {
 	// check for unique business name
 	businessID, err := l.GetBusinessIDFromName(businessName)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
+	var lastInsertBusinessID int
 	switch len(businessID) {
 	case 0:
-		var lastInsertId int
-		err := l.sql.QueryRow("INSERT INTO business(name) VALUES($1) returning business_id;", businessName).Scan(&lastInsertId)
+		err := l.sql.QueryRow("INSERT INTO business(name) VALUES($1) returning business_id;", businessName).Scan(&lastInsertBusinessID)
 		if err != nil {
-			return helper.DatabaseError{DBError: err.Error()}
+			return 0, helper.DatabaseError{DBError: err.Error()}
 		}
-		l.logger.Infof("last inserted id: %d", lastInsertId)
+		l.logger.Infof("last inserted id: %d", lastInsertBusinessID)
 	default:
-		return helper.DuplicateEntity{BusinessName: businessName}
+		return 0, helper.DuplicateEntity{BusinessName: businessName}
 	}
 
-	return nil
+	return lastInsertBusinessID, nil
 }
 
 func (l *listingEngine) GetBusinessIDFromName(businessName string) ([]int, error) {
