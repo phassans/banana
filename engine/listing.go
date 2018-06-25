@@ -126,7 +126,7 @@ func (l *listingEngine) AddBusinessAddress(line1 string, line2 string, city stri
 	geoAddress := fmt.Sprintf("%s,%s,%s,%s", line1, line2, city, state)
 
 	// add lat, long to database
-	err = l.AddGeoInfo(url.QueryEscape(geoAddress))
+	err = l.AddGeoInfo(url.QueryEscape(geoAddress), addressID, businessID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
@@ -158,7 +158,19 @@ func (l *listingEngine) AddListing(title string, description string, price float
 	return nil
 }
 
-func (l *listingEngine) AddGeoInfo(address string) error {
-	_, err := clients.GetLatLong(address)
+func (l *listingEngine) AddGeoInfo(address string, addressID int, businessID int) error {
+	resp, err := clients.GetLatLong(address)
+
+	var geoID int
+
+	err = l.sql.QueryRow("INSERT INTO address_geo(address_id,business_id,latitude,longitude) "+
+		"VALUES($1,$2,$3,$4) returning geo_id;",
+		addressID, businessID, resp.Lat, resp.Lon).Scan(&geoID)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	l.logger.Infof("successfully added a geoLocation %s for address: %s", geoID, address)
+
 	return err
 }
