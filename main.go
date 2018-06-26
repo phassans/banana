@@ -23,10 +23,12 @@ func main() {
 	xlog.Infof("successfully connected to db")
 
 	// createEngines
-	engine := engine.NewListingEngine(roach.Db, logger)
+	businessEngine := engine.NewBusinessEngine(roach.Db, logger)
+	listingEngine := engine.NewListingEngine(roach.Db, logger, businessEngine)
+	ownerEngine := engine.NewOwnerEngine(roach.Db, logger, businessEngine)
 
 	// start the server
-	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler(engine)}
+	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler(businessEngine, ownerEngine, listingEngine)}
 	go func() { serverErrChannel <- server.ListenAndServe() }()
 
 	// log server start time

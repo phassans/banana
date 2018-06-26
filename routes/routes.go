@@ -10,12 +10,12 @@ import (
 	"github.com/pshassans/banana/engine"
 )
 
-func APIServerHandler(engine engine.ListingEngine) http.Handler {
-	r := newAPIRouter(engine)
+func APIServerHandler(businessEngine engine.BusinessEngine, ownerEngine engine.OwnerEngine, listingEngine engine.ListingEngine) http.Handler {
+	r := newAPIRouter(businessEngine, ownerEngine, listingEngine)
 	return gziphandler.GzipHandler(r)
 }
 
-func newAPIRouter(engine engine.ListingEngine) chi.Router {
+func newAPIRouter(businessEngine engine.BusinessEngine, ownerEngine engine.OwnerEngine, listingEngine engine.ListingEngine) chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func newAPIRouter(engine engine.ListingEngine) chi.Router {
 		fmt.Fprintln(w, "OK")
 	})
 
-	r.Mount("/", api.NewRESTRouter(engine))
+	r.Mount("/", api.NewRESTRouter(businessEngine, ownerEngine, listingEngine))
 
 	return r
 }
