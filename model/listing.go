@@ -1,4 +1,4 @@
-package engine
+package model
 
 import (
 	"database/sql"
@@ -14,6 +14,10 @@ type listingEngine struct {
 	businessEngine BusinessEngine
 }
 
+const insertListingSQL = "INSERT INTO listing(title, description, old_price, new_price, " +
+	"listing_date, start_time, end_time, business_id, recurring, listing_create_date) " +
+	"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning listing_id"
+
 type ListingEngine interface {
 	AddListing(
 		title string,
@@ -23,6 +27,7 @@ type ListingEngine interface {
 		listingDate string,
 		startTime string,
 		endTime string,
+		recurring bool,
 		businessName string,
 	) error
 	AddListingImage(businessName string, imagePath string)
@@ -42,6 +47,7 @@ func (l *listingEngine) AddListing(
 	listingDate string,
 	startTime string,
 	endTime string,
+	recurring bool,
 	businessName string,
 ) error {
 	businessID, err := l.businessEngine.GetBusinessIDFromName(businessName)
@@ -55,10 +61,9 @@ func (l *listingEngine) AddListing(
 
 	var listingID int
 
-	err = l.sql.QueryRow("INSERT INTO listing(title, description, old_price, new_price, "+
-		"listing_date, start_time, end_time, business_id) "+
-		"VALUES($1, $2, $3, $4, $5, $6, $7, $8) returning listing_id;",
-		title, description, oldPrice, newPrice, listingDate, time.Now(), time.Now(), businessID).Scan(&listingID)
+	err = l.sql.QueryRow(insertListingSQL, title, description, oldPrice, newPrice,
+		listingDate, time.Now(), time.Now(), businessID, recurring, time.Now()).
+		Scan(&listingID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}

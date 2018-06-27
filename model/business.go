@@ -1,4 +1,4 @@
-package engine
+package model
 
 import (
 	"database/sql"
@@ -14,6 +14,17 @@ type businessEngine struct {
 	sql    *sql.DB
 	logger xlog.Logger
 }
+
+const (
+	insertBusinessSQL = "INSERT INTO business(name,phone,website) " +
+		"VALUES($1,$2,$3) returning business_id;"
+
+	insertBusinessAddressSQL = "INSERT INTO address(line1,line2,city,postal_code,state,country_id,business_id,other_details) " +
+		"VALUES($1,$2,$3,$4,$5,$6,$7,$8) returning address_id;"
+
+	insertBusinessAddressGEOSQL = "INSERT INTO address_geo(address_id,business_id,latitude,longitude) " +
+		"VALUES($1,$2,$3,$4) returning geo_id;"
+)
 
 type BusinessEngine interface {
 	AddBusiness(businessName string, phone string, website string) (int, error)
@@ -44,9 +55,8 @@ func (l *businessEngine) AddBusiness(businessName string, phone string, website 
 
 	var lastInsertBusinessID int
 
-	err = l.sql.QueryRow("INSERT INTO business(name,phone,website) "+
-		"VALUES($1,$2,$3) returning business_id;",
-		businessName, phone, website).Scan(&lastInsertBusinessID)
+	err = l.sql.QueryRow(insertBusinessSQL, businessName, phone, website).
+		Scan(&lastInsertBusinessID)
 	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
@@ -87,8 +97,16 @@ func (l *businessEngine) GetBusinessIDFromName(businessName string) (int, error)
 	return id, nil
 }
 
-func (l *businessEngine) AddBusinessAddress(line1 string, line2 string, city string, postalCode string,
-	state string, country string, businessName string, otherDetails string) error {
+func (l *businessEngine) AddBusinessAddress(
+	line1 string,
+	line2 string,
+	city string,
+	postalCode string,
+	state string,
+	country string,
+	businessName string,
+	otherDetails string,
+) error {
 	businessID, err := l.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return err
@@ -101,9 +119,9 @@ func (l *businessEngine) AddBusinessAddress(line1 string, line2 string, city str
 	var addressID int
 	countryID := 1
 
-	err = l.sql.QueryRow("INSERT INTO address(line1,line2,city,postal_code,state,country_id,business_id,other_details) "+
-		"VALUES($1,$2,$3,$4,$5,$6,$7,$8) returning address_id;",
-		line1, line2, city, postalCode, state, countryID, businessID, otherDetails).Scan(&addressID)
+	err = l.sql.QueryRow(insertBusinessAddressSQL, line1, line2, city, postalCode,
+		state, countryID, businessID, otherDetails).
+		Scan(&addressID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
@@ -126,9 +144,8 @@ func (l *businessEngine) AddGeoInfo(address string, addressID int, businessID in
 
 	var geoID int
 
-	err = l.sql.QueryRow("INSERT INTO address_geo(address_id,business_id,latitude,longitude) "+
-		"VALUES($1,$2,$3,$4) returning geo_id;",
-		addressID, businessID, resp.Lat, resp.Lon).Scan(&geoID)
+	err = l.sql.QueryRow(insertBusinessAddressGEOSQL, addressID, businessID, resp.Lat, resp.Lon).
+		Scan(&geoID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}

@@ -1,4 +1,4 @@
-package api
+package controller
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type businessResult struct {
 
 type createBusinessEndpoint struct{}
 
-func (r createBusinessEndpoint) GetPath() string          { return "/business/create" }
+func (r createBusinessEndpoint) GetPath() string          { return "/business/add" }
 func (r createBusinessEndpoint) HTTPRequest() interface{} { return businessRequest{} }
 func (r createBusinessEndpoint) HTTPResult() interface{}  { return businessResult{} }
 func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {

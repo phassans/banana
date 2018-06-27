@@ -1,4 +1,4 @@
-package routes
+package route
 
 import (
 	"fmt"
@@ -6,16 +6,16 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/go-chi/chi"
-	"github.com/pshassans/banana/api"
-	"github.com/pshassans/banana/engine"
+	"github.com/pshassans/banana/controller"
+	"github.com/pshassans/banana/model"
 )
 
-func APIServerHandler(engines engine.Engine) http.Handler {
+func APIServerHandler(engines model.Engine) http.Handler {
 	r := newAPIRouter(engines)
 	return gziphandler.GzipHandler(r)
 }
 
-func newAPIRouter(engines engine.Engine) chi.Router {
+func newAPIRouter(engines model.Engine) chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func newAPIRouter(engines engine.Engine) chi.Router {
 		fmt.Fprintln(w, "OK")
 	})
 
-	r.Mount("/", api.NewRESTRouter(engines))
+	r.Mount("/", controller.NewRESTRouter(engines))
 
 	return r
 }

@@ -1,4 +1,4 @@
-package api
+package controller
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/go-chi/chi"
-	"github.com/pshassans/banana/engine"
 	"github.com/pshassans/banana/helper"
+	"github.com/pshassans/banana/model"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 )
 
 type router struct {
-	engines engine.Engine
+	engines model.Engine
 	chi.Router
 }
 
@@ -55,7 +55,7 @@ var (
 )
 
 // NewRestAPIRouter construct a Router interface for Restful API.
-func NewRESTRouter(engines engine.Engine) http.Handler {
+func NewRESTRouter(engines model.Engine) http.Handler {
 	rtr := &router{
 		engines,
 		chi.NewRouter(),

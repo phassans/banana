@@ -1,4 +1,4 @@
-package api
+package controller
 
 import (
 	"context"
@@ -36,6 +36,7 @@ func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		request.ListingDate,
 		request.StartTime,
 		request.EndTime,
+		request.Recurring,
 		request.BusinessName,
 	)
 	result := listingADDResult{listingADDRequest: request, Error: NewAPIError(err)}

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/pshassans/banana/db"
-	"github.com/pshassans/banana/engine"
-	"github.com/pshassans/banana/routes"
+	"github.com/pshassans/banana/model"
+	"github.com/pshassans/banana/route"
 	"github.com/rs/xlog"
 )
 
@@ -23,14 +23,14 @@ func main() {
 	xlog.Infof("successfully connected to db")
 
 	// createEngines
-	businessEngine := engine.NewBusinessEngine(roach.Db, logger)
-	listingEngine := engine.NewListingEngine(roach.Db, logger, businessEngine)
-	ownerEngine := engine.NewOwnerEngine(roach.Db, logger, businessEngine)
+	businessEngine := model.NewBusinessEngine(roach.Db, logger)
+	listingEngine := model.NewListingEngine(roach.Db, logger, businessEngine)
+	ownerEngine := model.NewOwnerEngine(roach.Db, logger, businessEngine)
 
-	engines := engine.NewGenericEngine(businessEngine, ownerEngine, listingEngine)
+	engines := model.NewGenericEngine(businessEngine, ownerEngine, listingEngine)
 
 	// start the server
-	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler(engines)}
+	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: route.APIServerHandler(engines)}
 	go func() { serverErrChannel <- server.ListenAndServe() }()
 
 	// log server start time
