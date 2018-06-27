@@ -27,7 +27,7 @@ func (r addBusinessAddressEndpoint) HTTPRequest() interface{} { return businessA
 func (r addBusinessAddressEndpoint) HTTPResult() interface{}  { return businessAddressResult{} }
 func (r addBusinessAddressEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(businessAddressRequest)
-	err := rtr.businessEngine.AddBusinessAddress(request.Line1, request.Line2, request.City, request.PostalCode, request.State, request.Country, request.BusinessName, request.OtherDetails)
+	err := rtr.engines.AddBusinessAddress(request.Line1, request.Line2, request.City, request.PostalCode, request.State, request.Country, request.BusinessName, request.OtherDetails)
 	result := businessAddressResult{businessAddressRequest: request, Error: NewAPIError(err)}
 	return result, nil
 }

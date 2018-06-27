@@ -14,11 +14,36 @@ type listingEngine struct {
 	businessEngine BusinessEngine
 }
 
+type ListingEngine interface {
+	AddListing(
+		title string,
+		description string,
+		oldPrice float64,
+		newPrice float64,
+		listingDate string,
+		startTime string,
+		endTime string,
+		businessName string,
+	) error
+	AddListingImage(businessName string, imagePath string)
+	AddListingDietaryRestrictions(listingTitle string, dietaryRestriction string)
+	AddListingRecurringInfo(listingTitle string, day string, startTime string, endTime string)
+}
+
 func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessEngine) ListingEngine {
 	return &listingEngine{psql, logger, businessEngine}
 }
 
-func (l *listingEngine) AddListing(title string, description string, price float64, startTime string, endTime string, businessName string) error {
+func (l *listingEngine) AddListing(
+	title string,
+	description string,
+	oldPrice float64,
+	newPrice float64,
+	listingDate string,
+	startTime string,
+	endTime string,
+	businessName string,
+) error {
 	businessID, err := l.businessEngine.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return err
@@ -30,9 +55,10 @@ func (l *listingEngine) AddListing(title string, description string, price float
 
 	var listingID int
 
-	err = l.sql.QueryRow("INSERT INTO listing(title,description,price,start_time,end_time,business_id) "+
-		"VALUES($1,$2,$3,$4,$5,$6) returning listing_id;",
-		title, description, price, time.Now(), time.Now(), businessID).Scan(&listingID)
+	err = l.sql.QueryRow("INSERT INTO listing(title, description, old_price, new_price, "+
+		"listing_date, start_time, end_time, business_id) "+
+		"VALUES($1, $2, $3, $4, $5, $6, $7, $8) returning listing_id;",
+		title, description, oldPrice, newPrice, listingDate, time.Now(), time.Now(), businessID).Scan(&listingID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
@@ -40,4 +66,16 @@ func (l *listingEngine) AddListing(title string, description string, price float
 	l.logger.Infof("successfully added a listing %s for business: %s", title, businessName)
 
 	return nil
+}
+
+func (l *listingEngine) AddListingImage(businessName string, imagePath string) {
+	return
+}
+
+func (l *listingEngine) AddListingDietaryRestrictions(listingTitle string, dietaryRestriction string) {
+	return
+}
+
+func (l *listingEngine) AddListingRecurringInfo(listingTitle string, day string, startTime string, endTime string) {
+	return
 }

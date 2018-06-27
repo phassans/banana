@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS recurring_listing
 (
   listing_id INT           NULL,
   day        days_of_month NOT NULL,
+  start_time TIME,
+  end_time   TIME,
   PRIMARY KEY (listing_id, day),
   FOREIGN KEY (listing_id) REFERENCES listing (listing_id)
 );
@@ -168,9 +170,9 @@ CREATE TABLE IF NOT EXISTS happy_hour_listing
 
 CREATE TABLE IF NOT EXISTS happy_hour_image
 (
-  image_id   SERIAL,
+  image_id      SERIAL,
   happy_hour_id INT  NOT NULL,
-  path       TEXT NOT NULL,
+  path          TEXT NOT NULL,
   PRIMARY KEY (image_id, happy_hour_id),
   FOREIGN KEY (happy_hour_id) REFERENCES happy_hour (happy_hour_id)
 );

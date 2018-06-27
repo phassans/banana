@@ -15,6 +15,19 @@ type businessEngine struct {
 	logger xlog.Logger
 }
 
+type BusinessEngine interface {
+	AddBusiness(businessName string, phone string, website string) (int, error)
+
+	// TBD
+	AddBusinessHours(businessName string, day string, openTime string, closeTime string)
+	AddBusinessImage(businessName string, imagePath string)
+
+	AddBusinessAddress(line1 string, line2 string, city string, postalCode string, state string,
+		country string, businessName string, otherDetails string) error
+	AddGeoInfo(address string, addressID int, businessID int) error
+	GetBusinessIDFromName(businessName string) (int, error)
+}
+
 func NewBusinessEngine(psql *sql.DB, logger xlog.Logger) BusinessEngine {
 	return &businessEngine{psql, logger}
 }
@@ -43,6 +56,14 @@ func (l *businessEngine) AddBusiness(businessName string, phone string, website 
 	return lastInsertBusinessID, nil
 }
 
+func (l *businessEngine) AddBusinessHours(businessName string, day string, openTime string, closeTime string) {
+	return
+}
+
+func (l *businessEngine) AddBusinessImage(businessName string, imagePath string) {
+	return
+}
+
 func (l *businessEngine) GetBusinessIDFromName(businessName string) (int, error) {
 	rows, err := l.sql.Query("SELECT business_id FROM business where name = $1;", businessName)
 	if err != nil {
@@ -66,7 +87,8 @@ func (l *businessEngine) GetBusinessIDFromName(businessName string) (int, error)
 	return id, nil
 }
 
-func (l *businessEngine) AddBusinessAddress(line1 string, line2 string, city string, postalCode string, state string, country string, businessName string, otherDetails string) error {
+func (l *businessEngine) AddBusinessAddress(line1 string, line2 string, city string, postalCode string,
+	state string, country string, businessName string, otherDetails string) error {
 	businessID, err := l.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return err

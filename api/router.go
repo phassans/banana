@@ -17,9 +17,7 @@ var (
 )
 
 type router struct {
-	businessEngine engine.BusinessEngine
-	ownerEngine    engine.OwnerEngine
-	listingEngine  engine.ListingEngine
+	engines engine.Engine
 	chi.Router
 }
 
@@ -57,11 +55,9 @@ var (
 )
 
 // NewRestAPIRouter construct a Router interface for Restful API.
-func NewRESTRouter(businessEngine engine.BusinessEngine, ownerEngine engine.OwnerEngine, listingEngine engine.ListingEngine) http.Handler {
+func NewRESTRouter(engines engine.Engine) http.Handler {
 	rtr := &router{
-		businessEngine,
-		ownerEngine,
-		listingEngine,
+		engines,
 		chi.NewRouter(),
 	}
 

@@ -24,7 +24,7 @@ func (r addOwnerEndpoint) HTTPRequest() interface{} { return ownerRequest{} }
 func (r addOwnerEndpoint) HTTPResult() interface{}  { return ownerResult{} }
 func (r addOwnerEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(ownerRequest)
-	err := rtr.ownerEngine.AddOwner(request.FirstName, request.LastName, request.OwnerPhone, request.Email, request.BusinessName)
+	err := rtr.engines.AddOwner(request.FirstName, request.LastName, request.OwnerPhone, request.Email, request.BusinessName)
 	result := ownerResult{ownerRequest: request, Error: NewAPIError(err)}
 	return result, nil
 }

@@ -7,10 +7,13 @@ import (
 type listingADDRequest struct {
 	Title        string  `json:"title"`
 	Description  string  `json:"description"`
-	Price        float64 `json:"price"`
+	OldPrice     float64 `json:"oldPrice"`
+	NewPrice     float64 `json:"newPrice"`
+	ListingDate  string  `json:"listingDate"`
 	StartTime    string  `json:"startTime"`
 	EndTime      string  `json:"endTime"`
 	BusinessName string  `json:"businessName"`
+	Recurring    bool    `json:"recurring"`
 }
 
 type listingADDResult struct {
@@ -25,7 +28,16 @@ func (r addListingEndpoint) HTTPRequest() interface{} { return listingADDRequest
 func (r addListingEndpoint) HTTPResult() interface{}  { return listingADDResult{} }
 func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingADDRequest)
-	err := rtr.listingEngine.AddListing(request.Title, request.Description, request.Price, request.StartTime, request.EndTime, request.BusinessName)
+	err := rtr.engines.AddListing(
+		request.Title,
+		request.Description,
+		request.OldPrice,
+		request.NewPrice,
+		request.ListingDate,
+		request.StartTime,
+		request.EndTime,
+		request.BusinessName,
+	)
 	result := listingADDResult{listingADDRequest: request, Error: NewAPIError(err)}
 	return result, nil
 }

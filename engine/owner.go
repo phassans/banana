@@ -13,6 +13,10 @@ type ownerEngine struct {
 	businessEngine BusinessEngine
 }
 
+type OwnerEngine interface {
+	AddOwner(firstName string, lastName string, phone string, email string, businessName string) error
+}
+
 func NewOwnerEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessEngine) OwnerEngine {
 	return &ownerEngine{psql, logger, businessEngine}
 }

@@ -27,8 +27,10 @@ func main() {
 	listingEngine := engine.NewListingEngine(roach.Db, logger, businessEngine)
 	ownerEngine := engine.NewOwnerEngine(roach.Db, logger, businessEngine)
 
+	engines := engine.NewGenericEngine(businessEngine, ownerEngine, listingEngine)
+
 	// start the server
-	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler(businessEngine, ownerEngine, listingEngine)}
+	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: routes.APIServerHandler(engines)}
 	go func() { serverErrChannel <- server.ListenAndServe() }()
 
 	// log server start time
