@@ -51,6 +51,7 @@ var (
 		addOwner,
 		addBusinessAddress,
 		addListing,
+		allListing,
 	}
 )
 
