@@ -42,6 +42,10 @@ func GetErrorStatus(err error) int {
 	switch err := err.(type) {
 	case helper.DuplicateEntity:
 		return http.StatusBadRequest
+	case helper.ValidationError:
+		return http.StatusBadRequest
+	case helper.UserError:
+		return http.StatusBadRequest
 	case *APIError:
 		return err.Code
 	default:

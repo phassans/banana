@@ -34,8 +34,8 @@ type (
 	postEndpoint interface {
 		endpoint
 		HTTPRequest() interface{}
-		HTTPResult() interface{}
 		Execute(context.Context, *router, interface{}) (interface{}, error)
+		Validate(interface{}) error
 	}
 )
 
@@ -47,11 +47,11 @@ var (
 
 	// createEndpoints lists POST endpoints that create records.
 	addEndpoints = []postEndpoint{
+		addUser,
 		addBusiness,
-		addOwner,
-		addBusinessAddress,
 		addListing,
 		allListing,
+		verifyUser,
 	}
 )
 

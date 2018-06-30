@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS business_hours;
-DROP TABLE IF EXISTS owner;
+DROP TABLE IF EXISTS business_user;
 DROP TABLE IF EXISTS address_geo;
 DROP TABLE IF EXISTS address;
 DROP TABLE IF EXISTS country;

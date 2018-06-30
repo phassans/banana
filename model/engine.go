@@ -3,15 +3,15 @@ package model
 type GenericEngine struct {
 	BusinessEngine
 	ListingEngine
-	OwnerEngine
+	UserEngine
 }
 
-func NewGenericEngine(businessEngine BusinessEngine, ownerEngine OwnerEngine, listingEngine ListingEngine) Engine {
-	return &GenericEngine{businessEngine, listingEngine, ownerEngine}
+func NewGenericEngine(businessEngine BusinessEngine, userEngine UserEngine, listingEngine ListingEngine) Engine {
+	return &GenericEngine{businessEngine, listingEngine, userEngine}
 }
 
 type Engine interface {
 	BusinessEngine
 	ListingEngine
-	OwnerEngine
+	UserEngine
 }

@@ -34,15 +34,22 @@ CREATE TABLE IF NOT EXISTS business_hours
   FOREIGN KEY (business_id) REFERENCES business (business_id)
 );
 
-CREATE TABLE IF NOT EXISTS owner
+CREATE TABLE IF NOT EXISTS business_user
 (
-  owner_id    SERIAL,
-  business_id INT  NULL,
-  first_name  TEXT NOT NULL,
-  last_name   TEXT NOT NULL,
-  phone       TEXT NOT NULL,
-  email       TEXT NOT NULL,
-  PRIMARY KEY (owner_id, business_id),
+  user_id  SERIAL,
+  name     TEXT NOT NULL,
+  email    TEXT NOT NULL,
+  password TEXT NOT NULL,
+  phone    TEXT,
+  PRIMARY KEY (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_to_business
+(
+  user_id     INT NULL,
+  business_id INT NULL,
+  PRIMARY KEY (user_id, business_id),
+  FOREIGN KEY (user_id) REFERENCES user (user_id),
   FOREIGN KEY (business_id) REFERENCES business (business_id)
 );
 

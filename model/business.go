@@ -2,8 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"fmt"
-	"net/url"
 
 	"github.com/pshassans/banana/clients"
 	"github.com/pshassans/banana/helper"
@@ -27,23 +25,47 @@ const (
 )
 
 type BusinessEngine interface {
-	AddBusiness(businessName string, phone string, website string) (int, error)
+	AddBusiness(
+		businessName string,
+		phone string,
+		website string,
+		street string,
+		city string,
+		postalCode string,
+		state string,
+		country string,
+	) (int, error)
+
+	AddBusinessAddress(
+		street string,
+		city string,
+		postalCode string,
+		state string,
+		country string,
+		businessID int,
+	) error
+	AddGeoInfo(address string, addressID int, businessID int) error
+	GetBusinessIDFromName(businessName string) (int, error)
 
 	// TBD
 	AddBusinessHours(businessName string, day string, openTime string, closeTime string)
 	AddBusinessImage(businessName string, imagePath string)
-
-	AddBusinessAddress(line1 string, line2 string, city string, postalCode string, state string,
-		country string, businessName string, otherDetails string) error
-	AddGeoInfo(address string, addressID int, businessID int) error
-	GetBusinessIDFromName(businessName string) (int, error)
 }
 
 func NewBusinessEngine(psql *sql.DB, logger xlog.Logger) BusinessEngine {
 	return &businessEngine{psql, logger}
 }
 
-func (l *businessEngine) AddBusiness(businessName string, phone string, website string) (int, error) {
+func (l *businessEngine) AddBusiness(
+	businessName string,
+	phone string,
+	website string,
+	street string,
+	city string,
+	postalCode string,
+	state string,
+	country string,
+) (int, error) {
 	businessID, err := l.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return 0, err
@@ -98,16 +120,14 @@ func (l *businessEngine) GetBusinessIDFromName(businessName string) (int, error)
 }
 
 func (l *businessEngine) AddBusinessAddress(
-	line1 string,
-	line2 string,
+	street string,
 	city string,
 	postalCode string,
 	state string,
 	country string,
-	businessName string,
-	otherDetails string,
+	businessID int,
 ) error {
-	businessID, err := l.GetBusinessIDFromName(businessName)
+	/*businessID, err := l.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return err
 	}
@@ -134,7 +154,7 @@ func (l *businessEngine) AddBusinessAddress(
 	err = l.AddGeoInfo(url.QueryEscape(geoAddress), addressID, businessID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
-	}
+	}*/
 
 	return nil
 }

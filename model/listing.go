@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"time"
 
-	"fmt"
-
 	"github.com/pshassans/banana/helper"
 	"github.com/rs/xlog"
 	"github.com/umahmood/haversine"
@@ -141,6 +139,7 @@ func (l *listingEngine) GetAllListingsInRange(
 		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
 
+		// TBD: sort on miles
 		if mi > 5.0 {
 			listingsFromBusinessID, err := l.GetAllListingsFromBusinessID(geo.BusinessID)
 			if err != nil {
@@ -181,12 +180,6 @@ func (l *listingEngine) GetAllListingsLatLon() ([]AddressGeo, error) {
 func (l *listingEngine) GetAllListingsFromBusinessID(businessID int) ([]Listing, error) {
 	currentDate := time.Now().Format("2006-01-02")
 	currentTime := time.Now().Format("15:04:05.000000")
-
-	qry := fmt.Sprintf("SELECT listing_id, business_id, title, description, old_price, new_price, "+
-		"listing_date, start_time, end_time, recurring FROM listing where "+
-		"business_id = %d AND listing_date >= %s AND end_time >= %s;", businessID, currentDate, currentTime)
-
-	fmt.Printf("DEBUG: %s", qry)
 
 	rows, err := l.sql.Query("SELECT listing_id, business_id, title, description, old_price, new_price, "+
 		"listing_date, start_time, end_time, recurring FROM listing where "+

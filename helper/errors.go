@@ -5,6 +5,24 @@ import (
 	"fmt"
 )
 
+type ValidationError struct {
+	Message string `json:"message,omitempty"`
+}
+
+func (v ValidationError) Error() string {
+	b, _ := json.Marshal(v)
+	return fmt.Sprintf("validation failed with error: %s", string(b))
+}
+
+type UserError struct {
+	Message string `json:"message,omitempty"`
+}
+
+func (v UserError) Error() string {
+	b, _ := json.Marshal(v)
+	return fmt.Sprintf("user error: %s", string(b))
+}
+
 type DuplicateEntity struct {
 	BusinessName string `json:"name,omitempty"`
 }

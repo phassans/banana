@@ -6,25 +6,26 @@ import (
 	"github.com/pshassans/banana/model"
 )
 
-type allListingInRangeRequest struct {
-	Latitude      float64 `json:"latitude"`
-	Longitude     float64 `json:"longitude"`
-	ZipCode       int     `json:"zipCode,omitempty"`
-	PriceFilter   string  `json:"priceFilter,omitempty"`
-	DietaryFilter string  `json:"dietaryFilter,omitempty"`
-	Keywords      string  `json:"keywords,omitempty"`
-}
+type (
+	allListingInRangeRequest struct {
+		Latitude      float64 `json:"latitude,omitempty"`
+		Longitude     float64 `json:"longitude,omitempty"`
+		ZipCode       int     `json:"zipCode,omitempty"`
+		PriceFilter   string  `json:"priceFilter,omitempty"`
+		DietaryFilter string  `json:"dietaryFilter,omitempty"`
+		Keywords      string  `json:"keywords,omitempty"`
+	}
 
-type allListingInRangeResult struct {
-	Result []model.Listing
-	Error  *APIError `json:"error,omitempty"`
-}
+	allListingInRangeResult struct {
+		Result []model.Listing
+		Error  *APIError `json:"error,omitempty"`
+	}
 
-type allListingInRangeEndpoint struct{}
+	allListingInRangeEndpoint struct{}
+)
 
-func (r allListingInRangeEndpoint) GetPath() string          { return "/listing/all" }
-func (r allListingInRangeEndpoint) HTTPRequest() interface{} { return allListingInRangeRequest{} }
-func (r allListingInRangeEndpoint) HTTPResult() interface{}  { return allListingInRangeResult{} }
+var allListing postEndpoint = allListingInRangeEndpoint{}
+
 func (r allListingInRangeEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(allListingInRangeRequest)
 	result, err := rtr.engines.GetAllListingsInRange(
@@ -38,4 +39,14 @@ func (r allListingInRangeEndpoint) Execute(ctx context.Context, rtr *router, req
 	return allListingInRangeResult{Result: result, Error: NewAPIError(err)}, err
 }
 
-var allListing postEndpoint = allListingInRangeEndpoint{}
+func (r allListingInRangeEndpoint) Validate(request interface{}) error {
+	return nil
+}
+
+func (r allListingInRangeEndpoint) GetPath() string {
+	return "/listing/all"
+}
+
+func (r allListingInRangeEndpoint) HTTPRequest() interface{} {
+	return allListingInRangeRequest{}
+}
