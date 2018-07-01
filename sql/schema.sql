@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS business_hours
   day         DAYS_OF_MONTH NOT NULL,
   open_time   TIME          NOT NULL,
   close_time  TIME          NOT NULL,
-  PRIMARY KEY (business_id, day),
   FOREIGN KEY (business_id) REFERENCES business (business_id)
 );
 
@@ -64,8 +63,7 @@ CREATE TABLE IF NOT EXISTS address
 (
   address_id    SERIAL UNIQUE,
   business_id   INT  NULL,
-  line1         TEXT NOT NULL,
-  line2         TEXT,
+  street         TEXT NOT NULL,
   city          TEXT NOT NULL,
   postal_code   INT  NOT NULL,
   state         TEXT NOT NULL,

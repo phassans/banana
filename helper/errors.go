@@ -23,6 +23,15 @@ func (v UserError) Error() string {
 	return fmt.Sprintf("user error: %s", string(b))
 }
 
+type BusinessError struct {
+	Message string `json:"message,omitempty"`
+}
+
+func (b BusinessError) Error() string {
+	busError, _ := json.Marshal(b)
+	return fmt.Sprintf("business error: %s", string(busError))
+}
+
 type DuplicateEntity struct {
 	BusinessName string `json:"name,omitempty"`
 }

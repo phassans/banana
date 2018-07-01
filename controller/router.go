@@ -52,6 +52,8 @@ var (
 		addListing,
 		allListing,
 		verifyUser,
+		addBusinessHour,
+		addBusinessCuisine,
 	}
 )
 
