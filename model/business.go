@@ -3,8 +3,8 @@ package model
 import (
 	"database/sql"
 
-	"github.com/pshassans/banana/clients"
-	"github.com/pshassans/banana/helper"
+	"github.com/phassans/banana/clients"
+	"github.com/phassans/banana/helper"
 	"github.com/rs/xlog"
 )
 

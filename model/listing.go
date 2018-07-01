@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/pshassans/banana/helper"
+	"github.com/phassans/banana/helper"
 	"github.com/rs/xlog"
 	"github.com/umahmood/haversine"
 )

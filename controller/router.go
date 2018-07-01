@@ -8,8 +8,8 @@ import (
 
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/go-chi/chi"
-	"github.com/pshassans/banana/helper"
-	"github.com/pshassans/banana/model"
+	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/model"
 )
 
 var (

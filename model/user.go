@@ -7,7 +7,7 @@ import (
 
 	"fmt"
 
-	"github.com/pshassans/banana/helper"
+	"github.com/phassans/banana/helper"
 	"github.com/rs/xlog"
 )
 

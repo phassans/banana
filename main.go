@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pshassans/banana/db"
-	"github.com/pshassans/banana/model"
-	"github.com/pshassans/banana/route"
+	"github.com/phassans/banana/db"
+	"github.com/phassans/banana/model"
+	"github.com/phassans/banana/route"
 	"github.com/rs/xlog"
 )
 

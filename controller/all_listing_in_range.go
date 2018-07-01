@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	"github.com/pshassans/banana/model"
+	"github.com/phassans/banana/model"
 )
 
 type (

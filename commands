@@ -1,3 +1,3 @@
 psql -h localhost -d banana -U pshashidhara
-psql -h localhost -d banana -U pshashidhara -a -f goworkspace/src/github.com/pshassans/banana/sql/cleanup.sql
-psql -h localhost -d banana -U pshashidhara -a -f goworkspace/src/github.com/pshassans/banana/sql/schema.sql
+psql -h localhost -d banana -U pshashidhara -a -f goworkspace/src/github.com/phassans/banana/sql/cleanup.sql
+psql -h localhost -d banana -U pshashidhara -a -f goworkspace/src/github.com/phassans/banana/sql/schema.sql

@@ -6,8 +6,8 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/go-chi/chi"
-	"github.com/pshassans/banana/controller"
-	"github.com/pshassans/banana/model"
+	"github.com/phassans/banana/controller"
+	"github.com/phassans/banana/model"
 )
 
 func APIServerHandler(engines model.Engine) http.Handler {
