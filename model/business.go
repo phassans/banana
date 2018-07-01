@@ -55,7 +55,7 @@ type BusinessEngine interface {
 	GetBusinessIDFromName(businessName string) (int, error)
 
 	// TBD
-	AddBusinessHours([]Days, int) error
+	AddBusinessHours([]Hours, int) error
 	AddBusinessImage(businessName string, imagePath string)
 
 	DeleteBusinessFromID(business_id int) error
@@ -151,7 +151,7 @@ func (l *businessEngine) AddGeoInfo(address string, addressID int, businessID in
 	return err
 }
 
-func (l *businessEngine) AddBusinessHours(days []Days, businessID int) error {
+func (l *businessEngine) AddBusinessHours(days []Hours, businessID int) error {
 	businessName, err := l.GetBusinessFromID(businessID)
 	if err != nil {
 		return err
@@ -162,96 +162,16 @@ func (l *businessEngine) AddBusinessHours(days []Days, businessID int) error {
 	}
 
 	for _, day := range days {
-		switch day.(type) {
-		case HoursMonday:
-			request := day.(HoursMonday)
-			if request.Monday {
-				if err := l.AddHours("monday", request.MondayOpenTimeSessionOne, request.MondayCloseTimeSessionOne, businessID); err != nil {
+		if day.Day != "" {
+			if day.OpenTimeSessionOne != "" && day.CloseTimeSessionOne != "" {
+				if err := l.AddHours(day.Day, day.OpenTimeSessionOne, day.CloseTimeSessionOne, businessID); err != nil {
 					return err
-				}
-
-				if request.MondayOpenTimeSessionTwo != "" && request.MondayCloseTimeSessionTwo != "" {
-					if err := l.AddHours("monday", request.MondayOpenTimeSessionTwo, request.MondayCloseTimeSessionTwo, businessID); err != nil {
-						return err
-					}
 				}
 			}
-		case HoursTuesday:
-			request := day.(HoursTuesday)
-			if request.Tuesday {
-				if err := l.AddHours("tuesday", request.TuesdayOpenTimeSessionOne, request.TuesdayCloseTimeSessionOne, businessID); err != nil {
-					return err
-				}
 
-				if request.TuesdayOpenTimeSessionTwo != "" && request.TuesdayCloseTimeSessionTwo != "" {
-					if err := l.AddHours("tuesday", request.TuesdayOpenTimeSessionTwo, request.TuesdayCloseTimeSessionTwo, businessID); err != nil {
-						return err
-					}
-				}
-			}
-		case HoursWednesday:
-			request := day.(HoursWednesday)
-			if request.Wednesday {
-				if err := l.AddHours("wednesday", request.WednesdayOpenTimeSessionOne, request.WednesdayCloseTimeSessionOne, businessID); err != nil {
+			if day.OpenTimeSessionTwo != "" && day.CloseTimeSessionTwo != "" {
+				if err := l.AddHours(day.Day, day.OpenTimeSessionTwo, day.CloseTimeSessionTwo, businessID); err != nil {
 					return err
-				}
-
-				if request.WednesdayOpenTimeSessionTwo != "" && request.WednesdayCloseTimeSessionTwo != "" {
-					if err := l.AddHours("wednesday", request.WednesdayOpenTimeSessionTwo, request.WednesdayCloseTimeSessionTwo, businessID); err != nil {
-						return err
-					}
-				}
-			}
-		case HoursThursday:
-			request := day.(HoursThursday)
-			if request.Thursday {
-				if err := l.AddHours("thursday", request.ThursdayOpenTimeSessionOne, request.ThursdayCloseTimeSessionOne, businessID); err != nil {
-					return err
-				}
-
-				if request.ThursdayOpenTimeSessionTwo != "" && request.ThursdayCloseTimeSessionTwo != "" {
-					if err := l.AddHours("thursday", request.ThursdayOpenTimeSessionTwo, request.ThursdayCloseTimeSessionTwo, businessID); err != nil {
-						return err
-					}
-				}
-			}
-		case HoursFriday:
-			request := day.(HoursFriday)
-			if request.Friday {
-				if err := l.AddHours("friday", request.FridayOpenTimeSessionOne, request.FridayCloseTimeSessionOne, businessID); err != nil {
-					return err
-				}
-
-				if request.FridayOpenTimeSessionTwo != "" && request.FridayCloseTimeSessionTwo != "" {
-					if err := l.AddHours("friday", request.FridayOpenTimeSessionTwo, request.FridayCloseTimeSessionTwo, businessID); err != nil {
-						return err
-					}
-				}
-			}
-		case HoursSaturday:
-			request := day.(HoursSaturday)
-			if request.Saturday {
-				if err := l.AddHours("saturday", request.SaturdayOpenTimeSessionOne, request.SaturdayCloseTimeSessionOne, businessID); err != nil {
-					return err
-				}
-
-				if request.SaturdayOpenTimeSessionTwo != "" && request.SaturdayCloseTimeSessionTwo != "" {
-					if err := l.AddHours("saturday", request.SaturdayOpenTimeSessionTwo, request.SaturdayCloseTimeSessionTwo, businessID); err != nil {
-						return err
-					}
-				}
-			}
-		case HoursSunday:
-			request := day.(HoursSunday)
-			if request.Sunday {
-				if err := l.AddHours("sunday", request.SundayOpenTimeSessionOne, request.SundayCloseTimeSessionOne, businessID); err != nil {
-					return err
-				}
-
-				if request.SundayOpenTimeSessionTwo != "" && request.SundayCloseTimeSessionTwo != "" {
-					if err := l.AddHours("sunday", request.SundayOpenTimeSessionTwo, request.SundayCloseTimeSessionTwo, businessID); err != nil {
-						return err
-					}
 				}
 			}
 		}
