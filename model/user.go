@@ -64,7 +64,8 @@ func (u *userEngine) CheckEmail(email string) (int, error) {
 			return -1, helper.DatabaseError{DBError: err.Error()}
 		}
 	} else {
-		return -1, helper.UserError{Message: fmt.Sprintf("user %s password mismatch", email)}
+		// user does not exist for email
+		return 0, nil
 	}
 
 	if err = rows.Err(); err != nil {

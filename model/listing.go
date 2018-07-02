@@ -48,7 +48,7 @@ type ListingEngine interface {
 		dietaryFilter string,
 		keywords string,
 	) ([]Listing, error)
-	GetAllListings(businessID int) ([]Listing, error)
+	GetAllListings(businessID int, business_type string) ([]Listing, error)
 }
 
 func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessEngine) ListingEngine {
@@ -131,10 +131,12 @@ func (l *listingEngine) AddListingImage(businessName string, imagePath string) {
 
 //listing_id, business_id,
 
-func (l *listingEngine) GetAllListings(businessID int) ([]Listing, error) {
-	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
-		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where "+
-		"business_id = $1;", businessID)
+func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]Listing, error) {
+	getListingsQuery := "SELECT title, old_price, new_price, discount, description," +
+		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where " +
+		"business_id = $1"
+
+	rows, err := l.sql.Query(getListingsQuery, businessID)
 	if err != nil {
 		return []Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
