@@ -47,6 +47,8 @@ type BusinessEngine interface {
 		postalCode string,
 		state string,
 		country string,
+		hoursInfo []Hours,
+		cuisine []string,
 	) (int, error)
 	AddBusinessAddress(
 		street string,
@@ -82,7 +84,10 @@ func (b *businessEngine) AddBusiness(
 	postalCode string,
 	state string,
 	country string,
+	hoursInfo []Hours,
+	cuisine []string,
 ) (int, error) {
+	// check business name unique
 	businessID, err := b.GetBusinessIDFromName(businessName)
 	if err != nil {
 		return 0, err
@@ -92,19 +97,28 @@ func (b *businessEngine) AddBusiness(
 		return 0, helper.DuplicateEntity{BusinessName: businessName}
 	}
 
+	// insert business
 	var lastInsertBusinessID int
-	err = b.sql.QueryRow(insertBusinessSQL, businessName, phone, website).
-		Scan(&lastInsertBusinessID)
+	err = b.sql.QueryRow(insertBusinessSQL, businessName, phone, website).Scan(&lastInsertBusinessID)
 	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
-	b.logger.Infof("business addded successfully with id: %d", lastInsertBusinessID)
 
+	// add business address
 	if err = b.AddBusinessAddress(street, city, postalCode, state, country, lastInsertBusinessID); err != nil {
-		// cleanup
-		go b.DeleteBusinessFromID(lastInsertBusinessID)
-		return 0, nil
+		return 0, err
 	}
+
+	// add business hour
+	if err := b.AddBusinessHours(hoursInfo, lastInsertBusinessID); err != nil {
+		return 0, err
+	}
+
+	// add cuisine
+	if err := b.AddBusinessCuisine(cuisine, lastInsertBusinessID); err != nil {
+		return 0, err
+	}
+
 	b.logger.Infof("business addded successfully with id: %d", lastInsertBusinessID)
 
 	return lastInsertBusinessID, nil

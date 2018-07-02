@@ -2,6 +2,8 @@ package controller
 
 import (
 	"context"
+
+	"github.com/phassans/banana/model"
 )
 
 type (
@@ -14,6 +16,16 @@ type (
 		PostalCode string `json:"postalCode"`
 		State      string `json:"state"`
 		Country    string `json:"country"`
+
+		Hours []struct {
+			Day                 string `json:"day"`
+			OpenTimeSessionOne  string `json:"open_time_session_one,omitempty"`
+			CloseTimeSessionOne string `json:"close_time_session_one,omitempty"`
+			OpenTimeSessionTwo  string `json:"open_time_session_two,omitempty"`
+			CloseTimeSessionTwo string `json:"close_time_session_two,omitempty"`
+		} `json:"hours"`
+
+		Cuisine []string `json:"cuisine,omitempty"`
 	}
 
 	businessResult struct {
@@ -28,6 +40,13 @@ var addBusiness postEndpoint = createBusinessEndpoint{}
 
 func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(businessRequest)
+
+	var hoursInfo []model.Hours
+	for _, day := range request.Hours {
+		h := model.Hours{day.Day, day.OpenTimeSessionOne, day.CloseTimeSessionOne, day.OpenTimeSessionTwo, day.CloseTimeSessionTwo}
+		hoursInfo = append(hoursInfo, h)
+	}
+
 	_, err := rtr.engines.AddBusiness(
 		request.Name,
 		request.Phone,
@@ -37,8 +56,11 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.PostalCode,
 		request.State,
 		request.Country,
+		hoursInfo,
+		request.Cuisine,
 	)
 	result := businessResult{businessRequest: request, Error: NewAPIError(err)}
+
 	return result, err
 }
 
