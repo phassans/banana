@@ -2,19 +2,24 @@ package controller
 
 import (
 	"context"
+
+	"github.com/phassans/banana/model"
 )
 
 type (
 	listingADDRequest struct {
-		Title        string  `json:"title"`
-		Description  string  `json:"description"`
-		OldPrice     float64 `json:"oldPrice"`
-		NewPrice     float64 `json:"newPrice"`
-		ListingDate  string  `json:"listingDate"`
-		StartTime    string  `json:"startTime"`
-		EndTime      string  `json:"endTime"`
-		BusinessName string  `json:"businessName"`
-		Recurring    bool    `json:"recurring"`
+		Title              string   `json:"title"`
+		OldPrice           float64  `json:"oldPrice"`
+		NewPrice           float64  `json:"newPrice"`
+		DietaryRestriction []string `json:"dietaryRestriction,omitempty"`
+		Description        string   `json:"description"`
+		StartDate          string   `json:"startDate"`
+		EndDate            string   `json:"endDate"`
+		StartTime          string   `json:"startTime"`
+		EndTime            string   `json:"endTime"`
+		BusinessID         int      `json:"businessID"`
+		Recurring          bool     `json:"recurring"`
+		RecurringDays      []string `json:"recurringDays,omitempty"`
 	}
 
 	listingADDResult struct {
@@ -29,17 +34,24 @@ var addListing postEndpoint = addListingEndpoint{}
 
 func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingADDRequest)
-	err := rtr.engines.AddListing(
+
+	l := model.Listing{
 		request.Title,
-		request.Description,
 		request.OldPrice,
 		request.NewPrice,
-		request.ListingDate,
+		request.DietaryRestriction,
+		request.Description,
+		request.StartDate,
+		request.EndDate,
 		request.StartTime,
 		request.EndTime,
+		request.BusinessID,
 		request.Recurring,
-		request.BusinessName,
-	)
+		request.RecurringDays,
+		1,
+	}
+
+	err := rtr.engines.AddListing(l)
 	result := listingADDResult{listingADDRequest: request, Error: NewAPIError(err)}
 	return result, err
 }

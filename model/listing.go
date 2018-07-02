@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/phassans/banana/helper"
@@ -17,42 +18,24 @@ type (
 	}
 
 	Listing struct {
-		ListingID   int
-		BusinessID  int
-		Title       string
-		Description string
-		OldPrice    float64
-		NewPrice    float64
-		ListingDate string
-		StartTime   string
-		EndTime     string
-		Recurring   bool
-	}
-
-	AddressGeo struct {
-		AddressID  int
-		BusinessID int
-		Latitude   float64
-		Longitude  float64
+		Title              string
+		OldPrice           float64
+		NewPrice           float64
+		DietaryRestriction []string
+		Description        string
+		StartDate          string
+		EndDate            string
+		StartTime          string
+		EndTime            string
+		BusinessID         int
+		Recurring          bool
+		RecurringDays      []string
+		ListingID          int
 	}
 )
 
-const insertListingSQL = "INSERT INTO listing(title, description, old_price, new_price, " +
-	"listing_date, start_time, end_time, business_id, recurring, listing_create_date) " +
-	"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning listing_id"
-
 type ListingEngine interface {
-	AddListing(
-		title string,
-		description string,
-		oldPrice float64,
-		newPrice float64,
-		listingDate string,
-		startTime string,
-		endTime string,
-		recurring bool,
-		businessName string,
-	) error
+	AddListing(listing Listing) error
 	AddListingImage(businessName string, imagePath string)
 	AddListingDietaryRestrictions(listingTitle string, dietaryRestriction string)
 	AddListingRecurringInfo(listingTitle string, day string, startTime string, endTime string)
@@ -71,37 +54,73 @@ func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessE
 	return &listingEngine{psql, logger, businessEngine}
 }
 
-func (l *listingEngine) AddListing(
-	title string,
-	description string,
-	oldPrice float64,
-	newPrice float64,
-	listingDate string,
-	startTime string,
-	endTime string,
-	recurring bool,
-	businessName string,
-) error {
-	businessID, err := l.businessEngine.GetBusinessIDFromName(businessName)
+func (l *listingEngine) AddListing(listing Listing) error {
+	businessName, err := l.businessEngine.GetBusinessFromID(listing.BusinessID)
 	if err != nil {
 		return err
 	}
 
-	if businessID == 0 {
-		return helper.BusinessDoesNotExist{BusinessName: businessName}
+	if businessName == "" {
+		return helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", listing.BusinessID)}
 	}
 
 	var listingID int
+	const insertListingSQL = "INSERT INTO listing(business_id, title, old_price, new_price, description," +
+		"start_date, end_date, start_time, end_time, recurring, listing_create_date) " +
+		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning listing_id"
 
-	err = l.sql.QueryRow(insertListingSQL, title, description, oldPrice, newPrice,
-		listingDate, startTime, endTime, businessID, recurring, time.Now()).
+	err = l.sql.QueryRow(insertListingSQL, listing.BusinessID, listing.Title, listing.OldPrice, listing.NewPrice,
+		listing.Description, listing.StartDate, listing.EndDate, listing.StartTime, listing.EndTime,
+		listing.Recurring, time.Now()).
 		Scan(&listingID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
 
-	l.logger.Infof("successfully added a listing %s for business: %s", title, businessName)
+	if listing.Recurring {
+		for _, day := range listing.RecurringDays {
+			if err := l.AddRecurring(listingID, day); err != nil {
+				return err
+			}
+		}
+	}
 
+	if len(listing.DietaryRestriction) > 0 {
+		for _, restriction := range listing.DietaryRestriction {
+			if err := l.AddDietaryRestriction(listingID, restriction); err != nil {
+				return err
+			}
+		}
+	}
+
+	l.logger.Infof("successfully added a listing %s for business: %s", listing.Title, businessName)
+
+	return nil
+}
+
+func (l *listingEngine) AddRecurring(listingID int, day string) error {
+	addListingRecurringSQL := "INSERT INTO recurring_listing(listing_id,day) " +
+		"VALUES($1,$2);"
+
+	_, err := l.sql.Query(addListingRecurringSQL, listingID, day)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	l.logger.Infof("add recurring successful for listing:%d", listingID)
+	return nil
+}
+
+func (l *listingEngine) AddDietaryRestriction(listingID int, restriction string) error {
+	addListingDietRestrictionSQL := "INSERT INTO listing_dietary_restrictions(listing_id,restriction) " +
+		"VALUES($1,$2);"
+
+	_, err := l.sql.Query(addListingDietRestrictionSQL, listingID, restriction)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	l.logger.Infof("add listing_dietary_restrictions successful for listing:%d", listingID)
 	return nil
 }
 
@@ -200,7 +219,7 @@ func (l *listingEngine) GetAllListingsFromBusinessID(businessID int) ([]Listing,
 			&listing.Description,
 			&listing.OldPrice,
 			&listing.NewPrice,
-			&listing.ListingDate,
+			&listing.StartDate,
 			&listing.StartTime,
 			&listing.EndTime,
 			&listing.Recurring,

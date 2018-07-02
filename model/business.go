@@ -16,6 +16,13 @@ type businessEngine struct {
 	logger xlog.Logger
 }
 
+type AddressGeo struct {
+	AddressID  int
+	BusinessID int
+	Latitude   float64
+	Longitude  float64
+}
+
 const (
 	insertBusinessSQL = "INSERT INTO business(name,phone,website) " +
 		"VALUES($1,$2,$3) returning business_id;"
@@ -55,6 +62,7 @@ type BusinessEngine interface {
 
 	// Select
 	GetBusinessIDFromName(businessName string) (int, error)
+	GetBusinessFromID(businessID int) (string, error)
 
 	// Delete
 	DeleteBusinessFromID(businessID int) error

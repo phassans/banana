@@ -11,7 +11,7 @@ CREATE TYPE days_of_month AS ENUM (
 CREATE TYPE dietary_restrictions AS ENUM (
   'gluten_free',
   'vegan',
-  'vegetarian'
+  'vegetarian',
   'spicy'
 );
 
@@ -106,10 +106,11 @@ CREATE TABLE IF NOT EXISTS listing
   listing_id          SERIAL UNIQUE,
   business_id         INT       NOT NULL,
   title               TEXT      NOT NULL,
-  description         TEXT,
   old_price           DECIMAL   NOT NULL,
   new_price           DECIMAL   NOT NULL,
-  listing_date        DATE      NOT NULL,
+  description         TEXT,
+  start_date          DATE      NOT NULL,
+  end_date            DATE      NOT NULL,
   start_time          TIME,
   end_time            TIME,
   recurring           BOOLEAN   NOT NULL,
