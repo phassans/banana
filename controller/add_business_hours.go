@@ -43,7 +43,7 @@ func (r addBusinessHourEndpoint) Execute(ctx context.Context, rtr *router, reque
 
 	err := rtr.engines.AddBusinessHours(hoursInfo, request.BusinessID)
 	result := addBusinessHourResponse{addBusinessHourRequest: request, Error: NewAPIError(err)}
-	return result, nil
+	return result, err
 }
 
 func (r addBusinessHourEndpoint) Validate(request interface{}) error {

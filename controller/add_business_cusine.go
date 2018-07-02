@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 )
 
 type (
@@ -23,13 +22,10 @@ var addBusinessCuisine postEndpoint = addBusinessCuisineEndpoint{}
 
 func (r addBusinessCuisineEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(addBusinessCuisineRequest)
-	if err := r.Validate(requestI); err != nil {
-		return nil, err
-	}
-	fmt.Printf("cuisine: %s", request.Cuisine)
 
-	result := addBusinessCuisineResponse{addBusinessCuisineRequest: request, Error: NewAPIError(nil)}
-	return result, nil
+	err := rtr.engines.AddBusinessCuisine(request.Cuisine, request.BusinessID)
+	result := addBusinessCuisineResponse{addBusinessCuisineRequest: request, Error: NewAPIError(err)}
+	return result, err
 }
 
 func (r addBusinessCuisineEndpoint) Validate(request interface{}) error {

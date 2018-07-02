@@ -41,7 +41,7 @@ func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		request.BusinessName,
 	)
 	result := listingADDResult{listingADDRequest: request, Error: NewAPIError(err)}
-	return result, nil
+	return result, err
 }
 
 func (r addListingEndpoint) Validate(request interface{}) error {

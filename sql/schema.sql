@@ -33,6 +33,13 @@ CREATE TABLE IF NOT EXISTS business_hours
   FOREIGN KEY (business_id) REFERENCES business (business_id)
 );
 
+CREATE TABLE IF NOT EXISTS business_cuisine
+(
+  business_id INT  NULL,
+  cuisine     TEXT NOT NULL,
+  FOREIGN KEY (business_id) REFERENCES business (business_id)
+);
+
 CREATE TABLE IF NOT EXISTS business_user
 (
   user_id  SERIAL,
@@ -63,7 +70,7 @@ CREATE TABLE IF NOT EXISTS address
 (
   address_id    SERIAL UNIQUE,
   business_id   INT  NULL,
-  street         TEXT NOT NULL,
+  street        TEXT NOT NULL,
   city          TEXT NOT NULL,
   postal_code   INT  NOT NULL,
   state         TEXT NOT NULL,

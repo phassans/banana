@@ -32,7 +32,7 @@ func (r verifyUserEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 
 	userID, err := rtr.engines.VerifyUser(request.Email, request.Password)
 	result := verifyUserResponse{verifyUserRequest: request, UserID: userID, Error: NewAPIError(err)}
-	return result, nil
+	return result, err
 }
 
 func (r verifyUserEndpoint) Validate(request interface{}) error {

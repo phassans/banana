@@ -39,7 +39,7 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.Country,
 	)
 	result := businessResult{businessRequest: request, Error: NewAPIError(err)}
-	return result, nil
+	return result, err
 }
 
 func (r createBusinessEndpoint) Validate(request interface{}) error {

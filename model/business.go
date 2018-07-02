@@ -30,6 +30,7 @@ const (
 )
 
 type BusinessEngine interface {
+	// Add
 	AddBusiness(
 		businessName string,
 		phone string,
@@ -40,7 +41,6 @@ type BusinessEngine interface {
 		state string,
 		country string,
 	) (int, error)
-
 	AddBusinessAddress(
 		street string,
 		city string,
@@ -49,17 +49,16 @@ type BusinessEngine interface {
 		country string,
 		businessID int,
 	) error
-
 	AddGeoInfo(address string, addressID int, businessID int) error
+	AddBusinessHours([]Hours, int) error
+	AddBusinessCuisine(cuisines []string, businessID int) error
 
+	// Select
 	GetBusinessIDFromName(businessName string) (int, error)
 
-	// TBD
-	AddBusinessHours([]Hours, int) error
-	AddBusinessImage(businessName string, imagePath string)
-
-	DeleteBusinessFromID(business_id int) error
-	DeleteBusinessAddressFromID(business_id int) error
+	// Delete
+	DeleteBusinessFromID(businessID int) error
+	DeleteBusinessAddressFromID(businessID int) error
 }
 
 func NewBusinessEngine(psql *sql.DB, logger xlog.Logger) BusinessEngine {
@@ -192,8 +191,36 @@ func (l *businessEngine) AddHours(day string, openTime string, closeTime string,
 	return nil
 }
 
-func (l *businessEngine) AddBusinessImage(businessName string, imagePath string) {
-	return
+func (l *businessEngine) AddBusinessCuisine(cuisines []string, businessID int) error {
+	businessName, err := l.GetBusinessFromID(businessID)
+	if err != nil {
+		return err
+	}
+
+	if businessName == "" {
+		return helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", businessID)}
+	}
+
+	for _, cuisine := range cuisines {
+		if err := l.AddCuisine(businessID, cuisine); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (l *businessEngine) AddCuisine(businessID int, cuisine string) error {
+	addBusinessCuisineSQL := "INSERT INTO business_cuisine(business_id,cuisine) " +
+		"VALUES($1,$2);"
+
+	_, err := l.sql.Query(addBusinessCuisineSQL, businessID, cuisine)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	l.logger.Infof("add cuisine successful for businessID:%d", businessID)
+	return nil
 }
 
 func (l *businessEngine) GetBusinessIDFromName(businessName string) (int, error) {
@@ -242,18 +269,18 @@ func (l *businessEngine) GetBusinessFromID(businessID int) (string, error) {
 	return businessName, nil
 }
 
-func (b *businessEngine) DeleteBusinessAddressFromID(address_id int) error {
+func (b *businessEngine) DeleteBusinessAddressFromID(addressID int) error {
 	sqlStatement := `DELETE FROM address WHERE address_id = $1;`
-	b.logger.Infof("deleting address with query: %s and business_id: %d", sqlStatement, address_id)
+	b.logger.Infof("deleting address with query: %s and business_id: %d", sqlStatement, addressID)
 
-	_, err := b.sql.Exec(sqlStatement, address_id)
+	_, err := b.sql.Exec(sqlStatement, addressID)
 	return err
 }
 
-func (b *businessEngine) DeleteBusinessFromID(business_id int) error {
+func (b *businessEngine) DeleteBusinessFromID(businessID int) error {
 	sqlStatement := `DELETE FROM business WHERE business_id = $1;`
-	b.logger.Infof("deleting business with query: %s and business_id: %d", sqlStatement, business_id)
+	b.logger.Infof("deleting business with query: %s and business_id: %d", sqlStatement, businessID)
 
-	_, err := b.sql.Exec(sqlStatement, business_id)
+	_, err := b.sql.Exec(sqlStatement, businessID)
 	return err
 }
