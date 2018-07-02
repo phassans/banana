@@ -26,9 +26,17 @@ func NewUserEngine(psql *sql.DB, logger xlog.Logger) UserEngine {
 }
 
 func (u *userEngine) AddUser(name string, email string, password string, phone string) error {
-	var userID int
+	// check business name unique
+	userID, err := u.CheckEmail(email)
+	if err != nil {
+		return err
+	}
 
-	err := u.sql.QueryRow("INSERT INTO business_user(name,email,password,phone) "+
+	if userID != 0 {
+		return helper.DuplicateEntity{Name: email}
+	}
+
+	err = u.sql.QueryRow("INSERT INTO business_user(name,email,password,phone) "+
 		"VALUES($1,$2,$3,$4) returning user_id;",
 		name, email, GetMD5Hash(password), phone).Scan(&userID)
 	if err != nil {
@@ -38,6 +46,32 @@ func (u *userEngine) AddUser(name string, email string, password string, phone s
 	u.logger.Infof("successfully added a user with ID: %d", userID)
 
 	return nil
+}
+
+func (u *userEngine) CheckEmail(email string) (int, error) {
+	rows, err := u.sql.Query("SELECT user_id FROM business_user where "+
+		"email = $1;", email)
+	if err != nil {
+		return -1, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var userID int
+	if rows.Next() {
+		err := rows.Scan(&userID)
+		if err != nil {
+			return -1, helper.DatabaseError{DBError: err.Error()}
+		}
+	} else {
+		return -1, helper.UserError{Message: fmt.Sprintf("user %s password mismatch", email)}
+	}
+
+	if err = rows.Err(); err != nil {
+		return -1, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return userID, nil
 }
 
 func (u *userEngine) VerifyUser(email string, password string) (int, error) {

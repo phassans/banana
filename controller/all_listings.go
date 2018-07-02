@@ -2,20 +2,32 @@ package controller
 
 import (
 	"context"
-	"net/url"
 )
 
-type listingsEndpoint struct{}
+type (
+	listingAllRequest struct {
+		BusinessID int `json:"businessID"`
+	}
 
-func (r listingsEndpoint) GetPath() string { return "/listings" }
-func (r listingsEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
-	permissions, err := getListings()
-	return permissions, err
+	allListingEndpoint struct{}
+)
+
+var allListingAdmin postEndpoint = allListingEndpoint{}
+
+func (r allListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
+	request := requestI.(listingAllRequest)
+
+	return rtr.engines.GetAllListings(request.BusinessID)
 }
 
-func getListings() ([]string, error) {
-	listings := []string{"listing1"}
-	return listings, nil
+func (r allListingEndpoint) Validate(request interface{}) error {
+	return nil
 }
 
-var allListings getEndPoint = listingsEndpoint{}
+func (r allListingEndpoint) GetPath() string {
+	return "/listing/all"
+}
+
+func (r allListingEndpoint) HTTPRequest() interface{} {
+	return listingAllRequest{}
+}

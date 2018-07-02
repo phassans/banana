@@ -94,7 +94,7 @@ func (b *businessEngine) AddBusiness(
 	}
 
 	if businessID != 0 {
-		return 0, helper.DuplicateEntity{BusinessName: businessName}
+		return 0, helper.DuplicateEntity{Name: businessName}
 	}
 
 	// insert business

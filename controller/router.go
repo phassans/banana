@@ -42,7 +42,7 @@ type (
 var (
 	// getEndpoints lists all the GET endpoints.
 	getEndpoints = []getEndPoint{
-		allListings,
+	//allListings,
 	}
 
 	// createEndpoints lists POST endpoints that create records.
@@ -52,6 +52,7 @@ var (
 		addListing,
 		allListing,
 		verifyUser,
+		allListingAdmin,
 	}
 )
 

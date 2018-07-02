@@ -21,6 +21,7 @@ type (
 		Title              string
 		OldPrice           float64
 		NewPrice           float64
+		Discount           float64
 		DietaryRestriction []string
 		Description        string
 		StartDate          string
@@ -31,14 +32,13 @@ type (
 		Recurring          bool
 		RecurringDays      []string
 		ListingID          int
+		Type               string
 	}
 )
 
 type ListingEngine interface {
 	AddListing(listing Listing) error
 	AddListingImage(businessName string, imagePath string)
-	AddListingDietaryRestrictions(listingTitle string, dietaryRestriction string)
-	AddListingRecurringInfo(listingTitle string, day string, startTime string, endTime string)
 
 	GetAllListingsInRange(
 		latitude float64,
@@ -48,6 +48,7 @@ type ListingEngine interface {
 		dietaryFilter string,
 		keywords string,
 	) ([]Listing, error)
+	GetAllListings(businessID int) ([]Listing, error)
 }
 
 func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessEngine) ListingEngine {
@@ -65,13 +66,13 @@ func (l *listingEngine) AddListing(listing Listing) error {
 	}
 
 	var listingID int
-	const insertListingSQL = "INSERT INTO listing(business_id, title, old_price, new_price, description," +
-		"start_date, end_date, start_time, end_time, recurring, listing_create_date) " +
-		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning listing_id"
+	const insertListingSQL = "INSERT INTO listing(business_id, title, old_price, new_price, discount, description," +
+		"start_date, end_date, start_time, end_time, recurring, listing_type, listing_create_date) " +
+		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning listing_id"
 
-	err = l.sql.QueryRow(insertListingSQL, listing.BusinessID, listing.Title, listing.OldPrice, listing.NewPrice,
-		listing.Description, listing.StartDate, listing.EndDate, listing.StartTime, listing.EndTime,
-		listing.Recurring, time.Now()).
+	err = l.sql.QueryRow(insertListingSQL, listing.BusinessID, listing.Title, listing.OldPrice, listing.NewPrice, listing.Discount,
+		listing.Description, listing.StartDate, listing.EndDate, listing.StartTime, listing.EndTime, listing.Recurring,
+		listing.Type, time.Now()).
 		Scan(&listingID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
@@ -128,12 +129,115 @@ func (l *listingEngine) AddListingImage(businessName string, imagePath string) {
 	return
 }
 
-func (l *listingEngine) AddListingDietaryRestrictions(listingTitle string, dietaryRestriction string) {
-	return
+//listing_id, business_id,
+
+func (l *listingEngine) GetAllListings(businessID int) ([]Listing, error) {
+	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
+		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where "+
+		"business_id = $1;", businessID)
+	if err != nil {
+		return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+	}
+	defer rows.Close()
+
+	var listings []Listing
+	for rows.Next() {
+		var listing Listing
+		err := rows.Scan(
+			&listing.Title,
+			&listing.OldPrice,
+			&listing.NewPrice,
+			&listing.Discount,
+			&listing.Description,
+			&listing.StartDate,
+			&listing.EndDate,
+			&listing.StartTime,
+			&listing.EndTime,
+			&listing.Recurring,
+			&listing.Type,
+			&listing.BusinessID,
+			&listing.ListingID,
+		)
+		if err != nil {
+			return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+		}
+
+		// add dietary req's
+		reqs, err := l.GetDietaryRestriction(listing.ListingID)
+		if err != nil {
+			return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+		}
+		listing.DietaryRestriction = reqs
+
+		// add recurring listing
+		recurring, err := l.GetRecurringListing(listing.ListingID)
+		if err != nil {
+			return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+		}
+		listing.RecurringDays = recurring
+
+		listings = append(listings, listing)
+	}
+
+	if err = rows.Err(); err != nil {
+		return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return listings, nil
 }
 
-func (l *listingEngine) AddListingRecurringInfo(listingTitle string, day string, startTime string, endTime string) {
-	return
+func (l *listingEngine) GetDietaryRestriction(listingID int) ([]string, error) {
+	rows, err := l.sql.Query("SELECT restriction FROM listing_dietary_restrictions where "+
+		"listing_id = $1;", listingID)
+	if err != nil {
+		return []string{}, helper.DatabaseError{DBError: err.Error()}
+	}
+	defer rows.Close()
+
+	var dietaryReqs []string
+	for rows.Next() {
+		var diet string
+		err := rows.Scan(
+			&diet,
+		)
+		if err != nil {
+			return []string{}, helper.DatabaseError{DBError: err.Error()}
+		}
+		dietaryReqs = append(dietaryReqs, diet)
+	}
+
+	if err = rows.Err(); err != nil {
+		return []string{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return dietaryReqs, nil
+}
+
+func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
+	rows, err := l.sql.Query("SELECT day FROM recurring_listing where "+
+		"listing_id = $1;", listingID)
+	if err != nil {
+		return []string{}, helper.DatabaseError{DBError: err.Error()}
+	}
+	defer rows.Close()
+
+	var days []string
+	for rows.Next() {
+		var day string
+		err := rows.Scan(
+			&day,
+		)
+		if err != nil {
+			return []string{}, helper.DatabaseError{DBError: err.Error()}
+		}
+		days = append(days, day)
+	}
+
+	if err = rows.Err(); err != nil {
+		return []string{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return days, nil
 }
 
 func (l *listingEngine) GetAllListingsInRange(
@@ -160,7 +264,7 @@ func (l *listingEngine) GetAllListingsInRange(
 
 		// TBD: sort on miles
 		if mi > 5.0 {
-			listingsFromBusinessID, err := l.GetAllListingsFromBusinessID(geo.BusinessID)
+			listingsFromBusinessID, err := l.GetAllListingsFromBusinessIDWithDateTime(geo.BusinessID)
 			if err != nil {
 				return nil, err
 			}
@@ -196,7 +300,7 @@ func (l *listingEngine) GetAllListingsLatLon() ([]AddressGeo, error) {
 	return geoAddresses, nil
 }
 
-func (l *listingEngine) GetAllListingsFromBusinessID(businessID int) ([]Listing, error) {
+func (l *listingEngine) GetAllListingsFromBusinessIDWithDateTime(businessID int) ([]Listing, error) {
 	currentDate := time.Now().Format("2006-01-02")
 	currentTime := time.Now().Format("15:04:05.000000")
 

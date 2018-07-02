@@ -108,12 +108,14 @@ CREATE TABLE IF NOT EXISTS listing
   title               TEXT      NOT NULL,
   old_price           DECIMAL   NOT NULL,
   new_price           DECIMAL   NOT NULL,
+  discount            DECIMAL   NOT NULL,
   description         TEXT,
   start_date          DATE      NOT NULL,
   end_date            DATE      NOT NULL,
   start_time          TIME,
   end_time            TIME,
   recurring           BOOLEAN   NOT NULL,
+  listing_type        TEXT      NOT NULL,
   listing_create_date TIMESTAMP NOT NULL,
   PRIMARY KEY (listing_id),
   FOREIGN KEY (business_id) REFERENCES business (business_id)
@@ -156,39 +158,5 @@ CREATE TABLE IF NOT EXISTS favourites
   FOREIGN KEY (business_id) REFERENCES business (business_id),
   FOREIGN KEY (listing_id) REFERENCES listing (listing_id)
 );
-
-CREATE TABLE IF NOT EXISTS happy_hour
-(
-  happy_hour_id       SERIAL,
-  business_id         INT       NOT NULL,
-  title               TEXT      NOT NULL,
-  description         TEXT,
-  percentage_discount DECIMAL   NOT NULL,
-  listing_date        DATE      NOT NULL,
-  start_time          TIME,
-  end_time            TIME,
-  recurring           BOOLEAN   NOT NULL,
-  listing_create_date TIMESTAMP NOT NULL,
-  PRIMARY KEY (happy_hour_id),
-  FOREIGN KEY (business_id) REFERENCES business (business_id)
-);
-
-CREATE TABLE IF NOT EXISTS happy_hour_listing
-(
-  happy_hour_id INT           NULL,
-  day           days_of_month NOT NULL,
-  PRIMARY KEY (happy_hour_id, day),
-  FOREIGN KEY (happy_hour_id) REFERENCES happy_hour (happy_hour_id)
-);
-
-CREATE TABLE IF NOT EXISTS happy_hour_image
-(
-  image_id      SERIAL,
-  happy_hour_id INT  NOT NULL,
-  path          TEXT NOT NULL,
-  PRIMARY KEY (image_id, happy_hour_id),
-  FOREIGN KEY (happy_hour_id) REFERENCES happy_hour (happy_hour_id)
-);
-
 
 INSERT INTO country (name) VALUES ('USA');

@@ -33,7 +33,7 @@ func (b BusinessError) Error() string {
 }
 
 type DuplicateEntity struct {
-	BusinessName string `json:"name,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 func (e DuplicateEntity) Error() string {

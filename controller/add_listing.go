@@ -9,8 +9,9 @@ import (
 type (
 	listingADDRequest struct {
 		Title              string   `json:"title"`
-		OldPrice           float64  `json:"oldPrice"`
+		OldPrice           float64  `json:"oldPrice,omitempty"`
 		NewPrice           float64  `json:"newPrice"`
+		Discount           float64  `json:"discount,omitempty"`
 		DietaryRestriction []string `json:"dietaryRestriction,omitempty"`
 		Description        string   `json:"description"`
 		StartDate          string   `json:"startDate"`
@@ -20,6 +21,7 @@ type (
 		BusinessID         int      `json:"businessID"`
 		Recurring          bool     `json:"recurring"`
 		RecurringDays      []string `json:"recurringDays,omitempty"`
+		Type               string   `json:"type"`
 	}
 
 	listingADDResult struct {
@@ -36,19 +38,20 @@ func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 	request := requestI.(listingADDRequest)
 
 	l := model.Listing{
-		request.Title,
-		request.OldPrice,
-		request.NewPrice,
-		request.DietaryRestriction,
-		request.Description,
-		request.StartDate,
-		request.EndDate,
-		request.StartTime,
-		request.EndTime,
-		request.BusinessID,
-		request.Recurring,
-		request.RecurringDays,
-		1,
+		Title:              request.Title,
+		OldPrice:           request.OldPrice,
+		NewPrice:           request.NewPrice,
+		Discount:           request.Discount,
+		DietaryRestriction: request.DietaryRestriction,
+		Description:        request.Description,
+		StartDate:          request.StartDate,
+		EndDate:            request.EndDate,
+		StartTime:          request.StartTime,
+		EndTime:            request.EndTime,
+		BusinessID:         request.BusinessID,
+		Recurring:          request.Recurring,
+		RecurringDays:      request.RecurringDays,
+		Type:               request.Type,
 	}
 
 	err := rtr.engines.AddListing(l)
