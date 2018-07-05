@@ -148,14 +148,12 @@ CREATE TABLE IF NOT EXISTS listing_dietary_restrictions
   FOREIGN KEY (listing_id) REFERENCES listing (listing_id)
 );
 
-CREATE TABLE IF NOT EXISTS favourites
+CREATE TABLE IF NOT EXISTS favorites
 (
-  favourite_id SERIAL,
+  favorite_id SERIAL,
   phone_id     TEXT NOT NULL,
   listing_id   INT  NULL,
-  business_id  INT  NOT NULL,
-  PRIMARY KEY (favourite_id, phone_id),
-  FOREIGN KEY (business_id) REFERENCES business (business_id),
+  PRIMARY KEY (favorite_id, phone_id),
   FOREIGN KEY (listing_id) REFERENCES listing (listing_id)
 );
 

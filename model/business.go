@@ -16,12 +16,34 @@ type businessEngine struct {
 	logger xlog.Logger
 }
 
-type AddressGeo struct {
-	AddressID  int
-	BusinessID int
-	Latitude   float64
-	Longitude  float64
-}
+type (
+	AddressGeo struct {
+		AddressID  int
+		BusinessID int
+		Latitude   float64
+		Longitude  float64
+	}
+
+	Business struct {
+		Name    string
+		Phone   string
+		Website string
+	}
+
+	BusinessAddress struct {
+		Street     string
+		City       string
+		PostalCode string
+		State      string
+		BusinessID int
+	}
+
+	BusinessInfo struct {
+		Business        Business
+		BusinessAddress BusinessAddress
+		Hours           []Bhour
+	}
+)
 
 const (
 	insertBusinessSQL = "INSERT INTO business(name,phone,website) " +
@@ -64,7 +86,9 @@ type BusinessEngine interface {
 
 	// Select
 	GetBusinessIDFromName(businessName string) (int, error)
-	GetBusinessFromID(businessID int) (string, error)
+	GetBusinessFromID(businessID int) (Business, error)
+	GetBusinessAddressFromID(businessID int) (BusinessAddress, error)
+	GetBusinessInfo(businessID int) (BusinessInfo, error)
 
 	// Delete
 	DeleteBusinessFromID(businessID int) error
@@ -173,12 +197,12 @@ func (l *businessEngine) AddGeoInfo(address string, addressID int, businessID in
 }
 
 func (l *businessEngine) AddBusinessHours(days []Hours, businessID int) error {
-	businessName, err := l.GetBusinessFromID(businessID)
+	business, err := l.GetBusinessFromID(businessID)
 	if err != nil {
 		return err
 	}
 
-	if businessName == "" {
+	if business.Name == "" {
 		return helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", businessID)}
 	}
 
@@ -214,12 +238,12 @@ func (l *businessEngine) AddHours(day string, openTime string, closeTime string,
 }
 
 func (l *businessEngine) AddBusinessCuisine(cuisines []string, businessID int) error {
-	businessName, err := l.GetBusinessFromID(businessID)
+	business, err := l.GetBusinessFromID(businessID)
 	if err != nil {
 		return err
 	}
 
-	if businessName == "" {
+	if business.Name == "" {
 		return helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", businessID)}
 	}
 
@@ -268,27 +292,95 @@ func (l *businessEngine) GetBusinessIDFromName(businessName string) (int, error)
 	return id, nil
 }
 
-func (l *businessEngine) GetBusinessFromID(businessID int) (string, error) {
-	rows, err := l.sql.Query("SELECT name FROM business where business_id = $1;", businessID)
+func (l *businessEngine) GetBusinessFromID(businessID int) (Business, error) {
+	rows, err := l.sql.Query("SELECT name, phone, website FROM business where business_id = $1;", businessID)
 	if err != nil {
-		return "", helper.DatabaseError{DBError: err.Error()}
+		return Business{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	defer rows.Close()
 
-	var businessName string
+	var business Business
 	if rows.Next() {
-		err := rows.Scan(&businessName)
+		err := rows.Scan(&business.Name, &business.Phone, &business.Website)
 		if err != nil {
-			return "", helper.DatabaseError{DBError: err.Error()}
+			return Business{}, helper.DatabaseError{DBError: err.Error()}
 		}
 	}
 
 	if err = rows.Err(); err != nil {
-		return "", helper.DatabaseError{DBError: err.Error()}
+		return Business{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	return businessName, nil
+	return business, nil
+}
+
+func (l *businessEngine) GetBusinessAddressFromID(businessID int) (BusinessAddress, error) {
+	rows, err := l.sql.Query("SELECT street, city, postal_code, state FROM address where business_id = $1;", businessID)
+	if err != nil {
+		return BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var businessAddress BusinessAddress
+	if rows.Next() {
+		err := rows.Scan(&businessAddress.Street, &businessAddress.City, &businessAddress.PostalCode, &businessAddress.State)
+		if err != nil {
+			return BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return businessAddress, nil
+}
+
+func (l *businessEngine) GetBusinessHoursFromID(businessID int) ([]Bhour, error) {
+	rows, err := l.sql.Query("SELECT day, open_time, close_time FROM business_hours where business_id = $1;", businessID)
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var businessHours []Bhour
+	for rows.Next() {
+		var businessHour Bhour
+		err := rows.Scan(&businessHour.Day, &businessHour.OpenTime, &businessHour.CloseTime)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		businessHours = append(businessHours, businessHour)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return businessHours, nil
+}
+
+func (l *businessEngine) GetBusinessInfo(businessID int) (BusinessInfo, error) {
+	business, err := l.GetBusinessFromID(businessID)
+	if err != nil {
+		return BusinessInfo{}, err
+	}
+
+	businessAddress, err := l.GetBusinessAddressFromID(businessID)
+	if err != nil {
+		return BusinessInfo{}, err
+	}
+
+	businessHours, err := l.GetBusinessHoursFromID(businessID)
+	if err != nil {
+		return BusinessInfo{}, err
+	}
+
+	return BusinessInfo{Business: business, BusinessAddress: businessAddress, Hours: businessHours}, nil
+
 }
 
 func (b *businessEngine) DeleteBusinessAddressFromID(addressID int) error {

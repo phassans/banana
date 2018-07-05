@@ -26,8 +26,9 @@ func main() {
 	userEngine := model.NewUserEngine(roach.Db, logger)
 	businessEngine := model.NewBusinessEngine(roach.Db, logger)
 	listingEngine := model.NewListingEngine(roach.Db, logger, businessEngine)
+	favouriteEngine := model.NewFavoriteEngine(roach.Db, logger, businessEngine, listingEngine)
 
-	engines := model.NewGenericEngine(businessEngine, userEngine, listingEngine)
+	engines := model.NewGenericEngine(businessEngine, userEngine, listingEngine, favouriteEngine)
 
 	// start the server
 	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: route.APIServerHandler(engines)}

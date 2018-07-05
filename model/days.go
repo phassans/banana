@@ -13,4 +13,10 @@ type (
 		BusinessID int
 		HoursInfo  []Hours
 	}
+
+	Bhour struct {
+		Day       string
+		OpenTime  string
+		CloseTime string
+	}
 )

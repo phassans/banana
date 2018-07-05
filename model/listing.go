@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/phassans/banana/helper"
@@ -34,21 +35,30 @@ type (
 		ListingID          int
 		Type               string
 	}
+
+	ListingInfo struct {
+		BusinessInfo
+		Listing
+	}
 )
 
 type ListingEngine interface {
 	AddListing(listing Listing) error
 	AddListingImage(businessName string, imagePath string)
 
-	GetAllListingsInRange(
+	GetAllListingsForLocation(
+		listingType string,
 		latitude float64,
 		longitude float64,
 		zipCode int,
 		priceFilter string,
 		dietaryFilter string,
 		keywords string,
+		sortBy string,
 	) ([]Listing, error)
 	GetAllListings(businessID int, business_type string) ([]Listing, error)
+	GetListingByID(listingID int) (Listing, error)
+	GetListingInfo(listingID int) (ListingInfo, error)
 }
 
 func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessEngine) ListingEngine {
@@ -56,12 +66,12 @@ func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessE
 }
 
 func (l *listingEngine) AddListing(listing Listing) error {
-	businessName, err := l.businessEngine.GetBusinessFromID(listing.BusinessID)
+	business, err := l.businessEngine.GetBusinessFromID(listing.BusinessID)
 	if err != nil {
 		return err
 	}
 
-	if businessName == "" {
+	if business.Name == "" {
 		return helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", listing.BusinessID)}
 	}
 
@@ -94,7 +104,7 @@ func (l *listingEngine) AddListing(listing Listing) error {
 		}
 	}
 
-	l.logger.Infof("successfully added a listing %s for business: %s", listing.Title, businessName)
+	l.logger.Infof("successfully added a listing %s for business: %s", listing.Title, business.Name)
 
 	return nil
 }
@@ -128,8 +138,6 @@ func (l *listingEngine) AddDietaryRestriction(listingID int, restriction string)
 func (l *listingEngine) AddListingImage(businessName string, imagePath string) {
 	return
 }
-
-//listing_id, business_id,
 
 func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]Listing, error) {
 	getListingsQuery := "SELECT title, old_price, new_price, discount, description," +
@@ -242,36 +250,164 @@ func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
 	return days, nil
 }
 
-func (l *listingEngine) GetAllListingsInRange(
+type SortView struct {
+	listing Listing
+	mile    float64
+}
+
+func (l *listingEngine) GetAllListingsForLocation(
+	listingType string,
 	latitude float64,
 	longitude float64,
 	zipCode int,
 	priceFilter string,
 	dietaryFilter string,
 	keywords string,
+	sortBy string,
 ) ([]Listing, error) {
 
-	geoAddresses, err := l.GetAllListingsLatLon()
+	// get all active listings
+	listings, err := l.GetAllListingsWithDateTime(listingType)
 	if err != nil {
 		return nil, err
 	}
 
-	var listings []Listing
-	for _, geo := range geoAddresses {
+	var ll []SortView
+	for _, listing := range listings {
+		// get LatLon
+		geo, err := l.GetListingsLatLon(listing.BusinessID)
+		if err != nil {
+			return nil, err
+		}
 
-		// find out lat, lon in range
+		// append latLon
 		fromMobile := haversine.Coord{Lat: latitude, Lon: longitude}
 		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
 
-		// TBD: sort on miles
-		if mi > 5.0 {
-			listingsFromBusinessID, err := l.GetAllListingsFromBusinessIDWithDateTime(geo.BusinessID)
-			if err != nil {
-				return nil, err
-			}
-			listings = append(listings, listingsFromBusinessID...)
+		// get dietary restriction
+		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
+		if err != nil {
+			return nil, err
 		}
+		listing.DietaryRestriction = rests
+
+		s := SortView{listing: listing, mile: mi}
+		ll = append(ll, s)
+	}
+
+	// sort
+	sortView := l.OrderListings(ll)
+
+	// put in listing struct
+	var listingsResult []Listing
+	for _, view := range sortView {
+		listingsResult = append(listingsResult, view.listing)
+	}
+
+	// return result
+	return listingsResult, nil
+}
+
+func (l *listingEngine) OrderListings(listings []SortView) []SortView {
+	sort.Slice(listings, func(i, j int) bool {
+		return listings[i].mile < listings[j].mile
+	})
+	return listings
+}
+
+func (l *listingEngine) GetListingsLatLon(businessID int) (AddressGeo, error) {
+	rows, err := l.sql.Query("SELECT address_id, business_id, latitude, longitude  FROM address_geo WHERE business_id = $1", businessID)
+	if err != nil {
+		return AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	geo := AddressGeo{}
+	if rows.Next() {
+		err := rows.Scan(&geo.AddressID, &geo.BusinessID, &geo.Latitude, &geo.Longitude)
+		if err != nil {
+			return AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return geo, nil
+}
+
+func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, error) {
+	rows, err := l.sql.Query("SELECT restriction FROM listing_dietary_restrictions WHERE listing_id = $1", listingID)
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var rests []string
+	for rows.Next() {
+		var rest string
+		err := rows.Scan(&rest)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		rests = append(rests, rest)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return rests, nil
+}
+
+func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]Listing, error) {
+	currentDate := time.Now().Format("2006-01-02")
+	currentTime := time.Now().Format("15:04:05.000000")
+
+	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
+		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
+		"end_date >= $1 AND end_time >= $2 AND listing_type = $3;", currentDate, currentTime, listingType)
+
+	/*rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
+	"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
+	"end_date >= $1 AND listing_type = $2;", currentDate, listingType)*/
+
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var listings []Listing
+	for rows.Next() {
+		var listing Listing
+		err := rows.Scan(
+			&listing.Title,
+			&listing.OldPrice,
+			&listing.NewPrice,
+			&listing.Discount,
+			&listing.Description,
+			&listing.StartDate,
+			&listing.EndDate,
+			&listing.StartTime,
+			&listing.EndTime,
+			&listing.Recurring,
+			&listing.Type,
+			&listing.BusinessID,
+			&listing.ListingID,
+		)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		listings = append(listings, listing)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	return listings, nil
@@ -302,43 +438,61 @@ func (l *listingEngine) GetAllListingsLatLon() ([]AddressGeo, error) {
 	return geoAddresses, nil
 }
 
-func (l *listingEngine) GetAllListingsFromBusinessIDWithDateTime(businessID int) ([]Listing, error) {
-	currentDate := time.Now().Format("2006-01-02")
-	currentTime := time.Now().Format("15:04:05.000000")
+func (l *listingEngine) GetListingInfo(listingID int) (ListingInfo, error) {
+	var listingInfo ListingInfo
 
-	rows, err := l.sql.Query("SELECT listing_id, business_id, title, description, old_price, new_price, "+
-		"listing_date, start_time, end_time, recurring FROM listing where "+
-		"business_id = $1 AND listing_date >= $2 AND end_time >= $3;", businessID, currentDate, currentTime)
+	//GetListingByID
+	listing, err := l.GetListingByID(listingID)
 	if err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
+		return ListingInfo{}, err
+	}
+	listingInfo.Listing = listing
+
+	//GetBusinessInfo
+	businessInfo, err := l.businessEngine.GetBusinessInfo(listing.BusinessID)
+	if err != nil {
+		return ListingInfo{}, err
+	}
+	listingInfo.BusinessInfo = businessInfo
+	return listingInfo, nil
+}
+
+func (l *listingEngine) GetListingByID(listingID int) (Listing, error) {
+	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
+		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
+		"listing_id = $1;", listingID)
+
+	if err != nil {
+		return Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	defer rows.Close()
 
-	var listings []Listing
-	for rows.Next() {
-		var listing Listing
+	var listing Listing
+	if rows.Next() {
 		err := rows.Scan(
-			&listing.ListingID,
-			&listing.BusinessID,
 			&listing.Title,
-			&listing.Description,
 			&listing.OldPrice,
 			&listing.NewPrice,
+			&listing.Discount,
+			&listing.Description,
 			&listing.StartDate,
+			&listing.EndDate,
 			&listing.StartTime,
 			&listing.EndTime,
 			&listing.Recurring,
+			&listing.Type,
+			&listing.BusinessID,
+			&listing.ListingID,
 		)
 		if err != nil {
-			return nil, helper.DatabaseError{DBError: err.Error()}
+			return Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
-		listings = append(listings, listing)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
+		return Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	return listings, nil
+	return listing, nil
 }
