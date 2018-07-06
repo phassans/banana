@@ -30,6 +30,12 @@ func main() {
 
 	engines := model.NewGenericEngine(businessEngine, userEngine, listingEngine, favouriteEngine)
 
+	handerPrefix := "/static/"
+	path := "./images/"
+	maxConnections := 1
+	InitHandler(handerPrefix, path, maxConnections)
+	go func() { serverErrChannel <- http.ListenAndServe(":3000", nil) }()
+
 	// start the server
 	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: route.APIServerHandler(engines)}
 	go func() { serverErrChannel <- server.ListenAndServe() }()

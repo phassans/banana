@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"sort"
 	"time"
 
@@ -34,6 +35,7 @@ type (
 		RecurringDays      []string
 		ListingID          int
 		Type               string
+		ListingImage       string
 	}
 
 	ListingInfo struct {
@@ -291,6 +293,7 @@ func (l *listingEngine) GetAllListingsForLocation(
 			return nil, err
 		}
 		listing.DietaryRestriction = rests
+		listing.ListingImage = l.GetListingImage()
 
 		s := SortView{listing: listing, mile: mi}
 		ll = append(ll, s)
@@ -307,6 +310,25 @@ func (l *listingEngine) GetAllListingsForLocation(
 
 	// return result
 	return listingsResult, nil
+}
+
+const imageBaseURL = "http://71.198.1.192:3000"
+
+func (l *listingEngine) GetListingImage() string {
+	myrand := random(1, 6)
+	var ext string
+	if myrand == 1 {
+		ext = "jpg"
+	} else if myrand == 6 {
+		ext = "png"
+	} else {
+		ext = "jpeg"
+	}
+	return fmt.Sprintf("%s/static/%d.%s", imageBaseURL, myrand, ext)
+}
+
+func random(min, max int) int {
+	return rand.Intn(max-min) + min
 }
 
 func (l *listingEngine) OrderListings(listings []SortView) []SortView {
@@ -366,15 +388,15 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 
 func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]Listing, error) {
 	currentDate := time.Now().Format("2006-01-02")
-	currentTime := time.Now().Format("15:04:05.000000")
-
-	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
-		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
-		"end_date >= $1 AND end_time >= $2 AND listing_type = $3;", currentDate, currentTime, listingType)
+	//currentTime := time.Now().Format("15:04:05.000000")
 
 	/*rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
 	"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
-	"end_date >= $1 AND listing_type = $2;", currentDate, listingType)*/
+	"end_date >= $1 AND end_time >= $2 AND listing_type = $3;", currentDate, currentTime, listingType)*/
+
+	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
+		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
+		"end_date >= $1 AND listing_type = $2;", currentDate, listingType)
 
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
