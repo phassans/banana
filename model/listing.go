@@ -315,16 +315,8 @@ func (l *listingEngine) GetAllListingsForLocation(
 const imageBaseURL = "http://71.198.1.192:3000"
 
 func (l *listingEngine) GetListingImage() string {
-	myrand := random(1, 6)
-	var ext string
-	if myrand == 1 {
-		ext = "jpg"
-	} else if myrand == 6 {
-		ext = "png"
-	} else {
-		ext = "jpeg"
-	}
-	return fmt.Sprintf("%s/static/%d.%s", imageBaseURL, myrand, ext)
+	imgRand := random(1, 6)
+	return fmt.Sprintf("%s/static/%d.jpg", imageBaseURL, imgRand)
 }
 
 func random(min, max int) int {
