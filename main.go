@@ -27,8 +27,9 @@ func main() {
 	businessEngine := model.NewBusinessEngine(roach.Db, logger)
 	listingEngine := model.NewListingEngine(roach.Db, logger, businessEngine)
 	favouriteEngine := model.NewFavoriteEngine(roach.Db, logger, businessEngine, listingEngine)
+	notificationEngine := model.NewNotificationEngine(roach.Db, logger, businessEngine)
 
-	engines := model.NewGenericEngine(businessEngine, userEngine, listingEngine, favouriteEngine)
+	engines := model.NewGenericEngine(businessEngine, userEngine, listingEngine, favouriteEngine, notificationEngine)
 
 	handerPrefix := "/static/"
 	path := "./images/"

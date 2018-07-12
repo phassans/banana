@@ -151,10 +151,39 @@ CREATE TABLE IF NOT EXISTS listing_dietary_restrictions
 CREATE TABLE IF NOT EXISTS favorites
 (
   favorite_id SERIAL,
-  phone_id     TEXT NOT NULL,
-  listing_id   INT  NULL,
+  phone_id    TEXT NOT NULL,
+  listing_id  INT  NULL,
   PRIMARY KEY (favorite_id, phone_id),
   FOREIGN KEY (listing_id) REFERENCES listing (listing_id)
 );
+
+CREATE TABLE IF NOT EXISTS notifications
+(
+  notification_id SERIAL UNIQUE,
+  phone_id        TEXT NOT NULL,
+  business_id     INT,
+  price           TEXT,
+  keywords        TEXT,
+  PRIMARY KEY (notification_id, phone_id)
+);
+
+CREATE TABLE IF NOT EXISTS notifications_location
+(
+  notification_id INT NOT NULL,
+  location        TEXT,
+  latitude        NUMERIC,
+  longitude       NUMERIC,
+  PRIMARY KEY (notification_id),
+  FOREIGN KEY (notification_id) REFERENCES notifications (notification_id)
+);
+
+CREATE TABLE IF NOT EXISTS notifications_dietary_restrictions
+(
+  notification_id INT                  NOT NULL,
+  restriction     DIETARY_RESTRICTIONS NOT NULL,
+  PRIMARY KEY (notification_id, restriction),
+  FOREIGN KEY (notification_id) REFERENCES notifications (notification_id)
+);
+
 
 INSERT INTO country (name) VALUES ('USA');

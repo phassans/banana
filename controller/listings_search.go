@@ -31,7 +31,7 @@ var listingsSearch postEndpoint = listingsSearchEndpoint{}
 
 func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingsSearchRequest)
-	result, err := rtr.engines.GetAllListingsForLocation(
+	result, err := rtr.engines.SearchListings(
 		request.ListingType,
 		request.Latitude,
 		request.Longitude,

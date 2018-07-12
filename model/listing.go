@@ -7,6 +7,8 @@ import (
 	"sort"
 	"time"
 
+	"strings"
+
 	"github.com/phassans/banana/helper"
 	"github.com/rs/xlog"
 	"github.com/umahmood/haversine"
@@ -48,7 +50,7 @@ type ListingEngine interface {
 	AddListing(listing Listing) error
 	AddListingImage(businessName string, imagePath string)
 
-	GetAllListingsForLocation(
+	SearchListings(
 		listingType string,
 		latitude float64,
 		longitude float64,
@@ -252,12 +254,29 @@ func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
 	return days, nil
 }
 
-type SortView struct {
-	listing Listing
-	mile    float64
-}
+type (
+	sortDistanceView struct {
+		listing Listing
+		mile    float64
+	}
 
-func (l *listingEngine) GetAllListingsForLocation(
+	sortPriceView struct {
+		listing Listing
+		price   float64
+	}
+
+	sortTimeView struct {
+		listing  Listing
+		timeLeft float64
+	}
+
+	CurrentLocation struct {
+		Latitude  float64
+		Longitude float64
+	}
+)
+
+func (l *listingEngine) SearchListings(
 	listingType string,
 	latitude float64,
 	longitude float64,
@@ -267,14 +286,88 @@ func (l *listingEngine) GetAllListingsForLocation(
 	keywords string,
 	sortBy string,
 ) ([]Listing, error) {
-
 	// get all active listings
 	listings, err := l.GetAllListingsWithDateTime(listingType)
 	if err != nil {
 		return nil, err
 	}
 
-	var ll []SortView
+	// sort Listings based on sortBy
+	currentLocation := CurrentLocation{Latitude: latitude, Longitude: longitude}
+	return l.SortListings(listings, sortBy, currentLocation, priceFilter)
+}
+
+func (l *listingEngine) SortListings(listings []Listing, sortingType string, currentLocation CurrentLocation, priceFilter string) ([]Listing, error) {
+	if sortingType == "distance" || sortingType == "" {
+		return l.SortListingsByDistance(listings, currentLocation)
+	} else if sortingType == "price" {
+		return l.SortListingsByPrice(listings, priceFilter)
+	} else if sortingType == "timeLeft" {
+		return l.SortListingsByTimeLeft(listings)
+	}
+	return nil, nil
+}
+
+const (
+	// See http://golang.org/pkg/time/#Parse
+	timeFormat = "2006-01-02T15:04:05Z"
+)
+
+func (l *listingEngine) SortListingsByTimeLeft(listings []Listing) ([]Listing, error) {
+	var ll []sortTimeView
+	for _, listing := range listings {
+
+		dateTime := GetListingDateTime(listing.EndDate, listing.EndTime)
+		then, err := time.Parse(timeFormat, dateTime)
+		if err != nil {
+			return nil, nil
+		}
+
+		duration := time.Since(then)
+
+		s := sortTimeView{listing: listing, timeLeft: duration.Seconds()}
+		ll = append(ll, s)
+	}
+
+	// sort
+	priceView := l.OrderListingsByTime(ll)
+
+	// put in listing struct
+	var listingsResult []Listing
+	for _, view := range priceView {
+		listingsResult = append(listingsResult, view.listing)
+	}
+
+	return listingsResult, nil
+}
+
+func GetListingDateTime(endDate string, endTime string) string {
+	listingEndDate := strings.Split(endDate, "T")[0]
+	listingEndTime := strings.Split(endTime, "T")[1]
+	return fmt.Sprintf("%sT%s", listingEndDate, listingEndTime)
+}
+
+func (l *listingEngine) SortListingsByPrice(listings []Listing, priceFilter string) ([]Listing, error) {
+	var ll []sortPriceView
+	for _, listing := range listings {
+		s := sortPriceView{listing: listing, price: listing.NewPrice}
+		ll = append(ll, s)
+	}
+
+	// sort
+	priceView := l.OrderListingsByPrice(ll)
+
+	// put in listing struct
+	var listingsResult []Listing
+	for _, view := range priceView {
+		listingsResult = append(listingsResult, view.listing)
+	}
+
+	return listingsResult, nil
+}
+
+func (l *listingEngine) SortListingsByDistance(listings []Listing, currentLocation CurrentLocation) ([]Listing, error) {
+	var ll []sortDistanceView
 	for _, listing := range listings {
 		// get LatLon
 		geo, err := l.GetListingsLatLon(listing.BusinessID)
@@ -283,9 +376,11 @@ func (l *listingEngine) GetAllListingsForLocation(
 		}
 
 		// append latLon
-		fromMobile := haversine.Coord{Lat: latitude, Lon: longitude}
+		fromMobile := haversine.Coord{Lat: currentLocation.Latitude, Lon: currentLocation.Longitude}
 		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
+
+		fmt.Printf("business_id: %d and distance: %f \n", listing.BusinessID, mi)
 
 		// get dietary restriction
 		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
@@ -295,20 +390,19 @@ func (l *listingEngine) GetAllListingsForLocation(
 		listing.DietaryRestriction = rests
 		listing.ListingImage = l.GetListingImage()
 
-		s := SortView{listing: listing, mile: mi}
+		s := sortDistanceView{listing: listing, mile: mi}
 		ll = append(ll, s)
 	}
 
 	// sort
-	sortView := l.OrderListings(ll)
+	distanceView := l.OrderListingsByDistance(ll)
 
 	// put in listing struct
 	var listingsResult []Listing
-	for _, view := range sortView {
+	for _, view := range distanceView {
 		listingsResult = append(listingsResult, view.listing)
 	}
 
-	// return result
 	return listingsResult, nil
 }
 
@@ -323,7 +417,21 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func (l *listingEngine) OrderListings(listings []SortView) []SortView {
+func (l *listingEngine) OrderListingsByTime(listings []sortTimeView) []sortTimeView {
+	sort.Slice(listings, func(i, j int) bool {
+		return listings[i].timeLeft > listings[j].timeLeft
+	})
+	return listings
+}
+
+func (l *listingEngine) OrderListingsByPrice(listings []sortPriceView) []sortPriceView {
+	sort.Slice(listings, func(i, j int) bool {
+		return listings[i].price < listings[j].price
+	})
+	return listings
+}
+
+func (l *listingEngine) OrderListingsByDistance(listings []sortDistanceView) []sortDistanceView {
 	sort.Slice(listings, func(i, j int) bool {
 		return listings[i].mile < listings[j].mile
 	})
@@ -381,6 +489,12 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]Listing, error) {
 	currentDate := time.Now().Format("2006-01-02")
 	//currentTime := time.Now().Format("15:04:05.000000")
+
+	q := fmt.Sprintf("SELECT title, old_price, new_price, discount, description,"+
+		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
+		"end_date >= '%s' AND listing_type = '%s';", currentDate, listingType)
+
+	fmt.Println("qry: ", q)
 
 	/*rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
 	"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+

@@ -5,10 +5,12 @@ type GenericEngine struct {
 	ListingEngine
 	UserEngine
 	FavoriteEngine
+	NotificationEngine
 }
 
-func NewGenericEngine(businessEngine BusinessEngine, userEngine UserEngine, listingEngine ListingEngine, favouriteEngine FavoriteEngine) Engine {
-	return &GenericEngine{businessEngine, listingEngine, userEngine, favouriteEngine}
+func NewGenericEngine(businessEngine BusinessEngine, userEngine UserEngine, listingEngine ListingEngine,
+	favouriteEngine FavoriteEngine, notificationEngine NotificationEngine) Engine {
+	return &GenericEngine{businessEngine, listingEngine, userEngine, favouriteEngine, notificationEngine}
 }
 
 type Engine interface {
@@ -16,4 +18,5 @@ type Engine interface {
 	ListingEngine
 	UserEngine
 	FavoriteEngine
+	NotificationEngine
 }

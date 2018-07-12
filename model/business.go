@@ -25,9 +25,10 @@ type (
 	}
 
 	Business struct {
-		Name    string
-		Phone   string
-		Website string
+		BusinessID int
+		Name       string
+		Phone      string
+		Website    string
 	}
 
 	BusinessAddress struct {
@@ -89,6 +90,7 @@ type BusinessEngine interface {
 	GetBusinessFromID(businessID int) (Business, error)
 	GetBusinessAddressFromID(businessID int) (BusinessAddress, error)
 	GetBusinessInfo(businessID int) (BusinessInfo, error)
+	GetAllBusiness() ([]Business, error)
 
 	// Delete
 	DeleteBusinessFromID(businessID int) error
@@ -97,6 +99,31 @@ type BusinessEngine interface {
 
 func NewBusinessEngine(psql *sql.DB, logger xlog.Logger) BusinessEngine {
 	return &businessEngine{psql, logger}
+}
+
+func (b *businessEngine) GetAllBusiness() ([]Business, error) {
+	rows, err := b.sql.Query("SELECT business_id, name, phone, website FROM business;")
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var allBusiness []Business
+	for rows.Next() {
+		var business Business
+		err := rows.Scan(&business.BusinessID, &business.Name, &business.Phone, &business.Website)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		allBusiness = append(allBusiness, business)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return allBusiness, nil
 }
 
 func (b *businessEngine) AddBusiness(
