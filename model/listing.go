@@ -464,7 +464,7 @@ func (l *listingEngine) SortListingsByTimeLeft(listings []Listing) ([]Listing, e
 	var ll []sortTimeView
 	for _, listing := range listings {
 
-		dateTime := GetListingDateTime(listing.EndDate, listing.EndTime)
+		dateTime := GetListingDateTime(listing.StartDate, listing.StartTime)
 		then, err := time.Parse(dateTimeFormat, dateTime)
 		if err != nil {
 			return nil, nil
@@ -627,21 +627,16 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 
 func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) {
 	currentDate := time.Now().Format("2006-01-02")
+	currentTime := time.Now().Format("15:04:05.000000")
 
 	q := fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
 		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
 		"listing.business_id, listing.listing_id FROM listing "+
 		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id WHERE "+
-		"listing_date = '%s' AND listing_type = '%s';", currentDate, listingType)
-
+		"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s' AND listing_type = '%s';", currentDate, currentTime, listingType)
 	fmt.Println("Query: ", q)
 
-	rows, err := l.sql.Query("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
-		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-		"listing.business_id, listing.listing_id FROM listing "+
-		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id WHERE "+
-		"listing_date = $1 AND listing_type = $2;", currentDate, listingType)
-
+	rows, err := l.sql.Query(q)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
 	}
