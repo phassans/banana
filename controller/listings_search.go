@@ -12,7 +12,7 @@ type (
 		Future        bool    `json:"future"`
 		Latitude      float64 `json:"latitude,omitempty"`
 		Longitude     float64 `json:"longitude,omitempty"`
-		ZipCode       int     `json:"zipCode,omitempty"`
+		Location      string  `json:"location,omitempty"`
 		PriceFilter   string  `json:"priceFilter,omitempty"`
 		DietaryFilter string  `json:"dietaryFilter,omitempty"`
 		Keywords      string  `json:"keywords,omitempty"`
@@ -33,9 +33,10 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 	request := requestI.(listingsSearchRequest)
 	result, err := rtr.engines.SearchListings(
 		request.ListingType,
+		request.Future,
 		request.Latitude,
 		request.Longitude,
-		request.ZipCode,
+		request.Location,
 		request.PriceFilter,
 		request.DietaryFilter,
 		request.Keywords,

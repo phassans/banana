@@ -111,14 +111,24 @@ CREATE TABLE IF NOT EXISTS listing
   discount            DECIMAL   NOT NULL,
   description         TEXT,
   start_date          DATE      NOT NULL,
-  end_date            DATE      NOT NULL,
   start_time          TIME,
   end_time            TIME,
+  multiple_days       BOOLEAN   NOT NULL,
+  end_date            DATE      NOT NULL,
   recurring           BOOLEAN   NOT NULL,
+  recurring_end_date  DATE      NOT NULL,
   listing_type        TEXT      NOT NULL,
   listing_create_date TIMESTAMP NOT NULL,
   PRIMARY KEY (listing_id),
   FOREIGN KEY (business_id) REFERENCES business (business_id)
+);
+
+CREATE TABLE IF NOT EXISTS listing_date
+(
+  listing_id   INT  NULL,
+  listing_date DATE NOT NULL,
+  start_time   TIME,
+  end_time     TIME
 );
 
 CREATE TABLE IF NOT EXISTS recurring_listing

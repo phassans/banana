@@ -8,6 +8,7 @@ import (
 
 type (
 	listingADDRequest struct {
+		BusinessID         int      `json:"businessID"`
 		Title              string   `json:"title"`
 		OldPrice           float64  `json:"oldPrice,omitempty"`
 		NewPrice           float64  `json:"newPrice"`
@@ -15,12 +16,13 @@ type (
 		DietaryRestriction []string `json:"dietaryRestriction,omitempty"`
 		Description        string   `json:"description"`
 		StartDate          string   `json:"startDate"`
-		EndDate            string   `json:"endDate"`
 		StartTime          string   `json:"startTime"`
-		EndTime            string   `json:"endTime"`
-		BusinessID         int      `json:"businessID"`
+		EndTime            string   `json:"endTime,omitempty"`
+		MultipleDays       bool     `json:"multipleDays"`
+		EndDate            string   `json:"endDate,omitempty"`
 		Recurring          bool     `json:"recurring"`
 		RecurringDays      []string `json:"recurringDays,omitempty"`
+		RecurringEndDate   string   `json:"recurringEndDate,omitempty"`
 		Type               string   `json:"type"`
 	}
 
@@ -45,12 +47,14 @@ func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		DietaryRestriction: request.DietaryRestriction,
 		Description:        request.Description,
 		StartDate:          request.StartDate,
-		EndDate:            request.EndDate,
 		StartTime:          request.StartTime,
 		EndTime:            request.EndTime,
 		BusinessID:         request.BusinessID,
+		MultipleDays:       request.MultipleDays,
+		EndDate:            request.EndDate,
 		Recurring:          request.Recurring,
 		RecurringDays:      request.RecurringDays,
+		RecurringEndDate:   request.RecurringEndDate,
 		Type:               request.Type,
 	}
 

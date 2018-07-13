@@ -5,13 +5,22 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
+	"strings"
 	"time"
 
-	"strings"
+	"bytes"
 
+	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
 	"github.com/rs/xlog"
 	"github.com/umahmood/haversine"
+)
+
+const (
+	// See http://golang.org/pkg/time/#Parse
+	dateTimeFormat = "2006-01-02T15:04:05Z"
+	dateFormat     = "01/02/2006" //07/11/2018
+	dateFormat1    = "2006-01-02" //07/11/2018
 )
 
 type (
@@ -29,12 +38,14 @@ type (
 		DietaryRestriction []string
 		Description        string
 		StartDate          string
-		EndDate            string
 		StartTime          string
 		EndTime            string
 		BusinessID         int
+		MultipleDays       bool
+		EndDate            string
 		Recurring          bool
 		RecurringDays      []string
+		RecurringEndDate   string
 		ListingID          int
 		Type               string
 		ListingImage       string
@@ -44,6 +55,13 @@ type (
 		BusinessInfo
 		Listing
 	}
+
+	ListingDate struct {
+		ListingID   int
+		ListingDate string
+		StartTime   string
+		EndTime     string
+	}
 )
 
 type ListingEngine interface {
@@ -52,15 +70,17 @@ type ListingEngine interface {
 
 	SearchListings(
 		listingType string,
+		future bool,
 		latitude float64,
 		longitude float64,
-		zipCode int,
+		Location string,
 		priceFilter string,
 		dietaryFilter string,
 		keywords string,
 		sortBy string,
 	) ([]Listing, error)
-	GetAllListings(businessID int, business_type string) ([]Listing, error)
+
+	GetAllListings(businessID int, businessType string) ([]Listing, error)
 	GetListingByID(listingID int) (Listing, error)
 	GetListingInfo(listingID int) (ListingInfo, error)
 }
@@ -81,16 +101,17 @@ func (l *listingEngine) AddListing(listing Listing) error {
 
 	var listingID int
 	const insertListingSQL = "INSERT INTO listing(business_id, title, old_price, new_price, discount, description," +
-		"start_date, end_date, start_time, end_time, recurring, listing_type, listing_create_date) " +
-		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning listing_id"
+		"start_date, start_time, end_time, multiple_days, end_date, recurring, recurring_end_date, listing_type, listing_create_date) " +
+		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning listing_id"
 
 	err = l.sql.QueryRow(insertListingSQL, listing.BusinessID, listing.Title, listing.OldPrice, listing.NewPrice, listing.Discount,
-		listing.Description, listing.StartDate, listing.EndDate, listing.StartTime, listing.EndTime, listing.Recurring,
-		listing.Type, time.Now()).
+		listing.Description, listing.StartDate, listing.StartTime, listing.EndTime, listing.MultipleDays, listing.EndDate,
+		listing.Recurring, listing.RecurringEndDate, listing.Type, time.Now()).
 		Scan(&listingID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+	listing.ListingID = listingID
 
 	if listing.Recurring {
 		for _, day := range listing.RecurringDays {
@@ -108,8 +129,92 @@ func (l *listingEngine) AddListing(listing Listing) error {
 		}
 	}
 
+	// insert into listing_date
+	if err := l.AddListingDates(listing); err != nil {
+		return err
+	}
+
 	l.logger.Infof("successfully added a listing %s for business: %s", listing.Title, business.Name)
 
+	return nil
+}
+
+func (l *listingEngine) AddListingDates(listing Listing) error {
+	// current listing date
+	listings := []ListingDate{
+		ListingDate{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime},
+	}
+
+	dayMap := map[string]int{"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
+
+	listingDate, err := time.Parse(dateFormat, strings.Split(listing.StartDate, "T")[0])
+	if err != nil {
+		return err
+	}
+
+	if listing.MultipleDays {
+		listingEndDate, err := time.Parse(dateFormat, strings.Split(listing.EndDate, "T")[0])
+		if err != nil {
+			return err
+		}
+		// difference b/w days
+		days := listingEndDate.Sub(listingDate).Hours() / 24
+		curDate := listingDate
+		for i := 1; i < int(days); i++ {
+			var lDate ListingDate
+			nextDate := curDate.Add(time.Hour * 24)
+			year, month, day := nextDate.Date()
+
+			next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
+			lDate = ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
+			listings = append(listings, lDate)
+
+			curDate = nextDate
+		}
+	}
+
+	if listing.Recurring {
+		listingRecurringDate, err := time.Parse(dateFormat, strings.Split(listing.RecurringEndDate, "T")[0])
+		if err != nil {
+			return err
+		}
+		// difference b/w days
+		days := listingRecurringDate.Sub(listingDate).Hours() / 24
+		curDate := listingDate
+		for i := 1; i < int(days); i++ {
+			var lDate ListingDate
+			nextDate := curDate.Add(time.Hour * 24)
+			year, month, day := nextDate.Date()
+			for _, recurringDay := range listing.RecurringDays {
+				if dayMap[recurringDay] == int(nextDate.Weekday()) {
+					next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
+					lDate = ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
+					listings = append(listings, lDate)
+				}
+			}
+			curDate = nextDate
+		}
+	}
+
+	for _, listing := range listings {
+		err := l.InsertListingDate(listing)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (l *listingEngine) InsertListingDate(lDate ListingDate) error {
+	addListingDietRestrictionSQL := "INSERT INTO listing_date(listing_id,listing_date,start_time,end_time) " +
+		"VALUES($1,$2,$3,$4);"
+
+	_, err := l.sql.Query(addListingDietRestrictionSQL, lDate.ListingID, lDate.ListingDate, lDate.StartTime, lDate.EndTime)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	l.logger.Infof("InsertListingDate successful for listing:%d", lDate.ListingID)
 	return nil
 }
 
@@ -278,26 +383,72 @@ type (
 
 func (l *listingEngine) SearchListings(
 	listingType string,
+	future bool,
 	latitude float64,
 	longitude float64,
-	zipCode int,
+	location string,
 	priceFilter string,
 	dietaryFilter string,
 	keywords string,
 	sortBy string,
 ) ([]Listing, error) {
-	// get all active listings
-	listings, err := l.GetAllListingsWithDateTime(listingType)
+
+	var listings []Listing
+	var err error
+	if !future {
+		//GetTodayListings
+		listings, err = l.GetTodayListings(listingType)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		//GetFutureListings
+		listings, err = l.GetFutureListings(listingType)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var currentLocation CurrentLocation
+	if location != "" {
+		// getLatLonFromLocation
+		resp, err := clients.GetLatLong(location)
+		if err != nil {
+			return nil, err
+		}
+		currentLocation = CurrentLocation{Latitude: resp.Lat, Longitude: resp.Lon}
+	} else {
+		currentLocation = CurrentLocation{Latitude: latitude, Longitude: longitude}
+	}
+
+	// AddDietaryRestrictionsToListings
+	listings, err = l.AddDietaryRestrictionsToListings(listings)
 	if err != nil {
 		return nil, err
 	}
 
 	// sort Listings based on sortBy
-	currentLocation := CurrentLocation{Latitude: latitude, Longitude: longitude}
 	return l.SortListings(listings, sortBy, currentLocation, priceFilter)
 }
 
-func (l *listingEngine) SortListings(listings []Listing, sortingType string, currentLocation CurrentLocation, priceFilter string) ([]Listing, error) {
+func (l *listingEngine) AddDietaryRestrictionsToListings(listings []Listing) ([]Listing, error) {
+	// get dietary restriction
+	var listingsResult []Listing
+	for _, listing := range listings {
+		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
+		if err != nil {
+			return nil, err
+		}
+		listing.DietaryRestriction = rests
+		listing.ListingImage = l.GetListingImage()
+		listingsResult = append(listingsResult, listing)
+	}
+	return listingsResult, nil
+}
+
+func (l *listingEngine) SortListings(listings []Listing, sortingType string,
+	currentLocation CurrentLocation, priceFilter string) ([]Listing, error) {
+
 	if sortingType == "distance" || sortingType == "" {
 		return l.SortListingsByDistance(listings, currentLocation)
 	} else if sortingType == "price" {
@@ -305,20 +456,16 @@ func (l *listingEngine) SortListings(listings []Listing, sortingType string, cur
 	} else if sortingType == "timeLeft" {
 		return l.SortListingsByTimeLeft(listings)
 	}
+
 	return nil, nil
 }
-
-const (
-	// See http://golang.org/pkg/time/#Parse
-	timeFormat = "2006-01-02T15:04:05Z"
-)
 
 func (l *listingEngine) SortListingsByTimeLeft(listings []Listing) ([]Listing, error) {
 	var ll []sortTimeView
 	for _, listing := range listings {
 
 		dateTime := GetListingDateTime(listing.EndDate, listing.EndTime)
-		then, err := time.Parse(timeFormat, dateTime)
+		then, err := time.Parse(dateTimeFormat, dateTime)
 		if err != nil {
 			return nil, nil
 		}
@@ -381,14 +528,6 @@ func (l *listingEngine) SortListingsByDistance(listings []Listing, currentLocati
 		mi, _ := haversine.Distance(fromMobile, fromDB)
 
 		fmt.Printf("business_id: %d and distance: %f \n", listing.BusinessID, mi)
-
-		// get dietary restriction
-		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
-		if err != nil {
-			return nil, err
-		}
-		listing.DietaryRestriction = rests
-		listing.ListingImage = l.GetListingImage()
 
 		s := sortDistanceView{listing: listing, mile: mi}
 		ll = append(ll, s)
@@ -484,6 +623,124 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	}
 
 	return rests, nil
+}
+
+func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) {
+	currentDate := time.Now().Format("2006-01-02")
+
+	q := fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
+		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
+		"listing.business_id, listing.listing_id FROM listing "+
+		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id WHERE "+
+		"listing_date = '%s' AND listing_type = '%s';", currentDate, listingType)
+
+	fmt.Println("Query: ", q)
+
+	rows, err := l.sql.Query("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
+		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
+		"listing.business_id, listing.listing_id FROM listing "+
+		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id WHERE "+
+		"listing_date = $1 AND listing_type = $2;", currentDate, listingType)
+
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var listings []Listing
+	for rows.Next() {
+		var listing Listing
+		err := rows.Scan(
+			&listing.Title,
+			&listing.OldPrice,
+			&listing.NewPrice,
+			&listing.Discount,
+			&listing.Description,
+			&listing.StartDate,
+			&listing.EndDate,
+			&listing.StartTime,
+			&listing.EndTime,
+			&listing.Recurring,
+			&listing.Type,
+			&listing.BusinessID,
+			&listing.ListingID,
+		)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		listings = append(listings, listing)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return listings, nil
+}
+
+func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error) {
+	var buffer bytes.Buffer
+
+	currentDate := time.Now().Format(dateFormat)
+	listingDate, err := time.Parse(dateFormat, currentDate)
+
+	curr := listingDate
+	buffer.WriteString("(")
+	for i := 0; i < 7; i++ {
+		nextDate := curr.Add(time.Hour * 24)
+		if i == 6 {
+			buffer.WriteString(fmt.Sprintf("'%s')", strings.Split(nextDate.String(), " ")[0]))
+		} else {
+			buffer.WriteString(fmt.Sprintf("'%s',", strings.Split(nextDate.String(), " ")[0]))
+		}
+		curr = nextDate
+	}
+
+	q := fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
+		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
+		"listing.business_id, listing.listing_id FROM listing "+
+		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id WHERE "+
+		"listing_date IN %s AND listing_type = '%s';", buffer.String(), listingType)
+
+	fmt.Println("Query: ", q)
+
+	rows, err := l.sql.Query(q)
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var listings []Listing
+	for rows.Next() {
+		var listing Listing
+		err := rows.Scan(
+			&listing.Title,
+			&listing.OldPrice,
+			&listing.NewPrice,
+			&listing.Discount,
+			&listing.Description,
+			&listing.StartDate,
+			&listing.EndDate,
+			&listing.StartTime,
+			&listing.EndTime,
+			&listing.Recurring,
+			&listing.Type,
+			&listing.BusinessID,
+			&listing.ListingID,
+		)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		listings = append(listings, listing)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return listings, nil
 }
 
 func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]Listing, error) {
