@@ -545,7 +545,7 @@ func (l *listingEngine) SortListingsByDistance(listings []Listing, currentLocati
 	return listingsResult, nil
 }
 
-const imageBaseURL = "http://71.198.1.192:3000"
+const imageBaseURL = "http://71.198.1.192:3001"
 
 func (l *listingEngine) GetListingImage() string {
 	imgRand := random(1, 6)
