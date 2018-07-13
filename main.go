@@ -35,7 +35,7 @@ func main() {
 	path := "./images/"
 	maxConnections := 1
 	InitHandler(handerPrefix, path, maxConnections)
-	go func() { serverErrChannel <- http.ListenAndServe(":3000", nil) }()
+	go func() { serverErrChannel <- http.ListenAndServe(":3001", nil) }()
 
 	// start the server
 	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: route.APIServerHandler(engines)}
