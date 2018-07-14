@@ -22,7 +22,7 @@ type (
 	}
 
 	listingsSearchResult struct {
-		Result []model.Listing
+		Result []model.SearchListingResult
 		Error  *APIError `json:"error,omitempty"`
 	}
 

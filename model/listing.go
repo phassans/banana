@@ -30,24 +30,39 @@ type (
 	}
 
 	Listing struct {
-		Title              string
-		OldPrice           float64
-		NewPrice           float64
-		Discount           float64
-		DietaryRestriction []string
-		Description        string
-		StartDate          string
-		StartTime          string
-		EndTime            string
-		BusinessID         int
-		MultipleDays       bool
-		EndDate            string
-		Recurring          bool
-		RecurringDays      []string
-		RecurringEndDate   string
-		ListingID          int
-		Type               string
-		ListingImage       string
+		ListingID            int
+		Title                string
+		BusinessID           int
+		BusinessName         string
+		OldPrice             float64
+		NewPrice             float64
+		Discount             float64
+		DietaryRestriction   []string
+		Description          string
+		StartDate            string
+		StartTime            string
+		EndTime              string
+		MultipleDays         bool
+		EndDate              string
+		Recurring            bool
+		RecurringDays        []string
+		RecurringEndDate     string
+		Type                 string
+		ListingImage         string
+		DistanceFromLocation float64
+	}
+
+	SearchListingResult struct {
+		ListingID            int      `json:"listingId"`
+		Title                string   `json:"title"`
+		BusinessID           int      `json:"businessId"`
+		BusinessName         string   `json:"businessName"`
+		Price                float64  `json:"price"`
+		Discount             float64  `json:"discount"`
+		DietaryRestriction   []string `json:"dietaryRestriction"`
+		TimeLeft             float64  `json:"timeLeft"`
+		ListingImage         string   `json:"listingImage"`
+		DistanceFromLocation float64  `json:"distanceFromLocation"`
 	}
 
 	ListingInfo struct {
@@ -77,7 +92,7 @@ type ListingEngine interface {
 		dietaryFilter string,
 		keywords string,
 		sortBy string,
-	) ([]Listing, error)
+	) ([]SearchListingResult, error)
 
 	GetAllListings(businessID int, businessType string) ([]Listing, error)
 	GetListingByID(listingID int) (Listing, error)
@@ -390,7 +405,7 @@ func (l *listingEngine) SearchListings(
 	dietaryFilter string,
 	keywords string,
 	sortBy string,
-) ([]Listing, error) {
+) ([]SearchListingResult, error) {
 
 	var listings []Listing
 	var err error
@@ -433,7 +448,42 @@ func (l *listingEngine) SearchListings(
 	}
 
 	// sort Listings based on sortBy
-	return l.SortListings(listings, sortBy, currentLocation)
+	listings, err = l.SortListings(listings, sortBy, currentLocation)
+	if err != nil {
+		return nil, err
+	}
+
+	return l.massageAndPopulateSearchListings(listings)
+}
+
+func (l *listingEngine) massageAndPopulateSearchListings(listings []Listing) ([]SearchListingResult, error) {
+	// get dietary restriction
+	var listingsResult []SearchListingResult
+	for _, listing := range listings {
+
+		dateTime := GetListingDateTime(listing.StartDate, listing.StartTime)
+		then, err := time.Parse(dateTimeFormat, dateTime)
+		if err != nil {
+			return nil, nil
+		}
+
+		duration := time.Since(then)
+
+		sr := SearchListingResult{
+			ListingID:            listing.ListingID,
+			Title:                listing.Title,
+			BusinessID:           listing.BusinessID,
+			BusinessName:         listing.BusinessName,
+			Price:                listing.NewPrice,
+			Discount:             listing.Discount,
+			DietaryRestriction:   listing.DietaryRestriction,
+			TimeLeft:             duration.Hours(),
+			ListingImage:         listing.ListingImage,
+			DistanceFromLocation: listing.DistanceFromLocation,
+		}
+		listingsResult = append(listingsResult, sr)
+	}
+	return listingsResult, nil
 }
 
 func (l *listingEngine) FilterByPrice(listings []Listing, priceFilter float64) ([]Listing, error) {
@@ -559,6 +609,7 @@ func (l *listingEngine) SortListingsByDistance(listings []Listing, currentLocati
 		fromMobile := haversine.Coord{Lat: currentLocation.Latitude, Lon: currentLocation.Longitude}
 		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
+		listing.DistanceFromLocation = mi
 
 		fmt.Printf("business_id: %d and distance: %f \n", listing.BusinessID, mi)
 
@@ -664,8 +715,9 @@ func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) 
 
 	q := fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
 		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-		"listing.business_id, listing.listing_id FROM listing "+
-		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id WHERE "+
+		"listing.business_id, listing.listing_id, business.name FROM listing "+
+		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
+		"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
 		"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s' AND listing_type = '%s';", currentDate, currentTime, listingType)
 	fmt.Println("Query: ", q)
 
@@ -693,6 +745,7 @@ func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) 
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
+			&listing.BusinessName,
 		)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
@@ -727,8 +780,9 @@ func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error)
 
 	q := fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
 		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-		"listing.business_id, listing.listing_id FROM listing "+
-		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id WHERE "+
+		"listing.business_id, listing.listing_id, business.name FROM listing "+
+		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
+		"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
 		"listing_date IN %s AND listing_type = '%s';", buffer.String(), listingType)
 
 	fmt.Println("Query: ", q)
@@ -757,6 +811,7 @@ func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error)
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
+			&listing.BusinessName,
 		)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
