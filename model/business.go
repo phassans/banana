@@ -24,24 +24,24 @@ type (
 	}
 
 	Business struct {
-		BusinessID int
-		Name       string
-		Phone      string
-		Website    string
+		BusinessID int    `json:"businessId"`
+		Name       string `json:"name"`
+		Phone      string `json:"phone"`
+		Website    string `json:"website"`
 	}
 
 	BusinessAddress struct {
-		Street     string
-		City       string
-		PostalCode string
-		State      string
-		BusinessID int
+		Street     string `json:"street"`
+		City       string `json:"city"`
+		PostalCode string `json:"postalCode"`
+		State      string `json:"state"`
+		BusinessID int    `json:"businessID"`
 	}
 
 	BusinessInfo struct {
-		Business        Business
-		BusinessAddress BusinessAddress
-		Hours           []Bhour
+		Business        Business        `json:"business"`
+		BusinessAddress BusinessAddress `json:"businessAddress"`
+		Hours           []Bhour         `json:"businessHours"`
 	}
 )
 
@@ -319,7 +319,7 @@ func (l *businessEngine) GetBusinessIDFromName(businessName string) (int, error)
 }
 
 func (l *businessEngine) GetBusinessFromID(businessID int) (Business, error) {
-	rows, err := l.sql.Query("SELECT name, phone, website FROM business where business_id = $1;", businessID)
+	rows, err := l.sql.Query("SELECT business_id, name, phone, website FROM business where business_id = $1;", businessID)
 	if err != nil {
 		return Business{}, helper.DatabaseError{DBError: err.Error()}
 	}
@@ -328,7 +328,7 @@ func (l *businessEngine) GetBusinessFromID(businessID int) (Business, error) {
 
 	var business Business
 	if rows.Next() {
-		err := rows.Scan(&business.Name, &business.Phone, &business.Website)
+		err := rows.Scan(&business.BusinessID, &business.Name, &business.Phone, &business.Website)
 		if err != nil {
 			return Business{}, helper.DatabaseError{DBError: err.Error()}
 		}

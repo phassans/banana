@@ -15,8 +15,8 @@ type (
 	}
 
 	Bhour struct {
-		Day       string
-		OpenTime  string
-		CloseTime string
+		Day       string `json:"day"`
+		OpenTime  string `json:"openTime"`
+		CloseTime string `json:"closeTime"`
 	}
 )

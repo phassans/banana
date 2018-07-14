@@ -46,6 +46,8 @@ func GetErrorStatus(err error) int {
 		return http.StatusBadRequest
 	case helper.UserError:
 		return http.StatusBadRequest
+	case helper.ListingDoesNotExist:
+		return http.StatusBadRequest
 	case *APIError:
 		return err.Code
 	default:

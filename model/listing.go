@@ -66,8 +66,8 @@ type (
 	}
 
 	ListingInfo struct {
-		BusinessInfo
-		Listing
+		Business BusinessInfo        `json:"businessInfo"`
+		Listing  SearchListingResult `json:"listing"`
 	}
 
 	ListingDate struct {
@@ -914,14 +914,20 @@ func (l *listingEngine) GetListingInfo(listingID int) (ListingInfo, error) {
 	if err != nil {
 		return ListingInfo{}, err
 	}
-	listingInfo.Listing = listing
+
+	if listing.ListingID == 0 {
+		return ListingInfo{}, helper.ListingDoesNotExist{ListingID: listingID}
+	}
+
+	searchListingResult, err := l.massageAndPopulateSearchListings([]Listing{listing})
+	listingInfo.Listing = searchListingResult[0]
 
 	//GetBusinessInfo
 	businessInfo, err := l.businessEngine.GetBusinessInfo(listing.BusinessID)
 	if err != nil {
 		return ListingInfo{}, err
 	}
-	listingInfo.BusinessInfo = businessInfo
+	listingInfo.Business = businessInfo
 	return listingInfo, nil
 }
 

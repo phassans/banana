@@ -58,3 +58,12 @@ func (e BusinessDoesNotExist) Error() string {
 	b, _ := json.Marshal(e)
 	return fmt.Sprintf("business does not exist: %s", string(b))
 }
+
+type ListingDoesNotExist struct {
+	ListingID int `json:"listingId,omitempty"`
+}
+
+func (e ListingDoesNotExist) Error() string {
+	b, _ := json.Marshal(e)
+	return fmt.Sprintf("listingId does not exist: %s", string(b))
+}
