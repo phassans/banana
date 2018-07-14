@@ -20,7 +20,6 @@ const (
 	// See http://golang.org/pkg/time/#Parse
 	dateTimeFormat = "2006-01-02T15:04:05Z"
 	dateFormat     = "01/02/2006" //07/11/2018
-	dateFormat1    = "2006-01-02" //07/11/2018
 )
 
 type (
@@ -74,7 +73,7 @@ type ListingEngine interface {
 		latitude float64,
 		longitude float64,
 		Location string,
-		priceFilter string,
+		priceFilter float64,
 		dietaryFilter string,
 		keywords string,
 		sortBy string,
@@ -387,7 +386,7 @@ func (l *listingEngine) SearchListings(
 	latitude float64,
 	longitude float64,
 	location string,
-	priceFilter string,
+	priceFilter float64,
 	dietaryFilter string,
 	keywords string,
 	sortBy string,
@@ -409,6 +408,12 @@ func (l *listingEngine) SearchListings(
 		}
 	}
 
+	if priceFilter > 0.0 {
+		listings, err = l.FilterByPrice(listings, priceFilter)
+	} else if dietaryFilter != "" {
+		listings, err = l.FilterByDietaryRestrictions(listings, dietaryFilter)
+	}
+
 	var currentLocation CurrentLocation
 	if location != "" {
 		// getLatLonFromLocation
@@ -428,7 +433,35 @@ func (l *listingEngine) SearchListings(
 	}
 
 	// sort Listings based on sortBy
-	return l.SortListings(listings, sortBy, currentLocation, priceFilter)
+	return l.SortListings(listings, sortBy, currentLocation)
+}
+
+func (l *listingEngine) FilterByPrice(listings []Listing, priceFilter float64) ([]Listing, error) {
+	// get dietary restriction
+	var listingsResult []Listing
+	for _, listing := range listings {
+		if listing.NewPrice <= priceFilter {
+			listingsResult = append(listingsResult, listing)
+		}
+	}
+	return listingsResult, nil
+}
+
+func (l *listingEngine) FilterByDietaryRestrictions(listings []Listing, dietaryFilter string) ([]Listing, error) {
+	// get dietary restriction
+	var listingsResult []Listing
+	for _, listing := range listings {
+		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
+		if err != nil {
+			return nil, err
+		}
+		for _, rest := range rests {
+			if rest == dietaryFilter {
+				listingsResult = append(listingsResult, listing)
+			}
+		}
+	}
+	return listingsResult, nil
 }
 
 func (l *listingEngine) AddDietaryRestrictionsToListings(listings []Listing) ([]Listing, error) {
@@ -447,12 +480,12 @@ func (l *listingEngine) AddDietaryRestrictionsToListings(listings []Listing) ([]
 }
 
 func (l *listingEngine) SortListings(listings []Listing, sortingType string,
-	currentLocation CurrentLocation, priceFilter string) ([]Listing, error) {
+	currentLocation CurrentLocation) ([]Listing, error) {
 
 	if sortingType == "distance" || sortingType == "" {
 		return l.SortListingsByDistance(listings, currentLocation)
 	} else if sortingType == "price" {
-		return l.SortListingsByPrice(listings, priceFilter)
+		return l.SortListingsByPrice(listings)
 	} else if sortingType == "timeLeft" {
 		return l.SortListingsByTimeLeft(listings)
 	}
@@ -494,7 +527,7 @@ func GetListingDateTime(endDate string, endTime string) string {
 	return fmt.Sprintf("%sT%s", listingEndDate, listingEndTime)
 }
 
-func (l *listingEngine) SortListingsByPrice(listings []Listing, priceFilter string) ([]Listing, error) {
+func (l *listingEngine) SortListingsByPrice(listings []Listing) ([]Listing, error) {
 	var ll []sortPriceView
 	for _, listing := range listings {
 		s := sortPriceView{listing: listing, price: listing.NewPrice}
