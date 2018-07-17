@@ -54,13 +54,14 @@ type (
 
 	SearchListingResult struct {
 		ListingID            int      `json:"listingId"`
+		ListingType          string   `json:"listingType"`
 		Title                string   `json:"title"`
 		BusinessID           int      `json:"businessId"`
 		BusinessName         string   `json:"businessName"`
 		Price                float64  `json:"price"`
 		Discount             float64  `json:"discount"`
 		DietaryRestriction   []string `json:"dietaryRestriction"`
-		TimeLeft             float64  `json:"timeLeft"`
+		TimeLeft             int      `json:"timeLeft"`
 		ListingImage         string   `json:"listingImage"`
 		DistanceFromLocation float64  `json:"distanceFromLocation"`
 	}
@@ -111,6 +112,10 @@ func (l *listingEngine) AddListing(listing Listing) error {
 
 	if business.Name == "" {
 		return helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", listing.BusinessID)}
+	}
+
+	if listing.RecurringEndDate == "" {
+		listing.RecurringEndDate = "01/01/2000"
 	}
 
 	var listingID int
@@ -174,7 +179,7 @@ func (l *listingEngine) AddListingDates(listing Listing) error {
 		// difference b/w days
 		days := listingEndDate.Sub(listingDate).Hours() / 24
 		curDate := listingDate
-		for i := 1; i < int(days); i++ {
+		for i := 1; i <= int(days); i++ {
 			var lDate ListingDate
 			nextDate := curDate.Add(time.Hour * 24)
 			year, month, day := nextDate.Date()
@@ -459,25 +464,41 @@ func (l *listingEngine) SearchListings(
 func (l *listingEngine) massageAndPopulateSearchListings(listings []Listing) ([]SearchListingResult, error) {
 	// get dietary restriction
 	var listingsResult []SearchListingResult
+	currentDate := time.Now().Format("2006-01-02")
 	for _, listing := range listings {
 
-		dateTime := GetListingDateTime(listing.StartDate, listing.StartTime)
-		then, err := time.Parse(dateTimeFormat, dateTime)
+		loc, _ := time.LoadLocation("America/Los_Angeles")
+		listingEndTime := GetListingDateTime(currentDate, listing.EndTime)
+		then, err := time.Parse(dateTimeFormat, listingEndTime)
 		if err != nil {
 			return nil, nil
 		}
+		fmt.Println("endTime", listingEndTime)
+		fmt.Println("current dateTime", time.Now().In(loc).Format(dateTimeFormat))
 
-		duration := time.Since(then)
+		cd := time.Now().In(loc)
+		res := cd.In(loc).Sub(then)
+		fmt.Println("diff, ", res.Hours())
+
+		duration := time.Since(then).Hours()
+		if duration < 0 {
+			duration = -duration
+		}
+		//cd := time.Now()
+
+		//res := cd.Sub(then)
+		//fmt.Println("diff, ", res.Hours())
 
 		sr := SearchListingResult{
 			ListingID:            listing.ListingID,
+			ListingType:          listing.Type,
 			Title:                listing.Title,
 			BusinessID:           listing.BusinessID,
 			BusinessName:         listing.BusinessName,
 			Price:                listing.NewPrice,
 			Discount:             listing.Discount,
 			DietaryRestriction:   listing.DietaryRestriction,
-			TimeLeft:             duration.Hours(),
+			TimeLeft:             int(duration),
 			ListingImage:         listing.ListingImage,
 			DistanceFromLocation: listing.DistanceFromLocation,
 		}
@@ -713,15 +734,26 @@ func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) 
 	currentDate := time.Now().Format("2006-01-02")
 	currentTime := time.Now().Format("15:04:05.000000")
 
-	q := fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
-		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-		"listing.business_id, listing.listing_id, business.name FROM listing "+
-		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
-		"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
-		"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s' AND listing_type = '%s';", currentDate, currentTime, listingType)
-	fmt.Println("Query: ", q)
+	var query string
+	if listingType == "" {
+		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
+			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
+			"listing.business_id, listing.listing_id, business.name FROM listing "+
+			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
+			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
+			"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s';", currentDate, currentTime)
+	} else {
+		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
+			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
+			"listing.business_id, listing.listing_id, business.name FROM listing "+
+			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
+			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
+			"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s' AND listing_type = '%s';", currentDate, currentTime, listingType)
+	}
 
-	rows, err := l.sql.Query(q)
+	fmt.Println("Query: ", query)
+
+	rows, err := l.sql.Query(query)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
 	}
@@ -778,16 +810,26 @@ func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error)
 		curr = nextDate
 	}
 
-	q := fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
-		"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-		"listing.business_id, listing.listing_id, business.name FROM listing "+
-		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
-		"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
-		"listing_date IN %s AND listing_type = '%s';", buffer.String(), listingType)
+	var query string
+	if listingType == "" {
+		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
+			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
+			"listing.business_id, listing.listing_id, business.name FROM listing "+
+			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
+			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
+			"listing_date IN %s;", buffer.String())
+	} else {
+		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
+			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
+			"listing.business_id, listing.listing_id, business.name FROM listing "+
+			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
+			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
+			"listing_date IN %s AND listing_type = '%s';", buffer.String(), listingType)
+	}
 
-	fmt.Println("Query: ", q)
+	fmt.Println("Query: ", query)
 
-	rows, err := l.sql.Query(q)
+	rows, err := l.sql.Query(query)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
 	}

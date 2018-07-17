@@ -10,8 +10,8 @@ import (
 
 type (
 	listingsSearchRequest struct {
-		ListingType   string  `json:"listingType"`
 		Future        bool    `json:"future"`
+		ListingType   string  `json:"listingType,omitempty"`
 		Latitude      float64 `json:"latitude,omitempty"`
 		Longitude     float64 `json:"longitude,omitempty"`
 		Location      string  `json:"location,omitempty"`
@@ -56,9 +56,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 func (r listingsSearchEndpoint) Validate(request interface{}) error {
 	req := request.(listingsSearchRequest)
 
-	if req.ListingType != "meal" && req.ListingType != "happyhour" {
-		return helper.ValidationError{Message: fmt.Sprint("invalid listingType")}
-	} else if req.Location == "" && (req.Latitude == 0 || req.Longitude == 0) {
+	if req.Location == "" && (req.Latitude == 0 || req.Longitude == 0) {
 		return helper.ValidationError{Message: fmt.Sprint("invalid location")}
 	}
 

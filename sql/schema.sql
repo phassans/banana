@@ -1,7 +1,8 @@
+ALTER DATABASE banana SET timezone TO 'US/Pacific';
 CREATE TYPE days_of_month AS ENUM (
   'monday',
   'tuesday',
-  'wednesday'
+  'wednesday',
   'thursday',
   'friday',
   'saturday',
