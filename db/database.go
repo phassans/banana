@@ -83,7 +83,7 @@ func New(cfg Config) (roach Roach, err error) {
 
 // Close performs the release of any resources that
 // `sql/database` DB pool created. This is usually meant
-// to be used in the exitting of a program or `panic`ing.
+// to be used in the exiting of a program or `panic`ing.
 func (r *Roach) Close() (err error) {
 	if r.Db == nil {
 		return

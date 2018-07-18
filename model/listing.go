@@ -50,6 +50,7 @@ type (
 		Type                 string
 		ListingImage         string
 		DistanceFromLocation float64
+		ListingDate          string
 	}
 
 	SearchListingResult struct {
@@ -462,33 +463,21 @@ func (l *listingEngine) SearchListings(
 }
 
 func (l *listingEngine) massageAndPopulateSearchListings(listings []Listing) ([]SearchListingResult, error) {
-	// get dietary restriction
 	var listingsResult []SearchListingResult
-	currentDate := time.Now().Format("2006-01-02")
+	currentDateTime := time.Now().Format(dateTimeFormat)
+	currentDateTimeFormatted, err := time.Parse(dateTimeFormat, currentDateTime)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, listing := range listings {
-
-		loc, _ := time.LoadLocation("America/Los_Angeles")
-		listingEndTime := GetListingDateTime(currentDate, listing.EndTime)
-		then, err := time.Parse(dateTimeFormat, listingEndTime)
+		listingEndTime := GetListingDateTime(listing.ListingDate, listing.EndTime)
+		listingEndTimeFormatted, err := time.Parse(dateTimeFormat, listingEndTime)
 		if err != nil {
-			return nil, nil
+			return nil, err
 		}
-		fmt.Println("endTime", listingEndTime)
-		fmt.Println("current dateTime", time.Now().In(loc).Format(dateTimeFormat))
 
-		cd := time.Now().In(loc)
-		res := cd.In(loc).Sub(then)
-		fmt.Println("diff, ", res.Hours())
-
-		duration := time.Since(then).Hours()
-		if duration < 0 {
-			duration = -duration
-		}
-		//cd := time.Now()
-
-		//res := cd.Sub(then)
-		//fmt.Println("diff, ", res.Hours())
-
+		timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Hours()
 		sr := SearchListingResult{
 			ListingID:            listing.ListingID,
 			ListingType:          listing.Type,
@@ -498,12 +487,13 @@ func (l *listingEngine) massageAndPopulateSearchListings(listings []Listing) ([]
 			Price:                listing.NewPrice,
 			Discount:             listing.Discount,
 			DietaryRestriction:   listing.DietaryRestriction,
-			TimeLeft:             int(duration),
+			TimeLeft:             int(timeLeftInHours),
 			ListingImage:         listing.ListingImage,
 			DistanceFromLocation: listing.DistanceFromLocation,
 		}
 		listingsResult = append(listingsResult, sr)
 	}
+
 	return listingsResult, nil
 }
 
@@ -738,14 +728,14 @@ func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) 
 	if listingType == "" {
 		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
 			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-			"listing.business_id, listing.listing_id, business.name FROM listing "+
+			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
 			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
 			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
 			"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s';", currentDate, currentTime)
 	} else {
 		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
 			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-			"listing.business_id, listing.listing_id, business.name FROM listing "+
+			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
 			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
 			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
 			"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s' AND listing_type = '%s';", currentDate, currentTime, listingType)
@@ -778,6 +768,7 @@ func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) 
 			&listing.BusinessID,
 			&listing.ListingID,
 			&listing.BusinessName,
+			&listing.ListingDate,
 		)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
@@ -814,14 +805,14 @@ func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error)
 	if listingType == "" {
 		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
 			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-			"listing.business_id, listing.listing_id, business.name FROM listing "+
+			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
 			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
 			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
 			"listing_date IN %s;", buffer.String())
 	} else {
 		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
 			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-			"listing.business_id, listing.listing_id, business.name FROM listing "+
+			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
 			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
 			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
 			"listing_date IN %s AND listing_type = '%s';", buffer.String(), listingType)
@@ -854,6 +845,7 @@ func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error)
 			&listing.BusinessID,
 			&listing.ListingID,
 			&listing.BusinessName,
+			&listing.ListingDate,
 		)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
