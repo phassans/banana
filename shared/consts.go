@@ -6,4 +6,6 @@ const (
 	DateFormat     = "01/02/2006" //07/11/2018
 
 	CountryID = 1
+
+	ImageBaseURL = "http://71.198.1.192:3001"
 )

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"sort"
+
 	"github.com/phassans/banana/shared"
 	"github.com/umahmood/haversine"
 )
@@ -129,4 +131,25 @@ func (l *listingEngine) SortListingsByDistance(listings []shared.Listing, curren
 	}
 
 	return listingsResult, nil
+}
+
+func (l *listingEngine) OrderListingsByTime(listings []sortTimeView) []sortTimeView {
+	sort.Slice(listings, func(i, j int) bool {
+		return listings[i].timeLeft > listings[j].timeLeft
+	})
+	return listings
+}
+
+func (l *listingEngine) OrderListingsByPrice(listings []sortPriceView) []sortPriceView {
+	sort.Slice(listings, func(i, j int) bool {
+		return listings[i].price < listings[j].price
+	})
+	return listings
+}
+
+func (l *listingEngine) OrderListingsByDistance(listings []sortDistanceView) []sortDistanceView {
+	sort.Slice(listings, func(i, j int) bool {
+		return listings[i].mile < listings[j].mile
+	})
+	return listings
 }

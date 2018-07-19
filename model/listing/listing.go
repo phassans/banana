@@ -1,15 +1,10 @@
 package listing
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"math/rand"
-	"sort"
-	"strings"
-	"time"
 
-	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/shared"
@@ -47,226 +42,6 @@ type (
 
 func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine) ListingEngine {
 	return &listingEngine{psql, logger, businessEngine}
-}
-
-func (l *listingEngine) AddListing(listing shared.Listing) error {
-	business, err := l.businessEngine.GetBusinessFromID(listing.BusinessID)
-	if err != nil {
-		return err
-	}
-
-	if business.Name == "" {
-		return helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", listing.BusinessID)}
-	}
-
-	if listing.RecurringEndDate == "" {
-		listing.RecurringEndDate = "01/01/2000"
-	}
-
-	var listingID int
-	const insertListingSQL = "INSERT INTO listing(business_id, title, old_price, new_price, discount, description," +
-		"start_date, start_time, end_time, multiple_days, end_date, recurring, recurring_end_date, listing_type, listing_create_date) " +
-		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning listing_id"
-
-	err = l.sql.QueryRow(insertListingSQL, listing.BusinessID, listing.Title, listing.OldPrice, listing.NewPrice, listing.Discount,
-		listing.Description, listing.StartDate, listing.StartTime, listing.EndTime, listing.MultipleDays, listing.EndDate,
-		listing.Recurring, listing.RecurringEndDate, listing.Type, time.Now()).
-		Scan(&listingID)
-	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
-	}
-	listing.ListingID = listingID
-
-	if listing.Recurring {
-		for _, day := range listing.RecurringDays {
-			if err := l.AddRecurring(listingID, day); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(listing.DietaryRestriction) > 0 {
-		for _, restriction := range listing.DietaryRestriction {
-			if err := l.AddDietaryRestriction(listingID, restriction); err != nil {
-				return err
-			}
-		}
-	}
-
-	// insert into listing_date
-	if err := l.AddListingDates(listing); err != nil {
-		return err
-	}
-
-	l.logger.Infof("successfully added a listing %s for business: %s", listing.Title, business.Name)
-
-	return nil
-}
-
-func (l *listingEngine) AddListingDates(listing shared.Listing) error {
-	// current listing date
-	listings := []shared.ListingDate{
-		shared.ListingDate{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime},
-	}
-
-	dayMap := map[string]int{"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
-
-	listingDate, err := time.Parse(shared.DateFormat, strings.Split(listing.StartDate, "T")[0])
-	if err != nil {
-		return err
-	}
-
-	if listing.MultipleDays {
-		listingEndDate, err := time.Parse(shared.DateFormat, strings.Split(listing.EndDate, "T")[0])
-		if err != nil {
-			return err
-		}
-		// difference b/w days
-		days := listingEndDate.Sub(listingDate).Hours() / 24
-		curDate := listingDate
-		for i := 1; i <= int(days); i++ {
-			var lDate shared.ListingDate
-			nextDate := curDate.Add(time.Hour * 24)
-			year, month, day := nextDate.Date()
-
-			next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
-			lDate = shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
-			listings = append(listings, lDate)
-
-			curDate = nextDate
-		}
-	}
-
-	if listing.Recurring {
-		listingRecurringDate, err := time.Parse(shared.DateFormat, strings.Split(listing.RecurringEndDate, "T")[0])
-		if err != nil {
-			return err
-		}
-		// difference b/w days
-		days := listingRecurringDate.Sub(listingDate).Hours() / 24
-		curDate := listingDate
-		for i := 1; i < int(days); i++ {
-			var lDate shared.ListingDate
-			nextDate := curDate.Add(time.Hour * 24)
-			year, month, day := nextDate.Date()
-			for _, recurringDay := range listing.RecurringDays {
-				if dayMap[recurringDay] == int(nextDate.Weekday()) {
-					next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
-					lDate = shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
-					listings = append(listings, lDate)
-				}
-			}
-			curDate = nextDate
-		}
-	}
-
-	for _, listing := range listings {
-		err := l.InsertListingDate(listing)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (l *listingEngine) InsertListingDate(lDate shared.ListingDate) error {
-	addListingDietRestrictionSQL := "INSERT INTO listing_date(listing_id,listing_date,start_time,end_time) " +
-		"VALUES($1,$2,$3,$4);"
-
-	_, err := l.sql.Query(addListingDietRestrictionSQL, lDate.ListingID, lDate.ListingDate, lDate.StartTime, lDate.EndTime)
-	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
-	}
-
-	l.logger.Infof("InsertListingDate successful for listing:%d", lDate.ListingID)
-	return nil
-}
-
-func (l *listingEngine) AddRecurring(listingID int, day string) error {
-	addListingRecurringSQL := "INSERT INTO recurring_listing(listing_id,day) " +
-		"VALUES($1,$2);"
-
-	_, err := l.sql.Query(addListingRecurringSQL, listingID, day)
-	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
-	}
-
-	l.logger.Infof("add recurring successful for listing:%d", listingID)
-	return nil
-}
-
-func (l *listingEngine) AddDietaryRestriction(listingID int, restriction string) error {
-	addListingDietRestrictionSQL := "INSERT INTO listing_dietary_restrictions(listing_id,restriction) " +
-		"VALUES($1,$2);"
-
-	_, err := l.sql.Query(addListingDietRestrictionSQL, listingID, restriction)
-	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
-	}
-
-	l.logger.Infof("add listing_dietary_restrictions successful for listing:%d", listingID)
-	return nil
-}
-
-func (l *listingEngine) AddListingImage(businessName string, imagePath string) {
-	return
-}
-
-func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]shared.Listing, error) {
-	getListingsQuery := "SELECT title, old_price, new_price, discount, description," +
-		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where " +
-		"business_id = $1"
-
-	rows, err := l.sql.Query(getListingsQuery, businessID)
-	if err != nil {
-		return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-	}
-	defer rows.Close()
-
-	var listings []shared.Listing
-	for rows.Next() {
-		var listing shared.Listing
-		err := rows.Scan(
-			&listing.Title,
-			&listing.OldPrice,
-			&listing.NewPrice,
-			&listing.Discount,
-			&listing.Description,
-			&listing.StartDate,
-			&listing.EndDate,
-			&listing.StartTime,
-			&listing.EndTime,
-			&listing.Recurring,
-			&listing.Type,
-			&listing.BusinessID,
-			&listing.ListingID,
-		)
-		if err != nil {
-			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-		}
-
-		// add dietary req's
-		reqs, err := l.GetDietaryRestriction(listing.ListingID)
-		if err != nil {
-			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-		}
-		listing.DietaryRestriction = reqs
-
-		// add recurring listing
-		recurring, err := l.GetRecurringListing(listing.ListingID)
-		if err != nil {
-			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-		}
-		listing.RecurringDays = recurring
-
-		listings = append(listings, listing)
-	}
-
-	if err = rows.Err(); err != nil {
-		return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	return listings, nil
 }
 
 func (l *listingEngine) GetDietaryRestriction(listingID int) ([]string, error) {
@@ -323,103 +98,6 @@ func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
 	return days, nil
 }
 
-func (l *listingEngine) SearchListings(
-	listingType string,
-	future bool,
-	latitude float64,
-	longitude float64,
-	location string,
-	priceFilter float64,
-	dietaryFilter string,
-	keywords string,
-	sortBy string,
-) ([]shared.SearchListingResult, error) {
-
-	var listings []shared.Listing
-	var err error
-	if !future {
-		//GetTodayListings
-		listings, err = l.GetTodayListings(listingType, keywords)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		//GetFutureListings
-		listings, err = l.GetFutureListings(listingType)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if priceFilter > 0.0 {
-		listings, err = l.FilterByPrice(listings, priceFilter)
-	} else if dietaryFilter != "" {
-		listings, err = l.FilterByDietaryRestrictions(listings, dietaryFilter)
-	}
-
-	var currentLocation CurrentLocation
-	if location != "" {
-		// getLatLonFromLocation
-		resp, err := clients.GetLatLong(location)
-		if err != nil {
-			return nil, err
-		}
-		currentLocation = CurrentLocation{Latitude: resp.Lat, Longitude: resp.Lon}
-	} else {
-		currentLocation = CurrentLocation{Latitude: latitude, Longitude: longitude}
-	}
-
-	// AddDietaryRestrictionsToListings
-	listings, err = l.AddDietaryRestrictionsToListings(listings)
-	if err != nil {
-		return nil, err
-	}
-
-	// sort Listings based on sortBy
-	listings, err = l.SortListings(listings, sortBy, currentLocation)
-	if err != nil {
-		return nil, err
-	}
-
-	return l.massageAndPopulateSearchListings(listings)
-}
-
-func (l *listingEngine) massageAndPopulateSearchListings(listings []shared.Listing) ([]shared.SearchListingResult, error) {
-	// get current date and time
-	currentDateTime := time.Now().Format(shared.DateTimeFormat)
-	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)
-	if err != nil {
-		return nil, err
-	}
-
-	var listingsResult []shared.SearchListingResult
-	for _, listing := range listings {
-		listingEndTime := GetListingDateTime(listing.ListingDate, listing.EndTime)
-		listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, listingEndTime)
-		if err != nil {
-			return nil, err
-		}
-
-		timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Hours()
-		sr := shared.SearchListingResult{
-			ListingID:            listing.ListingID,
-			ListingType:          listing.Type,
-			Title:                listing.Title,
-			BusinessID:           listing.BusinessID,
-			BusinessName:         listing.BusinessName,
-			Price:                listing.NewPrice,
-			Discount:             listing.Discount,
-			DietaryRestriction:   listing.DietaryRestriction,
-			TimeLeft:             int(timeLeftInHours),
-			ListingImage:         listing.ListingImage,
-			DistanceFromLocation: listing.DistanceFromLocation,
-		}
-		listingsResult = append(listingsResult, sr)
-	}
-
-	return listingsResult, nil
-}
-
 func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listing) ([]shared.Listing, error) {
 	// get dietary restriction
 	var listingsResult []shared.Listing
@@ -435,36 +113,13 @@ func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listi
 	return listingsResult, nil
 }
 
-const imageBaseURL = "http://71.198.1.192:3001"
-
 func (l *listingEngine) GetListingImage() string {
 	imgRand := random(1, 6)
-	return fmt.Sprintf("%s/static/%d.jpg", imageBaseURL, imgRand)
+	return fmt.Sprintf("%s/static/%d.jpg", shared.ImageBaseURL, imgRand)
 }
 
 func random(min, max int) int {
 	return rand.Intn(max-min) + min
-}
-
-func (l *listingEngine) OrderListingsByTime(listings []sortTimeView) []sortTimeView {
-	sort.Slice(listings, func(i, j int) bool {
-		return listings[i].timeLeft > listings[j].timeLeft
-	})
-	return listings
-}
-
-func (l *listingEngine) OrderListingsByPrice(listings []sortPriceView) []sortPriceView {
-	sort.Slice(listings, func(i, j int) bool {
-		return listings[i].price < listings[j].price
-	})
-	return listings
-}
-
-func (l *listingEngine) OrderListingsByDistance(listings []sortDistanceView) []sortDistanceView {
-	sort.Slice(listings, func(i, j int) bool {
-		return listings[i].mile < listings[j].mile
-	})
-	return listings
 }
 
 func (l *listingEngine) GetListingsLatLon(businessID int) (shared.AddressGeo, error) {
@@ -513,243 +168,6 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	}
 
 	return rests, nil
-}
-
-func (l *listingEngine) GetTodayListings(listingType string, keywords string) ([]shared.Listing, error) {
-	currentDate := time.Now().Format("2006-01-02")
-	currentTime := time.Now().Format("15:04:05.000000")
-
-	var query string
-
-	if keywords != "" {
-		query = fmt.Sprintf(`SELECT title, old_price, new_price, discount, description, start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id, bname, listing_date
-FROM (SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price,
-    listing.discount as discount, listing.description as description, listing.start_date as start_date,
-    listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time,
-    listing.recurring as recurring, listing.listing_type as listing_type, listing.business_id as business_id,
-    listing.listing_id as listing_id, business.name as bname, listing_date.listing_date as listing_date,
-	to_tsvector(business.name) ||
-    to_tsvector(listing.title) ||
-    to_tsvector(listing.description) as document
-    FROM listing
-    INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id
-    INNER JOIN business ON listing.business_id = business.business_id
-    WHERE listing_date.listing_date = '%s' AND listing_date.end_time >= '%s' AND listing_type = '%s'
-) p_search
-WHERE p_search.document @@ to_tsquery('%s');`, currentDate, currentTime, listingType, keywords)
-	} else if listingType == "" {
-		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
-			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
-			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
-			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
-			"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s';", currentDate, currentTime)
-	} else {
-		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
-			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
-			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
-			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
-			"listing_date.listing_date = '%s' AND listing_date.end_time >= '%s' AND listing_type = '%s';", currentDate, currentTime, listingType)
-	}
-
-	fmt.Println("Query: ", query)
-
-	rows, err := l.sql.Query(query)
-	if err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
-
-	var listings []shared.Listing
-	for rows.Next() {
-		var listing shared.Listing
-		err := rows.Scan(
-			&listing.Title,
-			&listing.OldPrice,
-			&listing.NewPrice,
-			&listing.Discount,
-			&listing.Description,
-			&listing.StartDate,
-			&listing.EndDate,
-			&listing.StartTime,
-			&listing.EndTime,
-			&listing.Recurring,
-			&listing.Type,
-			&listing.BusinessID,
-			&listing.ListingID,
-			&listing.BusinessName,
-			&listing.ListingDate,
-		)
-		if err != nil {
-			return nil, helper.DatabaseError{DBError: err.Error()}
-		}
-		listings = append(listings, listing)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	return listings, nil
-}
-
-func (l *listingEngine) GetFutureListings(listingType string) ([]shared.Listing, error) {
-	var buffer bytes.Buffer
-
-	currentDate := time.Now().Format(shared.DateFormat)
-	listingDate, err := time.Parse(shared.DateFormat, currentDate)
-
-	curr := listingDate
-	buffer.WriteString("(")
-	for i := 0; i < 7; i++ {
-		nextDate := curr.Add(time.Hour * 24)
-		if i == 6 {
-			buffer.WriteString(fmt.Sprintf("'%s')", strings.Split(nextDate.String(), " ")[0]))
-		} else {
-			buffer.WriteString(fmt.Sprintf("'%s',", strings.Split(nextDate.String(), " ")[0]))
-		}
-		curr = nextDate
-	}
-
-	var query string
-	if listingType == "" {
-		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
-			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
-			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
-			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
-			"listing_date IN %s;", buffer.String())
-	} else {
-		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
-			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
-			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
-			"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id "+
-			"INNER JOIN business ON listing.business_id = business.business_id WHERE "+
-			"listing_date IN %s AND listing_type = '%s';", buffer.String(), listingType)
-	}
-
-	fmt.Println("Query: ", query)
-
-	rows, err := l.sql.Query(query)
-	if err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
-
-	var listings []shared.Listing
-	for rows.Next() {
-		var listing shared.Listing
-		err := rows.Scan(
-			&listing.Title,
-			&listing.OldPrice,
-			&listing.NewPrice,
-			&listing.Discount,
-			&listing.Description,
-			&listing.StartDate,
-			&listing.EndDate,
-			&listing.StartTime,
-			&listing.EndTime,
-			&listing.Recurring,
-			&listing.Type,
-			&listing.BusinessID,
-			&listing.ListingID,
-			&listing.BusinessName,
-			&listing.ListingDate,
-		)
-		if err != nil {
-			return nil, helper.DatabaseError{DBError: err.Error()}
-		}
-		listings = append(listings, listing)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	return listings, nil
-}
-
-func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]shared.Listing, error) {
-	currentDate := time.Now().Format("2006-01-02")
-	//currentTime := time.Now().Format("15:04:05.000000")
-
-	q := fmt.Sprintf("SELECT title, old_price, new_price, discount, description,"+
-		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
-		"end_date >= '%s' AND listing_type = '%s';", currentDate, listingType)
-
-	fmt.Println("qry: ", q)
-
-	/*rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
-	"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
-	"end_date >= $1 AND end_time >= $2 AND listing_type = $3;", currentDate, currentTime, listingType)*/
-
-	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
-		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
-		"end_date >= $1 AND listing_type = $2;", currentDate, listingType)
-
-	if err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
-
-	var listings []shared.Listing
-	for rows.Next() {
-		var listing shared.Listing
-		err := rows.Scan(
-			&listing.Title,
-			&listing.OldPrice,
-			&listing.NewPrice,
-			&listing.Discount,
-			&listing.Description,
-			&listing.StartDate,
-			&listing.EndDate,
-			&listing.StartTime,
-			&listing.EndTime,
-			&listing.Recurring,
-			&listing.Type,
-			&listing.BusinessID,
-			&listing.ListingID,
-		)
-		if err != nil {
-			return nil, helper.DatabaseError{DBError: err.Error()}
-		}
-		listings = append(listings, listing)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	return listings, nil
-}
-
-func (l *listingEngine) GetAllListingsLatLon() ([]shared.AddressGeo, error) {
-	rows, err := l.sql.Query("SELECT address_id, business_id, latitude, longitude  FROM address_geo")
-	if err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
-
-	var geoAddresses []shared.AddressGeo
-	for rows.Next() {
-		geo := shared.AddressGeo{}
-		err := rows.Scan(&geo.AddressID, &geo.BusinessID, &geo.Latitude, &geo.Longitude)
-		if err != nil {
-			return nil, helper.DatabaseError{DBError: err.Error()}
-		}
-		geoAddresses = append(geoAddresses, geo)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	return geoAddresses, nil
 }
 
 func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error) {
@@ -816,4 +234,60 @@ func (l *listingEngine) GetListingByID(listingID int) (shared.Listing, error) {
 	}
 
 	return listing, nil
+}
+func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]shared.Listing, error) {
+	getListingsQuery := "SELECT title, old_price, new_price, discount, description," +
+		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where " +
+		"business_id = $1"
+
+	rows, err := l.sql.Query(getListingsQuery, businessID)
+	if err != nil {
+		return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+	}
+	defer rows.Close()
+
+	var listings []shared.Listing
+	for rows.Next() {
+		var listing shared.Listing
+		err := rows.Scan(
+			&listing.Title,
+			&listing.OldPrice,
+			&listing.NewPrice,
+			&listing.Discount,
+			&listing.Description,
+			&listing.StartDate,
+			&listing.EndDate,
+			&listing.StartTime,
+			&listing.EndTime,
+			&listing.Recurring,
+			&listing.Type,
+			&listing.BusinessID,
+			&listing.ListingID,
+		)
+		if err != nil {
+			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+		}
+
+		// add dietary req's
+		reqs, err := l.GetDietaryRestriction(listing.ListingID)
+		if err != nil {
+			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+		}
+		listing.DietaryRestriction = reqs
+
+		// add recurring listing
+		recurring, err := l.GetRecurringListing(listing.ListingID)
+		if err != nil {
+			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+		}
+		listing.RecurringDays = recurring
+
+		listings = append(listings, listing)
+	}
+
+	if err = rows.Err(); err != nil {
+		return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return listings, nil
 }
