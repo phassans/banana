@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	"github.com/phassans/banana/model"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -31,7 +31,7 @@ var addNotification postEndpoint = addNotificationEndpoint{}
 func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(notificationADDRequest)
 
-	l := model.Notification{
+	l := shared.Notification{
 		PhoneId:            request.PhoneId,
 		BusinessId:         request.BusinessId,
 		Price:              request.Price,

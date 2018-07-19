@@ -7,6 +7,11 @@ import (
 
 	"github.com/phassans/banana/db"
 	"github.com/phassans/banana/model"
+	"github.com/phassans/banana/model/business"
+	"github.com/phassans/banana/model/favourite"
+	"github.com/phassans/banana/model/listing"
+	"github.com/phassans/banana/model/notification"
+	"github.com/phassans/banana/model/user"
 	"github.com/phassans/banana/route"
 	"github.com/rs/xlog"
 )
@@ -23,11 +28,11 @@ func main() {
 	xlog.Infof("successfully connected to db")
 
 	// createEngines
-	userEngine := model.NewUserEngine(roach.Db, logger)
-	businessEngine := model.NewBusinessEngine(roach.Db, logger)
-	listingEngine := model.NewListingEngine(roach.Db, logger, businessEngine)
-	favouriteEngine := model.NewFavoriteEngine(roach.Db, logger, businessEngine, listingEngine)
-	notificationEngine := model.NewNotificationEngine(roach.Db, logger, businessEngine)
+	userEngine := user.NewUserEngine(roach.Db, logger)
+	businessEngine := business.NewBusinessEngine(roach.Db, logger)
+	listingEngine := listing.NewListingEngine(roach.Db, logger, businessEngine)
+	favouriteEngine := favourite.NewFavoriteEngine(roach.Db, logger, businessEngine, listingEngine)
+	notificationEngine := notification.NewNotificationEngine(roach.Db, logger, businessEngine)
 
 	engines := model.NewGenericEngine(businessEngine, userEngine, listingEngine, favouriteEngine, notificationEngine)
 

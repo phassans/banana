@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	"github.com/phassans/banana/model"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -41,9 +41,9 @@ var addBusiness postEndpoint = createBusinessEndpoint{}
 func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(businessRequest)
 
-	var hoursInfo []model.Hours
+	var hoursInfo []shared.Hours
 	for _, day := range request.Hours {
-		h := model.Hours{day.Day, day.OpenTimeSessionOne, day.CloseTimeSessionOne, day.OpenTimeSessionTwo, day.CloseTimeSessionTwo}
+		h := shared.Hours{day.Day, day.OpenTimeSessionOne, day.CloseTimeSessionOne, day.OpenTimeSessionTwo, day.CloseTimeSessionTwo}
 		hoursInfo = append(hoursInfo, h)
 	}
 

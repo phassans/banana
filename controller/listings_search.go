@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/phassans/banana/helper"
-	"github.com/phassans/banana/model"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -22,7 +22,7 @@ type (
 	}
 
 	listingsSearchResult struct {
-		Result []model.SearchListingResult
+		Result []shared.SearchListingResult
 		Error  *APIError `json:"error,omitempty"`
 	}
 

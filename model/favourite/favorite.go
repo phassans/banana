@@ -1,9 +1,12 @@
-package model
+package favourite
 
 import (
 	"database/sql"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/model/business"
+	"github.com/phassans/banana/model/listing"
+	"github.com/phassans/banana/shared"
 	"github.com/rs/xlog"
 )
 
@@ -11,18 +14,18 @@ type (
 	favoriteEngine struct {
 		sql            *sql.DB
 		logger         xlog.Logger
-		businessEngine BusinessEngine
-		listingEngine  ListingEngine
+		businessEngine business.BusinessEngine
+		listingEngine  listing.ListingEngine
 	}
 
 	FavoriteEngine interface {
 		AddFavorite(phoneID string, listingID int) error
 		DeleteFavorite(phoneID string, listingID int) error
-		GetAllFavorites(phoneID string) ([]Listing, error)
+		GetAllFavorites(phoneID string) ([]shared.Listing, error)
 	}
 )
 
-func NewFavoriteEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessEngine, listingEngine ListingEngine) FavoriteEngine {
+func NewFavoriteEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine, listingEngine listing.ListingEngine) FavoriteEngine {
 	return &favoriteEngine{psql, logger, businessEngine, listingEngine}
 }
 
@@ -47,13 +50,13 @@ func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int) error {
 	return err
 }
 
-func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]Listing, error) {
+func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]shared.Listing, error) {
 	IDs, err := f.GetAllFavoritesIDs(phoneID)
 	if err != nil {
 		return nil, err
 	}
 
-	var listings []Listing
+	var listings []shared.Listing
 	for _, id := range IDs {
 		listing, err := f.listingEngine.GetListingByID(id)
 		if err != nil {

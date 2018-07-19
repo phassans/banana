@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	"github.com/phassans/banana/model"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -39,7 +39,7 @@ var addListing postEndpoint = addListingEndpoint{}
 func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingADDRequest)
 
-	l := model.Listing{
+	l := shared.Listing{
 		Title:              request.Title,
 		OldPrice:           request.OldPrice,
 		NewPrice:           request.NewPrice,

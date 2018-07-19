@@ -1,44 +1,34 @@
-package model
+package notification
 
 import (
 	"database/sql"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/model/business"
+	"github.com/phassans/banana/shared"
 	"github.com/rs/xlog"
 )
 
 type (
-	Notification struct {
-		NotificationID     NotificationID
-		PhoneId            string
-		BusinessId         int
-		Price              string
-		Keywords           string
-		DietaryRestriction []string
-		Latitude           float64
-		Longitude          float64
-		Location           string
-	}
-
 	notificationEngine struct {
 		sql            *sql.DB
 		logger         xlog.Logger
-		businessEngine BusinessEngine
+		businessEngine business.BusinessEngine
 	}
 
 	NotificationEngine interface {
-		AddNotification(notification Notification) error
+		AddNotification(notification shared.Notification) error
 		DeleteNotification(notificationID int) error
-		GetAllNotifications(phoneID string) ([]Notification, error)
+		GetAllNotifications(phoneID string) ([]shared.Notification, error)
 	}
 )
 
-func NewNotificationEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessEngine) NotificationEngine {
+func NewNotificationEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine) NotificationEngine {
 	return &notificationEngine{psql, logger, businessEngine}
 }
 
-func (n *notificationEngine) AddNotification(notification Notification) error {
-	var notificationID NotificationID
+func (n *notificationEngine) AddNotification(notification shared.Notification) error {
+	var notificationID int
 
 	// Add Notification
 	err := n.sql.QueryRow("INSERT INTO notifications(phone_id,business_id,price,keywords) "+
@@ -68,7 +58,7 @@ func (n *notificationEngine) AddNotification(notification Notification) error {
 	return nil
 }
 
-func (n *notificationEngine) AddNotificationLocation(notification Notification) error {
+func (n *notificationEngine) AddNotificationLocation(notification shared.Notification) error {
 	_, err := n.sql.Query("INSERT INTO notifications_location(notification_id,location,latitude,longitude) "+
 		"VALUES($1,$2,$3,$4);",
 		notification.NotificationID, notification.Location, notification.Latitude, notification.Longitude)
@@ -80,7 +70,7 @@ func (n *notificationEngine) AddNotificationLocation(notification Notification) 
 	return nil
 }
 
-func (l *notificationEngine) AddNotificationDietaryRestriction(restriction string, notificationID NotificationID) error {
+func (l *notificationEngine) AddNotificationDietaryRestriction(restriction string, notificationID int) error {
 	addNotificationDietRestrictionSQL := "INSERT INTO notifications_dietary_restrictions(notification_id,restriction) " +
 		"VALUES($1,$2);"
 
@@ -133,6 +123,6 @@ func (n *notificationEngine) DeleteNotificationDietaryRestriction(notificationID
 	return err
 }
 
-func (n *notificationEngine) GetAllNotifications(phoneID string) ([]Notification, error) {
+func (n *notificationEngine) GetAllNotifications(phoneID string) ([]shared.Notification, error) {
 	return nil, nil
 }

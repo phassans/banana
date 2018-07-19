@@ -1,4 +1,4 @@
-package model
+package business
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/shared"
 	"github.com/rs/xlog"
 )
 
@@ -14,36 +15,6 @@ type businessEngine struct {
 	sql    *sql.DB
 	logger xlog.Logger
 }
-
-type (
-	AddressGeo struct {
-		AddressID  int
-		BusinessID int
-		Latitude   float64
-		Longitude  float64
-	}
-
-	Business struct {
-		BusinessID int    `json:"businessId"`
-		Name       string `json:"name"`
-		Phone      string `json:"phone"`
-		Website    string `json:"website"`
-	}
-
-	BusinessAddress struct {
-		Street     string `json:"street"`
-		City       string `json:"city"`
-		PostalCode string `json:"postalCode"`
-		State      string `json:"state"`
-		BusinessID int    `json:"businessID"`
-	}
-
-	BusinessInfo struct {
-		Business        Business        `json:"business"`
-		BusinessAddress BusinessAddress `json:"businessAddress"`
-		Hours           []Bhour         `json:"businessHours"`
-	}
-)
 
 const (
 	insertBusinessSQL = "INSERT INTO business(name,phone,website) " +
@@ -54,8 +25,6 @@ const (
 
 	insertBusinessAddressGEOSQL = "INSERT INTO address_geo(address_id,business_id,latitude,longitude) " +
 		"VALUES($1,$2,$3,$4) returning geo_id;"
-
-	countryID = 1
 )
 
 type BusinessEngine interface {
@@ -69,7 +38,7 @@ type BusinessEngine interface {
 		postalCode string,
 		state string,
 		country string,
-		hoursInfo []Hours,
+		hoursInfo []shared.Hours,
 		cuisine []string,
 	) (int, error)
 	AddBusinessAddress(
@@ -81,15 +50,15 @@ type BusinessEngine interface {
 		businessID int,
 	) error
 	AddGeoInfo(address string, addressID int, businessID int) error
-	AddBusinessHours([]Hours, int) error
+	AddBusinessHours([]shared.Hours, int) error
 	AddBusinessCuisine(cuisines []string, businessID int) error
 
 	// Select
 	GetBusinessIDFromName(businessName string) (int, error)
-	GetBusinessFromID(businessID int) (Business, error)
-	GetBusinessAddressFromID(businessID int) (BusinessAddress, error)
-	GetBusinessInfo(businessID int) (BusinessInfo, error)
-	GetAllBusiness() ([]Business, error)
+	GetBusinessFromID(businessID int) (shared.Business, error)
+	GetBusinessAddressFromID(businessID int) (shared.BusinessAddress, error)
+	GetBusinessInfo(businessID int) (shared.BusinessInfo, error)
+	GetAllBusiness() ([]shared.Business, error)
 
 	// Delete
 	DeleteBusinessFromID(businessID int) error
@@ -100,7 +69,7 @@ func NewBusinessEngine(psql *sql.DB, logger xlog.Logger) BusinessEngine {
 	return &businessEngine{psql, logger}
 }
 
-func (b *businessEngine) GetAllBusiness() ([]Business, error) {
+func (b *businessEngine) GetAllBusiness() ([]shared.Business, error) {
 	rows, err := b.sql.Query("SELECT business_id, name, phone, website FROM business;")
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
@@ -108,9 +77,9 @@ func (b *businessEngine) GetAllBusiness() ([]Business, error) {
 
 	defer rows.Close()
 
-	var allBusiness []Business
+	var allBusiness []shared.Business
 	for rows.Next() {
-		var business Business
+		var business shared.Business
 		err := rows.Scan(&business.BusinessID, &business.Name, &business.Phone, &business.Website)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
@@ -134,7 +103,7 @@ func (b *businessEngine) AddBusiness(
 	postalCode string,
 	state string,
 	country string,
-	hoursInfo []Hours,
+	hoursInfo []shared.Hours,
 	cuisine []string,
 ) (int, error) {
 	// check business name unique
@@ -185,7 +154,7 @@ func (b *businessEngine) AddBusinessAddress(
 	// insert to address table
 	var addressID int
 	err := b.sql.QueryRow(insertBusinessAddressSQL, street, city, postalCode,
-		state, countryID, businessID).
+		state, shared.CountryID, businessID).
 		Scan(&addressID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
@@ -222,7 +191,7 @@ func (l *businessEngine) AddGeoInfo(address string, addressID int, businessID in
 	return err
 }
 
-func (l *businessEngine) AddBusinessHours(days []Hours, businessID int) error {
+func (l *businessEngine) AddBusinessHours(days []shared.Hours, businessID int) error {
 	business, err := l.GetBusinessFromID(businessID)
 	if err != nil {
 		return err
@@ -318,53 +287,53 @@ func (l *businessEngine) GetBusinessIDFromName(businessName string) (int, error)
 	return id, nil
 }
 
-func (l *businessEngine) GetBusinessFromID(businessID int) (Business, error) {
+func (l *businessEngine) GetBusinessFromID(businessID int) (shared.Business, error) {
 	rows, err := l.sql.Query("SELECT business_id, name, phone, website FROM business where business_id = $1;", businessID)
 	if err != nil {
-		return Business{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.Business{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	defer rows.Close()
 
-	var business Business
+	var business shared.Business
 	if rows.Next() {
 		err := rows.Scan(&business.BusinessID, &business.Name, &business.Phone, &business.Website)
 		if err != nil {
-			return Business{}, helper.DatabaseError{DBError: err.Error()}
+			return shared.Business{}, helper.DatabaseError{DBError: err.Error()}
 		}
 	}
 
 	if err = rows.Err(); err != nil {
-		return Business{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.Business{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	return business, nil
 }
 
-func (l *businessEngine) GetBusinessAddressFromID(businessID int) (BusinessAddress, error) {
+func (l *businessEngine) GetBusinessAddressFromID(businessID int) (shared.BusinessAddress, error) {
 	rows, err := l.sql.Query("SELECT street, city, postal_code, state FROM address where business_id = $1;", businessID)
 	if err != nil {
-		return BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	defer rows.Close()
 
-	var businessAddress BusinessAddress
+	var businessAddress shared.BusinessAddress
 	if rows.Next() {
 		err := rows.Scan(&businessAddress.Street, &businessAddress.City, &businessAddress.PostalCode, &businessAddress.State)
 		if err != nil {
-			return BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
+			return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
 		}
 	}
 
 	if err = rows.Err(); err != nil {
-		return BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	return businessAddress, nil
 }
 
-func (l *businessEngine) GetBusinessHoursFromID(businessID int) ([]Bhour, error) {
+func (l *businessEngine) GetBusinessHoursFromID(businessID int) ([]shared.Bhour, error) {
 	rows, err := l.sql.Query("SELECT day, open_time, close_time FROM business_hours where business_id = $1;", businessID)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
@@ -372,9 +341,9 @@ func (l *businessEngine) GetBusinessHoursFromID(businessID int) ([]Bhour, error)
 
 	defer rows.Close()
 
-	var businessHours []Bhour
+	var businessHours []shared.Bhour
 	for rows.Next() {
-		var businessHour Bhour
+		var businessHour shared.Bhour
 		err := rows.Scan(&businessHour.Day, &businessHour.OpenTime, &businessHour.CloseTime)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
@@ -389,23 +358,23 @@ func (l *businessEngine) GetBusinessHoursFromID(businessID int) ([]Bhour, error)
 	return businessHours, nil
 }
 
-func (l *businessEngine) GetBusinessInfo(businessID int) (BusinessInfo, error) {
+func (l *businessEngine) GetBusinessInfo(businessID int) (shared.BusinessInfo, error) {
 	business, err := l.GetBusinessFromID(businessID)
 	if err != nil {
-		return BusinessInfo{}, err
+		return shared.BusinessInfo{}, err
 	}
 
 	businessAddress, err := l.GetBusinessAddressFromID(businessID)
 	if err != nil {
-		return BusinessInfo{}, err
+		return shared.BusinessInfo{}, err
 	}
 
 	businessHours, err := l.GetBusinessHoursFromID(businessID)
 	if err != nil {
-		return BusinessInfo{}, err
+		return shared.BusinessInfo{}, err
 	}
 
-	return BusinessInfo{Business: business, BusinessAddress: businessAddress, Hours: businessHours}, nil
+	return shared.BusinessInfo{Business: business, BusinessAddress: businessAddress, Hours: businessHours}, nil
 
 }
 

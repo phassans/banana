@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	"github.com/phassans/banana/model"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -13,7 +13,7 @@ type (
 	}
 
 	favoritesViewResult struct {
-		Result []model.Listing
+		Result []shared.Listing
 		Error  *APIError `json:"error,omitempty"`
 	}
 

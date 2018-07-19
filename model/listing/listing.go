@@ -1,6 +1,7 @@
-package model
+package listing
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"math/rand"
@@ -8,104 +9,47 @@ import (
 	"strings"
 	"time"
 
-	"bytes"
-
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/model/business"
+	"github.com/phassans/banana/shared"
 	"github.com/rs/xlog"
-	"github.com/umahmood/haversine"
-)
-
-const (
-	// See http://golang.org/pkg/time/#Parse
-	dateTimeFormat = "2006-01-02T15:04:05Z"
-	dateFormat     = "01/02/2006" //07/11/2018
 )
 
 type (
 	listingEngine struct {
 		sql            *sql.DB
 		logger         xlog.Logger
-		businessEngine BusinessEngine
+		businessEngine business.BusinessEngine
 	}
 
-	Listing struct {
-		ListingID            int
-		Title                string
-		BusinessID           int
-		BusinessName         string
-		OldPrice             float64
-		NewPrice             float64
-		Discount             float64
-		DietaryRestriction   []string
-		Description          string
-		StartDate            string
-		StartTime            string
-		EndTime              string
-		MultipleDays         bool
-		EndDate              string
-		Recurring            bool
-		RecurringDays        []string
-		RecurringEndDate     string
-		Type                 string
-		ListingImage         string
-		DistanceFromLocation float64
-		ListingDate          string
-	}
+	ListingEngine interface {
+		AddListing(listing shared.Listing) error
+		AddListingImage(businessName string, imagePath string)
 
-	SearchListingResult struct {
-		ListingID            int      `json:"listingId"`
-		ListingType          string   `json:"listingType"`
-		Title                string   `json:"title"`
-		BusinessID           int      `json:"businessId"`
-		BusinessName         string   `json:"businessName"`
-		Price                float64  `json:"price"`
-		Discount             float64  `json:"discount"`
-		DietaryRestriction   []string `json:"dietaryRestriction"`
-		TimeLeft             int      `json:"timeLeft"`
-		ListingImage         string   `json:"listingImage"`
-		DistanceFromLocation float64  `json:"distanceFromLocation"`
-	}
+		SearchListings(
+			listingType string,
+			future bool,
+			latitude float64,
+			longitude float64,
+			Location string,
+			priceFilter float64,
+			dietaryFilter string,
+			keywords string,
+			sortBy string,
+		) ([]shared.SearchListingResult, error)
 
-	ListingInfo struct {
-		Business BusinessInfo        `json:"businessInfo"`
-		Listing  SearchListingResult `json:"listing"`
-	}
-
-	ListingDate struct {
-		ListingID   int
-		ListingDate string
-		StartTime   string
-		EndTime     string
+		GetAllListings(businessID int, businessType string) ([]shared.Listing, error)
+		GetListingByID(listingID int) (shared.Listing, error)
+		GetListingInfo(listingID int) (shared.ListingInfo, error)
 	}
 )
 
-type ListingEngine interface {
-	AddListing(listing Listing) error
-	AddListingImage(businessName string, imagePath string)
-
-	SearchListings(
-		listingType string,
-		future bool,
-		latitude float64,
-		longitude float64,
-		Location string,
-		priceFilter float64,
-		dietaryFilter string,
-		keywords string,
-		sortBy string,
-	) ([]SearchListingResult, error)
-
-	GetAllListings(businessID int, businessType string) ([]Listing, error)
-	GetListingByID(listingID int) (Listing, error)
-	GetListingInfo(listingID int) (ListingInfo, error)
-}
-
-func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine BusinessEngine) ListingEngine {
+func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine) ListingEngine {
 	return &listingEngine{psql, logger, businessEngine}
 }
 
-func (l *listingEngine) AddListing(listing Listing) error {
+func (l *listingEngine) AddListing(listing shared.Listing) error {
 	business, err := l.businessEngine.GetBusinessFromID(listing.BusinessID)
 	if err != nil {
 		return err
@@ -159,21 +103,21 @@ func (l *listingEngine) AddListing(listing Listing) error {
 	return nil
 }
 
-func (l *listingEngine) AddListingDates(listing Listing) error {
+func (l *listingEngine) AddListingDates(listing shared.Listing) error {
 	// current listing date
-	listings := []ListingDate{
-		ListingDate{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime},
+	listings := []shared.ListingDate{
+		shared.ListingDate{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime},
 	}
 
 	dayMap := map[string]int{"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
 
-	listingDate, err := time.Parse(dateFormat, strings.Split(listing.StartDate, "T")[0])
+	listingDate, err := time.Parse(shared.DateFormat, strings.Split(listing.StartDate, "T")[0])
 	if err != nil {
 		return err
 	}
 
 	if listing.MultipleDays {
-		listingEndDate, err := time.Parse(dateFormat, strings.Split(listing.EndDate, "T")[0])
+		listingEndDate, err := time.Parse(shared.DateFormat, strings.Split(listing.EndDate, "T")[0])
 		if err != nil {
 			return err
 		}
@@ -181,12 +125,12 @@ func (l *listingEngine) AddListingDates(listing Listing) error {
 		days := listingEndDate.Sub(listingDate).Hours() / 24
 		curDate := listingDate
 		for i := 1; i <= int(days); i++ {
-			var lDate ListingDate
+			var lDate shared.ListingDate
 			nextDate := curDate.Add(time.Hour * 24)
 			year, month, day := nextDate.Date()
 
 			next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
-			lDate = ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
+			lDate = shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
 			listings = append(listings, lDate)
 
 			curDate = nextDate
@@ -194,7 +138,7 @@ func (l *listingEngine) AddListingDates(listing Listing) error {
 	}
 
 	if listing.Recurring {
-		listingRecurringDate, err := time.Parse(dateFormat, strings.Split(listing.RecurringEndDate, "T")[0])
+		listingRecurringDate, err := time.Parse(shared.DateFormat, strings.Split(listing.RecurringEndDate, "T")[0])
 		if err != nil {
 			return err
 		}
@@ -202,13 +146,13 @@ func (l *listingEngine) AddListingDates(listing Listing) error {
 		days := listingRecurringDate.Sub(listingDate).Hours() / 24
 		curDate := listingDate
 		for i := 1; i < int(days); i++ {
-			var lDate ListingDate
+			var lDate shared.ListingDate
 			nextDate := curDate.Add(time.Hour * 24)
 			year, month, day := nextDate.Date()
 			for _, recurringDay := range listing.RecurringDays {
 				if dayMap[recurringDay] == int(nextDate.Weekday()) {
 					next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
-					lDate = ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
+					lDate = shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
 					listings = append(listings, lDate)
 				}
 			}
@@ -225,7 +169,7 @@ func (l *listingEngine) AddListingDates(listing Listing) error {
 	return nil
 }
 
-func (l *listingEngine) InsertListingDate(lDate ListingDate) error {
+func (l *listingEngine) InsertListingDate(lDate shared.ListingDate) error {
 	addListingDietRestrictionSQL := "INSERT INTO listing_date(listing_id,listing_date,start_time,end_time) " +
 		"VALUES($1,$2,$3,$4);"
 
@@ -268,20 +212,20 @@ func (l *listingEngine) AddListingImage(businessName string, imagePath string) {
 	return
 }
 
-func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]Listing, error) {
+func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]shared.Listing, error) {
 	getListingsQuery := "SELECT title, old_price, new_price, discount, description," +
 		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where " +
 		"business_id = $1"
 
 	rows, err := l.sql.Query(getListingsQuery, businessID)
 	if err != nil {
-		return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+		return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
 	defer rows.Close()
 
-	var listings []Listing
+	var listings []shared.Listing
 	for rows.Next() {
-		var listing Listing
+		var listing shared.Listing
 		err := rows.Scan(
 			&listing.Title,
 			&listing.OldPrice,
@@ -298,20 +242,20 @@ func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]L
 			&listing.ListingID,
 		)
 		if err != nil {
-			return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
 
 		// add dietary req's
 		reqs, err := l.GetDietaryRestriction(listing.ListingID)
 		if err != nil {
-			return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
 		listing.DietaryRestriction = reqs
 
 		// add recurring listing
 		recurring, err := l.GetRecurringListing(listing.ListingID)
 		if err != nil {
-			return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
 		listing.RecurringDays = recurring
 
@@ -319,7 +263,7 @@ func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]L
 	}
 
 	if err = rows.Err(); err != nil {
-		return []Listing{}, helper.DatabaseError{DBError: err.Error()}
+		return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	return listings, nil
@@ -379,28 +323,6 @@ func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
 	return days, nil
 }
 
-type (
-	sortDistanceView struct {
-		listing Listing
-		mile    float64
-	}
-
-	sortPriceView struct {
-		listing Listing
-		price   float64
-	}
-
-	sortTimeView struct {
-		listing  Listing
-		timeLeft float64
-	}
-
-	CurrentLocation struct {
-		Latitude  float64
-		Longitude float64
-	}
-)
-
 func (l *listingEngine) SearchListings(
 	listingType string,
 	future bool,
@@ -411,13 +333,13 @@ func (l *listingEngine) SearchListings(
 	dietaryFilter string,
 	keywords string,
 	sortBy string,
-) ([]SearchListingResult, error) {
+) ([]shared.SearchListingResult, error) {
 
-	var listings []Listing
+	var listings []shared.Listing
 	var err error
 	if !future {
 		//GetTodayListings
-		listings, err = l.GetTodayListings(listingType)
+		listings, err = l.GetTodayListings(listingType, keywords)
 		if err != nil {
 			return nil, err
 		}
@@ -462,23 +384,24 @@ func (l *listingEngine) SearchListings(
 	return l.massageAndPopulateSearchListings(listings)
 }
 
-func (l *listingEngine) massageAndPopulateSearchListings(listings []Listing) ([]SearchListingResult, error) {
-	var listingsResult []SearchListingResult
-	currentDateTime := time.Now().Format(dateTimeFormat)
-	currentDateTimeFormatted, err := time.Parse(dateTimeFormat, currentDateTime)
+func (l *listingEngine) massageAndPopulateSearchListings(listings []shared.Listing) ([]shared.SearchListingResult, error) {
+	// get current date and time
+	currentDateTime := time.Now().Format(shared.DateTimeFormat)
+	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)
 	if err != nil {
 		return nil, err
 	}
 
+	var listingsResult []shared.SearchListingResult
 	for _, listing := range listings {
 		listingEndTime := GetListingDateTime(listing.ListingDate, listing.EndTime)
-		listingEndTimeFormatted, err := time.Parse(dateTimeFormat, listingEndTime)
+		listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, listingEndTime)
 		if err != nil {
 			return nil, err
 		}
 
 		timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Hours()
-		sr := SearchListingResult{
+		sr := shared.SearchListingResult{
 			ListingID:            listing.ListingID,
 			ListingType:          listing.Type,
 			Title:                listing.Title,
@@ -497,37 +420,9 @@ func (l *listingEngine) massageAndPopulateSearchListings(listings []Listing) ([]
 	return listingsResult, nil
 }
 
-func (l *listingEngine) FilterByPrice(listings []Listing, priceFilter float64) ([]Listing, error) {
+func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listing) ([]shared.Listing, error) {
 	// get dietary restriction
-	var listingsResult []Listing
-	for _, listing := range listings {
-		if listing.NewPrice <= priceFilter {
-			listingsResult = append(listingsResult, listing)
-		}
-	}
-	return listingsResult, nil
-}
-
-func (l *listingEngine) FilterByDietaryRestrictions(listings []Listing, dietaryFilter string) ([]Listing, error) {
-	// get dietary restriction
-	var listingsResult []Listing
-	for _, listing := range listings {
-		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
-		if err != nil {
-			return nil, err
-		}
-		for _, rest := range rests {
-			if rest == dietaryFilter {
-				listingsResult = append(listingsResult, listing)
-			}
-		}
-	}
-	return listingsResult, nil
-}
-
-func (l *listingEngine) AddDietaryRestrictionsToListings(listings []Listing) ([]Listing, error) {
-	// get dietary restriction
-	var listingsResult []Listing
+	var listingsResult []shared.Listing
 	for _, listing := range listings {
 		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
 		if err != nil {
@@ -537,106 +432,6 @@ func (l *listingEngine) AddDietaryRestrictionsToListings(listings []Listing) ([]
 		listing.ListingImage = l.GetListingImage()
 		listingsResult = append(listingsResult, listing)
 	}
-	return listingsResult, nil
-}
-
-func (l *listingEngine) SortListings(listings []Listing, sortingType string,
-	currentLocation CurrentLocation) ([]Listing, error) {
-
-	if sortingType == "distance" || sortingType == "" {
-		return l.SortListingsByDistance(listings, currentLocation)
-	} else if sortingType == "price" {
-		return l.SortListingsByPrice(listings)
-	} else if sortingType == "timeLeft" {
-		return l.SortListingsByTimeLeft(listings)
-	}
-
-	return nil, nil
-}
-
-func (l *listingEngine) SortListingsByTimeLeft(listings []Listing) ([]Listing, error) {
-	var ll []sortTimeView
-	for _, listing := range listings {
-
-		dateTime := GetListingDateTime(listing.StartDate, listing.StartTime)
-		then, err := time.Parse(dateTimeFormat, dateTime)
-		if err != nil {
-			return nil, nil
-		}
-
-		duration := time.Since(then)
-
-		s := sortTimeView{listing: listing, timeLeft: duration.Seconds()}
-		ll = append(ll, s)
-	}
-
-	// sort
-	priceView := l.OrderListingsByTime(ll)
-
-	// put in listing struct
-	var listingsResult []Listing
-	for _, view := range priceView {
-		listingsResult = append(listingsResult, view.listing)
-	}
-
-	return listingsResult, nil
-}
-
-func GetListingDateTime(endDate string, endTime string) string {
-	listingEndDate := strings.Split(endDate, "T")[0]
-	listingEndTime := strings.Split(endTime, "T")[1]
-	return fmt.Sprintf("%sT%s", listingEndDate, listingEndTime)
-}
-
-func (l *listingEngine) SortListingsByPrice(listings []Listing) ([]Listing, error) {
-	var ll []sortPriceView
-	for _, listing := range listings {
-		s := sortPriceView{listing: listing, price: listing.NewPrice}
-		ll = append(ll, s)
-	}
-
-	// sort
-	priceView := l.OrderListingsByPrice(ll)
-
-	// put in listing struct
-	var listingsResult []Listing
-	for _, view := range priceView {
-		listingsResult = append(listingsResult, view.listing)
-	}
-
-	return listingsResult, nil
-}
-
-func (l *listingEngine) SortListingsByDistance(listings []Listing, currentLocation CurrentLocation) ([]Listing, error) {
-	var ll []sortDistanceView
-	for _, listing := range listings {
-		// get LatLon
-		geo, err := l.GetListingsLatLon(listing.BusinessID)
-		if err != nil {
-			return nil, err
-		}
-
-		// append latLon
-		fromMobile := haversine.Coord{Lat: currentLocation.Latitude, Lon: currentLocation.Longitude}
-		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
-		mi, _ := haversine.Distance(fromMobile, fromDB)
-		listing.DistanceFromLocation = mi
-
-		fmt.Printf("business_id: %d and distance: %f \n", listing.BusinessID, mi)
-
-		s := sortDistanceView{listing: listing, mile: mi}
-		ll = append(ll, s)
-	}
-
-	// sort
-	distanceView := l.OrderListingsByDistance(ll)
-
-	// put in listing struct
-	var listingsResult []Listing
-	for _, view := range distanceView {
-		listingsResult = append(listingsResult, view.listing)
-	}
-
 	return listingsResult, nil
 }
 
@@ -672,24 +467,24 @@ func (l *listingEngine) OrderListingsByDistance(listings []sortDistanceView) []s
 	return listings
 }
 
-func (l *listingEngine) GetListingsLatLon(businessID int) (AddressGeo, error) {
+func (l *listingEngine) GetListingsLatLon(businessID int) (shared.AddressGeo, error) {
 	rows, err := l.sql.Query("SELECT address_id, business_id, latitude, longitude  FROM address_geo WHERE business_id = $1", businessID)
 	if err != nil {
-		return AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	defer rows.Close()
 
-	geo := AddressGeo{}
+	geo := shared.AddressGeo{}
 	if rows.Next() {
 		err := rows.Scan(&geo.AddressID, &geo.BusinessID, &geo.Latitude, &geo.Longitude)
 		if err != nil {
-			return AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
+			return shared.AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
 		}
 	}
 
 	if err = rows.Err(); err != nil {
-		return AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	return geo, nil
@@ -720,12 +515,29 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	return rests, nil
 }
 
-func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) {
+func (l *listingEngine) GetTodayListings(listingType string, keywords string) ([]shared.Listing, error) {
 	currentDate := time.Now().Format("2006-01-02")
 	currentTime := time.Now().Format("15:04:05.000000")
 
 	var query string
-	if listingType == "" {
+
+	if keywords != "" {
+		query = fmt.Sprintf(`SELECT title, old_price, new_price, discount, description, start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id, bname, listing_date
+FROM (SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price,
+    listing.discount as discount, listing.description as description, listing.start_date as start_date,
+    listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time,
+    listing.recurring as recurring, listing.listing_type as listing_type, listing.business_id as business_id,
+    listing.listing_id as listing_id, business.name as bname, listing_date.listing_date as listing_date,
+	to_tsvector(business.name) ||
+    to_tsvector(listing.title) ||
+    to_tsvector(listing.description) as document
+    FROM listing
+    INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id
+    INNER JOIN business ON listing.business_id = business.business_id
+    WHERE listing_date.listing_date = '%s' AND listing_date.end_time >= '%s' AND listing_type = '%s'
+) p_search
+WHERE p_search.document @@ to_tsquery('%s');`, currentDate, currentTime, listingType, keywords)
+	} else if listingType == "" {
 		query = fmt.Sprintf("SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description,"+
 			"listing.start_date, listing.end_date, listing.start_time, listing.end_time, listing.recurring, listing.listing_type, "+
 			"listing.business_id, listing.listing_id, business.name, listing_date.listing_date FROM listing "+
@@ -750,9 +562,9 @@ func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) 
 
 	defer rows.Close()
 
-	var listings []Listing
+	var listings []shared.Listing
 	for rows.Next() {
-		var listing Listing
+		var listing shared.Listing
 		err := rows.Scan(
 			&listing.Title,
 			&listing.OldPrice,
@@ -783,11 +595,11 @@ func (l *listingEngine) GetTodayListings(listingType string) ([]Listing, error) 
 	return listings, nil
 }
 
-func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error) {
+func (l *listingEngine) GetFutureListings(listingType string) ([]shared.Listing, error) {
 	var buffer bytes.Buffer
 
-	currentDate := time.Now().Format(dateFormat)
-	listingDate, err := time.Parse(dateFormat, currentDate)
+	currentDate := time.Now().Format(shared.DateFormat)
+	listingDate, err := time.Parse(shared.DateFormat, currentDate)
 
 	curr := listingDate
 	buffer.WriteString("(")
@@ -827,9 +639,9 @@ func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error)
 
 	defer rows.Close()
 
-	var listings []Listing
+	var listings []shared.Listing
 	for rows.Next() {
-		var listing Listing
+		var listing shared.Listing
 		err := rows.Scan(
 			&listing.Title,
 			&listing.OldPrice,
@@ -860,7 +672,7 @@ func (l *listingEngine) GetFutureListings(listingType string) ([]Listing, error)
 	return listings, nil
 }
 
-func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]Listing, error) {
+func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]shared.Listing, error) {
 	currentDate := time.Now().Format("2006-01-02")
 	//currentTime := time.Now().Format("15:04:05.000000")
 
@@ -884,9 +696,9 @@ func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]Listin
 
 	defer rows.Close()
 
-	var listings []Listing
+	var listings []shared.Listing
 	for rows.Next() {
-		var listing Listing
+		var listing shared.Listing
 		err := rows.Scan(
 			&listing.Title,
 			&listing.OldPrice,
@@ -915,7 +727,7 @@ func (l *listingEngine) GetAllListingsWithDateTime(listingType string) ([]Listin
 	return listings, nil
 }
 
-func (l *listingEngine) GetAllListingsLatLon() ([]AddressGeo, error) {
+func (l *listingEngine) GetAllListingsLatLon() ([]shared.AddressGeo, error) {
 	rows, err := l.sql.Query("SELECT address_id, business_id, latitude, longitude  FROM address_geo")
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
@@ -923,9 +735,9 @@ func (l *listingEngine) GetAllListingsLatLon() ([]AddressGeo, error) {
 
 	defer rows.Close()
 
-	var geoAddresses []AddressGeo
+	var geoAddresses []shared.AddressGeo
 	for rows.Next() {
-		geo := AddressGeo{}
+		geo := shared.AddressGeo{}
 		err := rows.Scan(&geo.AddressID, &geo.BusinessID, &geo.Latitude, &geo.Longitude)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
@@ -940,43 +752,43 @@ func (l *listingEngine) GetAllListingsLatLon() ([]AddressGeo, error) {
 	return geoAddresses, nil
 }
 
-func (l *listingEngine) GetListingInfo(listingID int) (ListingInfo, error) {
-	var listingInfo ListingInfo
+func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error) {
+	var listingInfo shared.ListingInfo
 
 	//GetListingByID
 	listing, err := l.GetListingByID(listingID)
 	if err != nil {
-		return ListingInfo{}, err
+		return shared.ListingInfo{}, err
 	}
 
 	if listing.ListingID == 0 {
-		return ListingInfo{}, helper.ListingDoesNotExist{ListingID: listingID}
+		return shared.ListingInfo{}, helper.ListingDoesNotExist{ListingID: listingID}
 	}
 
-	searchListingResult, err := l.massageAndPopulateSearchListings([]Listing{listing})
+	searchListingResult, err := l.massageAndPopulateSearchListings([]shared.Listing{listing})
 	listingInfo.Listing = searchListingResult[0]
 
 	//GetBusinessInfo
 	businessInfo, err := l.businessEngine.GetBusinessInfo(listing.BusinessID)
 	if err != nil {
-		return ListingInfo{}, err
+		return shared.ListingInfo{}, err
 	}
 	listingInfo.Business = businessInfo
 	return listingInfo, nil
 }
 
-func (l *listingEngine) GetListingByID(listingID int) (Listing, error) {
+func (l *listingEngine) GetListingByID(listingID int) (shared.Listing, error) {
 	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
 		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
 		"listing_id = $1;", listingID)
 
 	if err != nil {
-		return Listing{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	defer rows.Close()
 
-	var listing Listing
+	var listing shared.Listing
 	if rows.Next() {
 		err := rows.Scan(
 			&listing.Title,
@@ -994,12 +806,13 @@ func (l *listingEngine) GetListingByID(listingID int) (Listing, error) {
 			&listing.ListingID,
 		)
 		if err != nil {
-			return Listing{}, helper.DatabaseError{DBError: err.Error()}
+			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
 	}
 
 	if err = rows.Err(); err != nil {
-		return Listing{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	return listing, nil
