@@ -109,4 +109,16 @@ type (
 		BusinessAddress BusinessAddress `json:"businessAddress"`
 		Hours           []Bhour         `json:"businessHours"`
 	}
+
+	SortView struct {
+		Listing  Listing
+		Mile     float64
+		Price    float64
+		TimeLeft float64
+	}
+
+	CurrentLocation struct {
+		Latitude  float64
+		Longitude float64
+	}
 )

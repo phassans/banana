@@ -122,29 +122,6 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func (l *listingEngine) GetListingsLatLon(businessID int) (shared.AddressGeo, error) {
-	rows, err := l.sql.Query("SELECT address_id, business_id, latitude, longitude  FROM address_geo WHERE business_id = $1", businessID)
-	if err != nil {
-		return shared.AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
-
-	geo := shared.AddressGeo{}
-	if rows.Next() {
-		err := rows.Scan(&geo.AddressID, &geo.BusinessID, &geo.Latitude, &geo.Longitude)
-		if err != nil {
-			return shared.AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
-		}
-	}
-
-	if err = rows.Err(); err != nil {
-		return shared.AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	return geo, nil
-}
-
 func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, error) {
 	rows, err := l.sql.Query("SELECT restriction FROM listing_dietary_restrictions WHERE listing_id = $1", listingID)
 	if err != nil {
