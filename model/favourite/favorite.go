@@ -21,7 +21,7 @@ type (
 	FavoriteEngine interface {
 		AddFavorite(phoneID string, listingID int) error
 		DeleteFavorite(phoneID string, listingID int) error
-		GetAllFavorites(phoneID string) ([]shared.Listing, error)
+		GetAllFavorites(phoneID string) ([]shared.SearchListingResult, error)
 	}
 )
 
@@ -30,8 +30,17 @@ func NewFavoriteEngine(psql *sql.DB, logger xlog.Logger, businessEngine business
 }
 
 func (f *favoriteEngine) AddFavorite(phoneID string, listingID int) error {
+	listing, err := f.listingEngine.GetListingByID(listingID)
+	if err != nil {
+		return err
+	}
+
+	if listing.ListingID == 0 {
+		return helper.ListingDoesNotExist{ListingID: listingID}
+	}
+
 	var favoriteID int
-	err := f.sql.QueryRow("INSERT INTO favorites(phone_id,listing_id) "+
+	err = f.sql.QueryRow("INSERT INTO favorites(phone_id,listing_id) "+
 		"VALUES($1,$2) returning favorite_id;",
 		phoneID, listingID).Scan(&favoriteID)
 	if err != nil {
@@ -50,7 +59,7 @@ func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int) error {
 	return err
 }
 
-func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]shared.Listing, error) {
+func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]shared.SearchListingResult, error) {
 	IDs, err := f.GetAllFavoritesIDs(phoneID)
 	if err != nil {
 		return nil, err
@@ -62,10 +71,11 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]shared.Listing, erro
 		if err != nil {
 			return nil, err
 		}
+		listing.ListingImage = f.listingEngine.GetListingImage()
 		listings = append(listings, listing)
 	}
 
-	return listings, nil
+	return f.listingEngine.MassageAndPopulateSearchListings(listings)
 }
 
 func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]int, error) {

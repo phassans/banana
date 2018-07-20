@@ -13,7 +13,7 @@ type (
 	}
 
 	favoritesViewResult struct {
-		Result []shared.Listing
+		Result []shared.SearchListingResult
 		Error  *APIError `json:"error,omitempty"`
 	}
 

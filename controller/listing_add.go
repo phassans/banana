@@ -58,7 +58,7 @@ func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		Type:               request.Type,
 	}
 
-	err := rtr.engines.AddListing(l)
+	err := rtr.engines.AddListing(&l)
 	result := listingADDResult{listingADDRequest: request, Error: NewAPIError(err)}
 	return result, err
 }

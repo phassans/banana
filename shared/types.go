@@ -29,6 +29,7 @@ type (
 		ListingID            int      `json:"listingId"`
 		ListingType          string   `json:"listingType"`
 		Title                string   `json:"title"`
+		Description          string   `json:"description"`
 		BusinessID           int      `json:"businessId"`
 		BusinessName         string   `json:"businessName"`
 		Price                float64  `json:"price"`

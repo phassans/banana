@@ -76,11 +76,10 @@ func (l *listingEngine) SearchListings(
 		return nil, err
 	}
 
-	return l.massageAndPopulateSearchListings(listings)
+	return l.MassageAndPopulateSearchListings(listings)
 }
 
-func (l *listingEngine) GetListings(listingType string, keywords string, future bool) ([]shared.Listing, error) {
-	var searchQuery string
+func getWhereClause(listingType string, future bool) (string, error) {
 	var whereClause bytes.Buffer
 	if future {
 		var dateClause bytes.Buffer
@@ -88,7 +87,7 @@ func (l *listingEngine) GetListings(listingType string, keywords string, future 
 		currentDate := time.Now().Format(shared.DateFormat)
 		listingDate, err := time.Parse(shared.DateFormat, currentDate)
 		if err != nil {
-			return nil, helper.DatabaseError{DBError: err.Error()}
+			return "", helper.DatabaseError{DBError: err.Error()}
 		}
 
 		curr := listingDate
@@ -115,7 +114,17 @@ func (l *listingEngine) GetListings(listingType string, keywords string, future 
 			whereClause.WriteString(fmt.Sprintf(" AND listing_type = '%s'", listingType))
 		}
 	}
+	return whereClause.String(), nil
+}
 
+func (l *listingEngine) GetListings(listingType string, keywords string, future bool) ([]shared.Listing, error) {
+	// determine where clause
+	whereClause, err := getWhereClause(listingType, future)
+	if err != nil {
+		return nil, err
+	}
+
+	var searchQuery string
 	if keywords != "" {
 		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, description, start_date, end_date, "+
 			"start_time, end_time, recurring, listing_type, business_id, listing_id, bname, listing_date "+
@@ -124,9 +133,9 @@ func (l *listingEngine) GetListings(listingType string, keywords string, future 
 			"to_tsvector(listing.title) || "+
 			"to_tsvector(listing.description) as document "+
 			"%s %s ) p_search "+
-			"WHERE p_search.document @@ to_tsquery('%s');", searchSelect, fromClause, whereClause.String(), keywords)
+			"WHERE p_search.document @@ to_tsquery('%s');", searchSelect, fromClause, whereClause, keywords)
 	} else {
-		searchQuery = fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause.String())
+		searchQuery = fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause)
 	}
 
 	xlog.Infof("search Query: %s", searchQuery)
@@ -171,7 +180,7 @@ func (l *listingEngine) GetListings(listingType string, keywords string, future 
 	return listings, nil
 }
 
-func (l *listingEngine) massageAndPopulateSearchListings(listings []shared.Listing) ([]shared.SearchListingResult, error) {
+func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing) ([]shared.SearchListingResult, error) {
 	var listingsResult []shared.SearchListingResult
 	for _, listing := range listings {
 		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
@@ -182,6 +191,7 @@ func (l *listingEngine) massageAndPopulateSearchListings(listings []shared.Listi
 			ListingID:            listing.ListingID,
 			ListingType:          listing.Type,
 			Title:                listing.Title,
+			Description:          listing.Description,
 			BusinessID:           listing.BusinessID,
 			BusinessName:         listing.BusinessName,
 			Price:                listing.NewPrice,

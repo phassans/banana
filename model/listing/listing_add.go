@@ -9,7 +9,7 @@ import (
 	"github.com/phassans/banana/shared"
 )
 
-func (l *listingEngine) AddListing(listing shared.Listing) error {
+func (l *listingEngine) AddListing(listing *shared.Listing) error {
 	business, err := l.businessEngine.GetBusinessFromID(listing.BusinessID)
 	if err != nil {
 		return err
@@ -63,13 +63,11 @@ func (l *listingEngine) AddListing(listing shared.Listing) error {
 	return nil
 }
 
-func (l *listingEngine) AddListingDates(listing shared.Listing) error {
+func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 	// current listing date
 	listings := []shared.ListingDate{
 		shared.ListingDate{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime},
 	}
-
-	dayMap := map[string]int{"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
 
 	listingDate, err := time.Parse(shared.DateFormat, strings.Split(listing.StartDate, "T")[0])
 	if err != nil {
@@ -110,7 +108,7 @@ func (l *listingEngine) AddListingDates(listing shared.Listing) error {
 			nextDate := curDate.Add(time.Hour * 24)
 			year, month, day := nextDate.Date()
 			for _, recurringDay := range listing.RecurringDays {
-				if dayMap[recurringDay] == int(nextDate.Weekday()) {
+				if shared.DayMap[recurringDay] == int(nextDate.Weekday()) {
 					next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
 					lDate = shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
 					listings = append(listings, lDate)

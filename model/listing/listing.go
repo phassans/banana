@@ -1,6 +1,7 @@
 package listing
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"math/rand"
@@ -19,7 +20,7 @@ type (
 	}
 
 	ListingEngine interface {
-		AddListing(listing shared.Listing) error
+		AddListing(listing *shared.Listing) error
 		AddListingImage(businessName string, imagePath string)
 
 		SearchListings(
@@ -37,6 +38,9 @@ type (
 		GetAllListings(businessID int, businessType string) ([]shared.Listing, error)
 		GetListingByID(listingID int) (shared.Listing, error)
 		GetListingInfo(listingID int) (shared.ListingInfo, error)
+		GetListingImage() string
+
+		MassageAndPopulateSearchListings([]shared.Listing) ([]shared.SearchListingResult, error)
 	}
 )
 
@@ -160,7 +164,7 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error
 		return shared.ListingInfo{}, helper.ListingDoesNotExist{ListingID: listingID}
 	}
 
-	searchListingResult, err := l.massageAndPopulateSearchListings([]shared.Listing{listing})
+	searchListingResult, err := l.MassageAndPopulateSearchListings([]shared.Listing{listing})
 	listingInfo.Listing = searchListingResult[0]
 
 	//GetBusinessInfo
@@ -173,9 +177,14 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error
 }
 
 func (l *listingEngine) GetListingByID(listingID int) (shared.Listing, error) {
-	rows, err := l.sql.Query("SELECT title, old_price, new_price, discount, description,"+
-		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing WHERE "+
-		"listing_id = $1;", listingID)
+
+	var whereClause bytes.Buffer
+	whereClause.WriteString(fmt.Sprintf(" WHERE listing.listing_id = %d", listingID))
+	query := fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause.String())
+
+	fmt.Println("GetListingByID ", query)
+
+	rows, err := l.sql.Query(query)
 
 	if err != nil {
 		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
@@ -199,6 +208,8 @@ func (l *listingEngine) GetListingByID(listingID int) (shared.Listing, error) {
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
+			&listing.BusinessName,
+			&listing.ListingDate,
 		)
 		if err != nil {
 			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
@@ -212,6 +223,7 @@ func (l *listingEngine) GetListingByID(listingID int) (shared.Listing, error) {
 
 	return listing, nil
 }
+
 func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]shared.Listing, error) {
 	getListingsQuery := "SELECT title, old_price, new_price, discount, description," +
 		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where " +
