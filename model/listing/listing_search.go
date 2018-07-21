@@ -31,7 +31,7 @@ func (l *listingEngine) SearchListings(
 	longitude float64,
 	location string,
 	priceFilter float64,
-	dietaryFilter string,
+	dietaryFilters []string,
 	distanceFilter string,
 	keywords string,
 	sortBy string,
@@ -42,6 +42,13 @@ func (l *listingEngine) SearchListings(
 
 	//GetListings
 	listings, err = l.GetListings(listingType, keywords, future)
+	if err != nil {
+		return nil, err
+	}
+	xlog.Infof("total number of listing found: %d", len(listings))
+
+	// addDietaryRestrictionsToListings
+	listings, err = l.AddDietaryRestrictionsToListings(listings)
 	if err != nil {
 		return nil, err
 	}
@@ -57,12 +64,7 @@ func (l *listingEngine) SearchListings(
 	} else {
 		currentLocation = shared.CurrentLocation{Latitude: latitude, Longitude: longitude}
 	}
-
-	// AddDietaryRestrictionsToListings
-	listings, err = l.AddDietaryRestrictionsToListings(listings)
-	if err != nil {
-		return nil, err
-	}
+	xlog.Infof("search location: %v", currentLocation)
 
 	// sort Listings based on sortBy
 	sortListingEngine := NewSortListingEngine(listings, sortBy, currentLocation, l.sql)
@@ -70,16 +72,36 @@ func (l *listingEngine) SearchListings(
 	if err != nil {
 		return nil, err
 	}
+	xlog.Infof("done sorting the listings. listings count: %d", len(listings))
 
+	// filterResults
+	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter)
+	xlog.Infof("applied filters. number of listings: %d", len(listings))
+
+	// populate searchResult
+	return l.MassageAndPopulateSearchListings(listings)
+}
+
+func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter float64,
+	dietaryFilters []string, distanceFilter string) ([]shared.Listing, error) {
+
+	var err error
 	if priceFilter > 0.0 {
 		listings, err = l.FilterByPrice(listings, priceFilter)
-	} else if dietaryFilter != "" {
-		listings, err = l.FilterByDietaryRestrictions(listings, dietaryFilter)
-	} else if distanceFilter != "" {
-		listings, err = l.FilterByDistance(listings, distanceFilter)
+		xlog.Infof("applied priceFilter. count listings: %d", len(listings))
 	}
 
-	return l.MassageAndPopulateSearchListings(listings)
+	if len(dietaryFilters) > 0 {
+		listings, err = l.FilterByDietaryRestrictions(listings, dietaryFilters)
+		xlog.Infof("applied dietaryFilters. count listings: %d", len(listings))
+	}
+
+	if distanceFilter != "" {
+		listings, err = l.FilterByDistance(listings, distanceFilter)
+		xlog.Infof("applied distanceFilter. count listings: %d", len(listings))
+	}
+
+	return listings, err
 }
 
 func getWhereClause(listingType string, future bool) (string, error) {
@@ -127,6 +149,9 @@ func (l *listingEngine) GetListings(listingType string, keywords string, future 
 		return nil, err
 	}
 
+	splitKeywordsBySpace := strings.Split(keywords, " ")
+	searchKeywords := strings.Join(splitKeywordsBySpace, ",")
+
 	var searchQuery string
 	if keywords != "" {
 		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, description, start_date, end_date, "+
@@ -136,7 +161,7 @@ func (l *listingEngine) GetListings(listingType string, keywords string, future 
 			"to_tsvector(listing.title) || "+
 			"to_tsvector(listing.description) as document "+
 			"%s %s ) p_search "+
-			"WHERE p_search.document @@ to_tsquery('%s');", searchSelect, fromClause, whereClause, keywords)
+			"WHERE p_search.document @@ to_tsquery('%s');", searchSelect, fromClause, whereClause, searchKeywords)
 	} else {
 		searchQuery = fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause)
 	}

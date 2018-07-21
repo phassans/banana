@@ -30,7 +30,7 @@ type (
 			longitude float64,
 			Location string,
 			priceFilter float64,
-			dietaryFilter string,
+			dietaryFilter []string,
 			distanceFilter string,
 			keywords string,
 			sortBy string,

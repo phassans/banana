@@ -38,17 +38,26 @@ func (l *listingEngine) FilterByDistance(listings []shared.Listing, distanceFilt
 	return listingsResult, nil
 }
 
-func (l *listingEngine) FilterByDietaryRestrictions(listings []shared.Listing, dietaryFilter string) ([]shared.Listing, error) {
+func (l *listingEngine) FilterByDietaryRestrictions(listings []shared.Listing, dietaryFilters []string) ([]shared.Listing, error) {
 	// get dietary restriction
 	var listingsResult []shared.Listing
 	for _, listing := range listings {
+		listingAdded := false
 		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
 		if err != nil {
 			return nil, err
 		}
+
 		for _, rest := range rests {
-			if rest == dietaryFilter {
-				listingsResult = append(listingsResult, listing)
+			if listingAdded {
+				continue
+			}
+			for _, dietaryFilter := range dietaryFilters {
+				if rest == dietaryFilter {
+					listingsResult = append(listingsResult, listing)
+					listingAdded = true
+					continue
+				}
 			}
 		}
 	}

@@ -39,24 +39,25 @@ func NewSortListingEngine(listings []shared.Listing, sortingType string,
 
 func (l *sortListingEngine) SortListings() ([]shared.Listing, error) {
 
-	if l.sortingType == sortByDistance || l.sortingType == "" {
-		return l.SortListingsByDistance()
-	} else if l.sortingType == sortByPrice {
-		return l.SortListingsByPrice()
+	// have to sort by distance, in order to calculate distanceFromLocation
+	l.SortListingsByDistance()
+
+	if l.sortingType == sortByPrice {
+		l.SortListingsByPrice()
 	} else if l.sortingType == sortByTimeLeft {
-		return l.SortListingsByTimeLeft()
+		l.SortListingsByTimeLeft()
 	}
 
-	return nil, nil
+	return l.listings, nil
 }
 
-func (l *sortListingEngine) SortListingsByTimeLeft() ([]shared.Listing, error) {
+func (l *sortListingEngine) SortListingsByTimeLeft() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 
 		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		s := shared.SortView{Listing: listing, TimeLeft: float64(timeLeft)}
@@ -68,11 +69,11 @@ func (l *sortListingEngine) SortListingsByTimeLeft() ([]shared.Listing, error) {
 	for _, view := range l.orderListings(ll, sortByTimeLeft) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
-
-	return listingsResult, nil
+	l.listings = listingsResult
+	return nil
 }
 
-func (l *sortListingEngine) SortListingsByPrice() ([]shared.Listing, error) {
+func (l *sortListingEngine) SortListingsByPrice() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 		s := shared.SortView{Listing: listing, Price: listing.NewPrice}
@@ -84,17 +85,18 @@ func (l *sortListingEngine) SortListingsByPrice() ([]shared.Listing, error) {
 	for _, view := range l.orderListings(ll, sortByPrice) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
+	l.listings = listingsResult
 
-	return listingsResult, nil
+	return nil
 }
 
-func (l *sortListingEngine) SortListingsByDistance() ([]shared.Listing, error) {
+func (l *sortListingEngine) SortListingsByDistance() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 		// get LatLon
 		geo, err := l.GetListingsLatLon(listing.BusinessID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// append latLon
@@ -102,8 +104,6 @@ func (l *sortListingEngine) SortListingsByDistance() ([]shared.Listing, error) {
 		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
 		listing.DistanceFromLocation = mi
-
-		fmt.Printf("business_id: %d and distance: %f \n", listing.BusinessID, mi)
 
 		s := shared.SortView{Listing: listing, Mile: mi}
 		ll = append(ll, s)
@@ -114,8 +114,9 @@ func (l *sortListingEngine) SortListingsByDistance() ([]shared.Listing, error) {
 	for _, view := range l.orderListings(ll, sortByDistance) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
+	l.listings = listingsResult
 
-	return listingsResult, nil
+	return nil
 }
 
 func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType string) []shared.SortView {

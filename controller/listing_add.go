@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/phassans/banana/shared"
+	"github.com/rs/xlog"
 )
 
 type (
@@ -38,6 +39,7 @@ var addListing postEndpoint = addListingEndpoint{}
 
 func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingADDRequest)
+	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
 	l := shared.Listing{
 		Title:              request.Title,

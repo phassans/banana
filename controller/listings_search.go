@@ -6,20 +6,21 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
+	"github.com/rs/xlog"
 )
 
 type (
 	listingsSearchRequest struct {
-		Future         bool    `json:"future"`
-		ListingType    string  `json:"listingType,omitempty"`
-		Latitude       float64 `json:"latitude,omitempty"`
-		Longitude      float64 `json:"longitude,omitempty"`
-		Location       string  `json:"location,omitempty"`
-		PriceFilter    float64 `json:"priceFilter,omitempty"`
-		DietaryFilter  string  `json:"dietaryFilter,omitempty"`
-		DistanceFilter string  `json:"distanceFilter,omitempty"`
-		Keywords       string  `json:"keywords,omitempty"`
-		SortBy         string  `json:"sortBy,omitempty"`
+		Future         bool     `json:"future"`
+		ListingType    string   `json:"listingType,omitempty"`
+		Latitude       float64  `json:"latitude,omitempty"`
+		Longitude      float64  `json:"longitude,omitempty"`
+		Location       string   `json:"location,omitempty"`
+		PriceFilter    float64  `json:"priceFilter,omitempty"`
+		DietaryFilters []string `json:"dietaryFilters,omitempty"`
+		DistanceFilter string   `json:"distanceFilter,omitempty"`
+		Keywords       string   `json:"keywords,omitempty"`
+		SortBy         string   `json:"sortBy,omitempty"`
 	}
 
 	listingsSearchResult struct {
@@ -34,6 +35,7 @@ var listingsSearch postEndpoint = listingsSearchEndpoint{}
 
 func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingsSearchRequest)
+	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
 	// validate input
 	if err := r.Validate(request); err != nil {
@@ -47,7 +49,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.Longitude,
 		request.Location,
 		request.PriceFilter,
-		request.DietaryFilter,
+		request.DietaryFilters,
 		request.DistanceFilter,
 		request.Keywords,
 		request.SortBy,
