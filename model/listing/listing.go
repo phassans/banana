@@ -31,6 +31,7 @@ type (
 			Location string,
 			priceFilter float64,
 			dietaryFilter string,
+			distanceFilter string,
 			keywords string,
 			sortBy string,
 		) ([]shared.SearchListingResult, error)

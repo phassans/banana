@@ -32,6 +32,7 @@ func (l *listingEngine) SearchListings(
 	location string,
 	priceFilter float64,
 	dietaryFilter string,
+	distanceFilter string,
 	keywords string,
 	sortBy string,
 ) ([]shared.SearchListingResult, error) {
@@ -43,12 +44,6 @@ func (l *listingEngine) SearchListings(
 	listings, err = l.GetListings(listingType, keywords, future)
 	if err != nil {
 		return nil, err
-	}
-
-	if priceFilter > 0.0 {
-		listings, err = l.FilterByPrice(listings, priceFilter)
-	} else if dietaryFilter != "" {
-		listings, err = l.FilterByDietaryRestrictions(listings, dietaryFilter)
 	}
 
 	var currentLocation shared.CurrentLocation
@@ -74,6 +69,14 @@ func (l *listingEngine) SearchListings(
 	listings, err = sortListingEngine.SortListings()
 	if err != nil {
 		return nil, err
+	}
+
+	if priceFilter > 0.0 {
+		listings, err = l.FilterByPrice(listings, priceFilter)
+	} else if dietaryFilter != "" {
+		listings, err = l.FilterByDietaryRestrictions(listings, dietaryFilter)
+	} else if distanceFilter != "" {
+		listings, err = l.FilterByDistance(listings, distanceFilter)
 	}
 
 	return l.MassageAndPopulateSearchListings(listings)

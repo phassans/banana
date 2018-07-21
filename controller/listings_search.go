@@ -10,15 +10,16 @@ import (
 
 type (
 	listingsSearchRequest struct {
-		Future        bool    `json:"future"`
-		ListingType   string  `json:"listingType,omitempty"`
-		Latitude      float64 `json:"latitude,omitempty"`
-		Longitude     float64 `json:"longitude,omitempty"`
-		Location      string  `json:"location,omitempty"`
-		PriceFilter   float64 `json:"priceFilter,omitempty"`
-		DietaryFilter string  `json:"dietaryFilter,omitempty"`
-		Keywords      string  `json:"keywords,omitempty"`
-		SortBy        string  `json:"sortBy,omitempty"`
+		Future         bool    `json:"future"`
+		ListingType    string  `json:"listingType,omitempty"`
+		Latitude       float64 `json:"latitude,omitempty"`
+		Longitude      float64 `json:"longitude,omitempty"`
+		Location       string  `json:"location,omitempty"`
+		PriceFilter    float64 `json:"priceFilter,omitempty"`
+		DietaryFilter  string  `json:"dietaryFilter,omitempty"`
+		DistanceFilter string  `json:"distanceFilter,omitempty"`
+		Keywords       string  `json:"keywords,omitempty"`
+		SortBy         string  `json:"sortBy,omitempty"`
 	}
 
 	listingsSearchResult struct {
@@ -47,6 +48,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.Location,
 		request.PriceFilter,
 		request.DietaryFilter,
+		request.DistanceFilter,
 		request.Keywords,
 		request.SortBy,
 	)
