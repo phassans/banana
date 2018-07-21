@@ -18,7 +18,7 @@ type (
 	addFavoriteEndpoint struct{}
 )
 
-var addFavorite postEndpoint = addFavoriteEndpoint{}
+var favouriteAdd postEndpoint = addFavoriteEndpoint{}
 
 func (r addFavoriteEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(addFavoriteRequest)

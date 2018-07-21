@@ -20,7 +20,7 @@ type (
 	favoritesViewEndpoint struct{}
 )
 
-var favoritesView postEndpoint = favoritesViewEndpoint{}
+var favouriteAll postEndpoint = favoritesViewEndpoint{}
 
 func (r favoritesViewEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(favoritesViewRequest)
@@ -35,7 +35,7 @@ func (r favoritesViewEndpoint) Validate(request interface{}) error {
 }
 
 func (r favoritesViewEndpoint) GetPath() string {
-	return "/favorites"
+	return "/favorite/all"
 }
 
 func (r favoritesViewEndpoint) HTTPRequest() interface{} {

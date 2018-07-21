@@ -12,7 +12,6 @@ DROP TABLE IF EXISTS listing_date;
 DROP TABLE IF EXISTS listing;
 DROP TABLE IF EXISTS business_image;
 DROP TABLE IF EXISTS business;
-DROP TABLE IF EXISTS notifications_location;
 DROP TABLE IF EXISTS notifications_dietary_restrictions;
 DROP TABLE IF EXISTS notifications;
 DROP TYPE IF EXISTS dietary_restrictions;

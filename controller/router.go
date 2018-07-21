@@ -42,21 +42,27 @@ type (
 var (
 	// getEndpoints lists all the GET endpoints.
 	getEndpoints = []getEndPoint{
-		listing,
-		allBusiness,
+		businessAll,
+		listingAll,
 	}
 
 	// createEndpoints lists POST endpoints that create records.
 	addEndpoints = []postEndpoint{
-		addUser,
-		addBusiness,
-		addListing,
+		userAdd,
+		userVerify,
+
+		businessAdd,
+
+		listingAdd,
 		listingsSearch,
-		verifyUser,
-		allListingAdmin,
-		addFavorite,
-		deleteFavorite,
-		favoritesView,
+
+		notificationAdd,
+		notificationDelete,
+		notificationAll,
+
+		favouriteAdd,
+		favouriteDelete,
+		favouriteAll,
 	}
 )
 

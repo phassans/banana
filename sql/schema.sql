@@ -175,17 +175,10 @@ CREATE TABLE IF NOT EXISTS notifications
   business_id     INT,
   price           TEXT,
   keywords        TEXT,
-  PRIMARY KEY (notification_id, phone_id)
-);
-
-CREATE TABLE IF NOT EXISTS notifications_location
-(
-  notification_id INT NOT NULL,
   location        TEXT,
   latitude        NUMERIC,
   longitude       NUMERIC,
-  PRIMARY KEY (notification_id),
-  FOREIGN KEY (notification_id) REFERENCES notifications (notification_id)
+  PRIMARY KEY (notification_id, phone_id)
 );
 
 CREATE TABLE IF NOT EXISTS notifications_dietary_restrictions

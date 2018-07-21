@@ -10,7 +10,7 @@ type (
 	listingEndpoint struct{}
 )
 
-var listing getEndPoint = listingEndpoint{}
+var listingAll getEndPoint = listingEndpoint{}
 
 func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
 	listingID, err := strconv.Atoi(values.Get("listingId"))

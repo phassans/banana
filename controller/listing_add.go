@@ -35,7 +35,7 @@ type (
 	addListingEndpoint struct{}
 )
 
-var addListing postEndpoint = addListingEndpoint{}
+var listingAdd postEndpoint = addListingEndpoint{}
 
 func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingADDRequest)

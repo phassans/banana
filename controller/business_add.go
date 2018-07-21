@@ -36,7 +36,7 @@ type (
 	createBusinessEndpoint struct{}
 )
 
-var addBusiness postEndpoint = createBusinessEndpoint{}
+var businessAdd postEndpoint = createBusinessEndpoint{}
 
 func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(businessRequest)

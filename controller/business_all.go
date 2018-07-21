@@ -7,7 +7,7 @@ import (
 
 type allBusinessEndpoint struct{}
 
-var allBusiness getEndPoint = allBusinessEndpoint{}
+var businessAll getEndPoint = allBusinessEndpoint{}
 
 func (r allBusinessEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
 	return rtr.engines.GetAllBusiness()

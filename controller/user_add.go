@@ -23,7 +23,7 @@ type (
 	addUserEndpoint struct{}
 )
 
-var addUser postEndpoint = addUserEndpoint{}
+var userAdd postEndpoint = addUserEndpoint{}
 
 func (r addUserEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(addUserRequest)

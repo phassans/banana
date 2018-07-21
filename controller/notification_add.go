@@ -26,7 +26,7 @@ type (
 	addNotificationEndpoint struct{}
 )
 
-var addNotification postEndpoint = addNotificationEndpoint{}
+var notificationAdd postEndpoint = addNotificationEndpoint{}
 
 func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(notificationADDRequest)

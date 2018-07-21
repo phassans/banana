@@ -22,7 +22,7 @@ type (
 	verifyUserEndpoint struct{}
 )
 
-var verifyUser postEndpoint = verifyUserEndpoint{}
+var userVerify postEndpoint = verifyUserEndpoint{}
 
 func (r verifyUserEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(verifyUserRequest)
