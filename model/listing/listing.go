@@ -42,6 +42,8 @@ type (
 		GetListingImage() string
 
 		MassageAndPopulateSearchListings([]shared.Listing) ([]shared.SearchListingResult, error)
+
+		DeleteListing(listingId int) error
 	}
 )
 
@@ -225,7 +227,7 @@ func (l *listingEngine) GetListingByID(listingID int) (shared.Listing, error) {
 	return listing, nil
 }
 
-func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]shared.Listing, error) {
+func (l *listingEngine) GetAllListings(businessID int, status string) ([]shared.Listing, error) {
 	getListingsQuery := "SELECT title, old_price, new_price, discount, description," +
 		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where " +
 		"business_id = $1"
@@ -280,4 +282,67 @@ func (l *listingEngine) GetAllListings(businessID int, businessType string) ([]s
 	}
 
 	return listings, nil
+}
+
+func (f *listingEngine) DeleteListing(listingID int) error {
+
+	listingInfo, err := f.GetListingByID(listingID)
+	if err != nil {
+		return nil
+	}
+
+	if listingInfo.ListingID == 0 {
+		return helper.ListingDoesNotExist{ListingID: listingID}
+	}
+
+	if err := f.deleteListingImage(listingID); err != nil {
+		return nil
+	}
+
+	if err := f.deleteListingDietaryRestriction(listingID); err != nil {
+		return nil
+	}
+
+	if err := f.deleteListingDate(listingID); err != nil {
+		return nil
+	}
+
+	if err := f.deleteListing(listingID); err != nil {
+		return nil
+	}
+
+	f.logger.Infof("sucessfully delete listing: %d", listingID)
+	return nil
+}
+
+func (f *listingEngine) deleteListing(listingID int) error {
+	sqlStatement := `DELETE FROM listing WHERE listing_id = $1;`
+	f.logger.Infof("deleting listing with query: %s and listing: %d", sqlStatement, listingID)
+
+	_, err := f.sql.Exec(sqlStatement, listingID)
+	return err
+}
+
+func (f *listingEngine) deleteListingDate(listingID int) error {
+	sqlStatement := `DELETE FROM listing_date WHERE listing_id = $1;`
+	f.logger.Infof("deleting listing_date with query: %s and listing: %d", sqlStatement, listingID)
+
+	_, err := f.sql.Exec(sqlStatement, listingID)
+	return err
+}
+
+func (f *listingEngine) deleteListingDietaryRestriction(listingID int) error {
+	sqlStatement := `DELETE FROM listing_dietary_restrictions WHERE listing_id = $1;`
+	f.logger.Infof("deleting listing_dietary_restrictions with query: %s and listing: %d", sqlStatement, listingID)
+
+	_, err := f.sql.Exec(sqlStatement, listingID)
+	return err
+}
+
+func (f *listingEngine) deleteListingImage(listingID int) error {
+	sqlStatement := `DELETE FROM listing_image WHERE listing_id = $1;`
+	f.logger.Infof("deleting listing_image with query: %s and listing: %d", sqlStatement, listingID)
+
+	_, err := f.sql.Exec(sqlStatement, listingID)
+	return err
 }

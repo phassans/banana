@@ -15,7 +15,7 @@ type (
 
 	verifyUserResponse struct {
 		verifyUserRequest
-		UserID int       `json:"user_id,omitempty"`
+		UserID int       `json:"user_id"`
 		Error  *APIError `json:"error,omitempty"`
 	}
 

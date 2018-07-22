@@ -43,7 +43,7 @@ var (
 	// getEndpoints lists all the GET endpoints.
 	getEndpoints = []getEndPoint{
 		businessAll,
-		listingAll,
+		listingInfo,
 	}
 
 	// createEndpoints lists POST endpoints that create records.
@@ -55,6 +55,8 @@ var (
 
 		listingAdd,
 		listingsSearch,
+		listingDelete,
+		listingAll,
 
 		notificationAdd,
 		notificationDelete,
