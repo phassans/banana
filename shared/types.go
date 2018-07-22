@@ -103,11 +103,17 @@ type (
 		PostalCode string `json:"postalCode"`
 		State      string `json:"state"`
 		BusinessID int    `json:"businessID"`
+		AddressID  int    `json:"addressID"`
+	}
+
+	BusinessCuisine struct {
+		Cuisine []string `json:"cuisine"`
 	}
 
 	BusinessInfo struct {
 		Business        Business        `json:"business"`
 		BusinessAddress BusinessAddress `json:"businessAddress"`
+		BusinessCuisine BusinessCuisine `json:"businessCuisine"`
 		Hours           []Bhour         `json:"businessHours"`
 	}
 

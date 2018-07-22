@@ -44,6 +44,7 @@ var (
 	getEndpoints = []getEndPoint{
 		businessAll,
 		listingInfo,
+		businessInfo,
 	}
 
 	// createEndpoints lists POST endpoints that create records.
@@ -52,6 +53,7 @@ var (
 		userVerify,
 
 		businessAdd,
+		businessEdit,
 
 		listingAdd,
 		listingsSearch,
