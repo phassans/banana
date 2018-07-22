@@ -30,7 +30,7 @@ func (r verifyUserEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		return nil, err
 	}
 
-	userID, err := rtr.engines.VerifyUser(request.Email, request.Password)
+	userID, err := rtr.engines.UserVerify(request.Email, request.Password)
 	result := verifyUserResponse{verifyUserRequest: request, UserID: userID, Error: NewAPIError(err)}
 	return result, err
 }

@@ -1,6 +1,14 @@
 package shared
 
 type (
+	BusinessUser struct {
+		UserID   int    `json:"userId"`
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password,omitempty"`
+		Phone    string `json:"phone,omitempty"`
+	}
+
 	Listing struct {
 		ListingID            int
 		Title                string

@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/shared"
 	"github.com/rs/xlog"
 )
 
@@ -17,15 +18,57 @@ type userEngine struct {
 }
 
 type UserEngine interface {
-	AddUser(name string, email string, password string, phone string) error
-	VerifyUser(email string, password string) (int, error)
+	UserAdd(name string, email string, password string, phone string) error
+	UserEdit(user_id int, name string, email string, password string, phone string) error
+	UserGet(user_id int) (shared.BusinessUser, error)
+	UserVerify(email string, password string) (int, error)
 }
 
 func NewUserEngine(psql *sql.DB, logger xlog.Logger) UserEngine {
 	return &userEngine{psql, logger}
 }
 
-func (u *userEngine) AddUser(name string, email string, password string, phone string) error {
+func (u *userEngine) UserEdit(userID int, name string, email string, password string, phone string) error {
+	updateBusinessUserSQL := `
+	UPDATE business_user
+	SET name = $1, email = $2, password = $3, phone = $4
+	WHERE user_id = $5;`
+
+	_, err := u.sql.Exec(updateBusinessUserSQL, name, email, GetMD5Hash(password), phone, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userEngine) UserGet(userID int) (shared.BusinessUser, error) {
+	rows, err := u.sql.Query("SELECT user_id, name, email, phone FROM business_user where "+
+		"user_id = $1;", userID)
+	if err != nil {
+		return shared.BusinessUser{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var userInfo shared.BusinessUser
+	if rows.Next() {
+		err := rows.Scan(&userInfo.UserID, &userInfo.Name, &userInfo.Email, &userInfo.Phone)
+		if err != nil {
+			return shared.BusinessUser{}, helper.DatabaseError{DBError: err.Error()}
+		}
+	} else {
+		return shared.BusinessUser{}, helper.UserError{Message: fmt.Sprintf("user with id: %d not found", userID)}
+	}
+
+	if err = rows.Err(); err != nil {
+		return shared.BusinessUser{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return userInfo, nil
+}
+
+func (u *userEngine) UserAdd(name string, email string, password string, phone string) error {
 	// check business name unique
 	userID, err := u.CheckEmail(email)
 	if err != nil {
@@ -75,7 +118,7 @@ func (u *userEngine) CheckEmail(email string) (int, error) {
 	return userID, nil
 }
 
-func (u *userEngine) VerifyUser(email string, password string) (int, error) {
+func (u *userEngine) UserVerify(email string, password string) (int, error) {
 	rows, err := u.sql.Query("SELECT user_id FROM business_user where "+
 		"email = $1 AND password = $2;", email, GetMD5Hash(password))
 	if err != nil {

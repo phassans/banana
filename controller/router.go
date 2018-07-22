@@ -45,12 +45,14 @@ var (
 		businessAll,
 		listingInfo,
 		businessInfo,
+		userGet,
 	}
 
 	// createEndpoints lists POST endpoints that create records.
 	addEndpoints = []postEndpoint{
 		userAdd,
 		userVerify,
+		userEdit,
 
 		businessAdd,
 		businessEdit,

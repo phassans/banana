@@ -31,7 +31,7 @@ func (r addUserEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 		return nil, err
 	}
 
-	err := rtr.engines.AddUser(request.Name, request.Email, request.Password, request.Phone)
+	err := rtr.engines.UserAdd(request.Name, request.Email, request.Password, request.Phone)
 	result := addUserResponse{addUserRequest: request, Error: NewAPIError(err)}
 	return result, err
 }
