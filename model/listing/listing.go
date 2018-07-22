@@ -307,11 +307,15 @@ func (f *listingEngine) DeleteListing(listingID int) error {
 		return nil
 	}
 
+	if err := f.deleteListingRecurring(listingID); err != nil {
+		return nil
+	}
+
 	if err := f.deleteListing(listingID); err != nil {
 		return nil
 	}
 
-	f.logger.Infof("sucessfully delete listing: %d", listingID)
+	f.logger.Infof("successfully delete listing: %d", listingID)
 	return nil
 }
 
@@ -326,6 +330,14 @@ func (f *listingEngine) deleteListing(listingID int) error {
 func (f *listingEngine) deleteListingDate(listingID int) error {
 	sqlStatement := `DELETE FROM listing_date WHERE listing_id = $1;`
 	f.logger.Infof("deleting listing_date with query: %s and listing: %d", sqlStatement, listingID)
+
+	_, err := f.sql.Exec(sqlStatement, listingID)
+	return err
+}
+
+func (f *listingEngine) deleteListingRecurring(listingID int) error {
+	sqlStatement := `DELETE FROM recurring_listing WHERE listing_id = $1;`
+	f.logger.Infof("deleting recurring_listing with query: %s and listing: %d", sqlStatement, listingID)
 
 	_, err := f.sql.Exec(sqlStatement, listingID)
 	return err
