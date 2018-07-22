@@ -10,27 +10,29 @@ type (
 	}
 
 	Listing struct {
-		ListingID            int
-		Title                string
-		BusinessID           int
-		BusinessName         string
-		OldPrice             float64
-		NewPrice             float64
-		Discount             float64
-		DietaryRestriction   []string
-		Description          string
-		StartDate            string
-		StartTime            string
-		EndTime              string
-		MultipleDays         bool
-		EndDate              string
-		Recurring            bool
-		RecurringDays        []string
-		RecurringEndDate     string
-		Type                 string
-		ListingImage         string
-		DistanceFromLocation float64
-		ListingDate          string
+		ListingID            int      `json:"listingId,omitempty"`
+		Title                string   `json:"title,omitempty"`
+		BusinessID           int      `json:"businessId,omitempty"`
+		BusinessName         string   `json:"businessName,omitempty"`
+		OldPrice             float64  `json:"oldPrice,omitempty"`
+		NewPrice             float64  `json:"newPrice,omitempty"`
+		Discount             float64  `json:"discount,omitempty"`
+		DietaryRestriction   []string `json:"dietaryRestriction,omitempty"`
+		Description          string   `json:"description,omitempty"`
+		StartDate            string   `json:"startDate,omitempty"`
+		StartTime            string   `json:"startTime,omitempty"`
+		EndTime              string   `json:"endTime,omitempty"`
+		MultipleDays         bool     `json:"multipleDays,omitempty"`
+		EndDate              string   `json:"endDate,omitempty"`
+		Recurring            bool     `json:"recurring,omitempty"`
+		RecurringDays        []string `json:"recurringDays,omitempty"`
+		RecurringEndDate     string   `json:"recurringEndDate,omitempty"`
+		Type                 string   `json:"listingType,omitempty"`
+		ListingImage         string   `json:"listingImage,omitempty"`
+		DistanceFromLocation float64  `json:"distanceFromLocation,omitempty"`
+		ListingDate          string   `json:"listingDate,omitempty"`
+		ListingStatus        string   `json:"listingStatus,omitempty"`
+		TimeLeft             int      `json:"timeLeft"`
 	}
 
 	SearchListingResult struct {

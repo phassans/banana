@@ -36,7 +36,7 @@ type (
 			sortBy string,
 		) ([]shared.SearchListingResult, error)
 
-		GetAllListings(businessID int, businessType string) ([]shared.Listing, error)
+		GetListingsByBusinessID(businessID int, businessType string) ([]shared.Listing, error)
 		GetListingByID(listingID int) (shared.Listing, error)
 		GetListingInfo(listingID int) (shared.ListingInfo, error)
 		GetListingImage() string
@@ -227,10 +227,15 @@ func (l *listingEngine) GetListingByID(listingID int) (shared.Listing, error) {
 	return listing, nil
 }
 
-func (l *listingEngine) GetAllListings(businessID int, status string) ([]shared.Listing, error) {
-	getListingsQuery := "SELECT title, old_price, new_price, discount, description," +
-		"start_date, end_date, start_time, end_time, recurring, listing_type, business_id, listing_id FROM listing where " +
-		"business_id = $1"
+func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) ([]shared.Listing, error) {
+	getListingsQuery := "SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description," +
+		"listing.start_date, listing.multiple_days, listing.end_date, listing.start_time, listing.end_time, listing.recurring, " +
+		"listing.recurring_end_date, listing.listing_type, " +
+		"business.business_id, listing_id, business.name " +
+		"FROM listing " +
+		"INNER JOIN business ON listing.business_id = business.business_id " +
+		"WHERE " +
+		"listing.business_id = $1"
 
 	rows, err := l.sql.Query(getListingsQuery, businessID)
 	if err != nil {
@@ -248,13 +253,16 @@ func (l *listingEngine) GetAllListings(businessID int, status string) ([]shared.
 			&listing.Discount,
 			&listing.Description,
 			&listing.StartDate,
+			&listing.MultipleDays,
 			&listing.EndDate,
 			&listing.StartTime,
 			&listing.EndTime,
 			&listing.Recurring,
+			&listing.RecurringEndDate,
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
+			&listing.BusinessName,
 		)
 		if err != nil {
 			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
@@ -274,6 +282,9 @@ func (l *listingEngine) GetAllListings(businessID int, status string) ([]shared.
 		}
 		listing.RecurringDays = recurring
 
+		// add listing status
+		listing.ListingStatus = l.getListingStatus(listing)
+
 		listings = append(listings, listing)
 	}
 
@@ -281,7 +292,58 @@ func (l *listingEngine) GetAllListings(businessID int, status string) ([]shared.
 		return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	return listings, nil
+	return l.filterListingBasedOnStatus(listings, status), nil
+}
+
+func (f *listingEngine) getListingStatus(listing shared.Listing) string {
+
+	startDateTimeLeft, err := CalculateTimeLeft(listing.StartDate, listing.EndTime)
+	if err != nil {
+		return ""
+	}
+
+	if startDateTimeLeft > 1 {
+		return "scheduled"
+	} else if startDateTimeLeft < 0 && !listing.MultipleDays && !listing.Recurring {
+		return "ended"
+	}
+
+	if listing.MultipleDays {
+		endDateTimeLeft, err := CalculateTimeLeft(listing.EndDate, listing.EndTime)
+		if err != nil {
+			return ""
+		}
+
+		if endDateTimeLeft < 0 {
+			return "ended"
+		}
+	} else if listing.Recurring {
+		recurringEndDateTimeLeft, err := CalculateTimeLeft(listing.RecurringEndDate, listing.EndTime)
+		if err != nil {
+			return ""
+		}
+
+		if recurringEndDateTimeLeft < 0 {
+			return "ended"
+		}
+	}
+
+	return "active"
+}
+
+func (f *listingEngine) filterListingBasedOnStatus(listings []shared.Listing, status string) []shared.Listing {
+	if status == "all" || status == "" {
+		return listings
+	}
+
+	var resultListings []shared.Listing
+	for _, listing := range listings {
+		if listing.ListingStatus == status {
+			resultListings = append(resultListings, listing)
+		}
+	}
+
+	return resultListings
 }
 
 func (f *listingEngine) DeleteListing(listingID int) error {

@@ -55,7 +55,7 @@ func (l *sortListingEngine) SortListingsByTimeLeft() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 
-		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
+		timeLeft, err := CalculateTimeLeft(listing.ListingDate, listing.EndTime)
 		if err != nil {
 			return err
 		}

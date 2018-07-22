@@ -211,7 +211,7 @@ func (l *listingEngine) GetListings(listingType string, keywords string, future 
 func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing) ([]shared.SearchListingResult, error) {
 	var listingsResult []shared.SearchListingResult
 	for _, listing := range listings {
-		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
+		timeLeft, err := CalculateTimeLeft(listing.ListingDate, listing.EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -234,7 +234,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 	return listingsResult, nil
 }
 
-func calculateTimeLeft(listingDate string, listingTime string) (int, error) {
+func CalculateTimeLeft(listingDate string, listingTime string) (int, error) {
 	// get current date and time
 	currentDateTime := time.Now().Format(shared.DateTimeFormat)
 	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)

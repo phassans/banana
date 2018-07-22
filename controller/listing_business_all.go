@@ -9,7 +9,7 @@ import (
 type (
 	listingAllRequest struct {
 		BusinessID int    `json:"businessID"`
-		status     string `json:"status"`
+		Status     string `json:"status"`
 	}
 
 	listingAllResult struct {
@@ -24,7 +24,7 @@ var listingAll postEndpoint = listingAllEndpoint{}
 
 func (r listingAllEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingAllRequest)
-	result, err := rtr.engines.GetAllListings(request.BusinessID, request.status)
+	result, err := rtr.engines.GetListingsByBusinessID(request.BusinessID, request.Status)
 	return listingAllResult{Result: result, Error: NewAPIError(err)}, err
 }
 
