@@ -3,6 +3,10 @@ package controller
 import (
 	"context"
 
+	"fmt"
+	"strings"
+
+	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
 )
 
@@ -23,6 +27,10 @@ var notificationAll postEndpoint = notificationAllEndpoint{}
 
 func (r notificationAllEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(notificationAllRequest)
+	if err := r.Validate(requestI); err != nil {
+		return nil, err
+	}
+
 	result, err := rtr.engines.GetAllNotifications(
 		request.PhoneID,
 	)
@@ -30,6 +38,11 @@ func (r notificationAllEndpoint) Execute(ctx context.Context, rtr *router, reque
 }
 
 func (r notificationAllEndpoint) Validate(request interface{}) error {
+	req := request.(notificationAllRequest)
+	if strings.TrimSpace(req.PhoneID) == "" {
+		return helper.ValidationError{Message: fmt.Sprint("notification all failed, please provide 'phoneId'")}
+	}
+
 	return nil
 }
 

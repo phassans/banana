@@ -2,14 +2,17 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
+	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
 )
 
 type (
 	notificationADDRequest struct {
 		PhoneId            string   `json:"phoneId"`
-		BusinessId         int      `json:"businessId,omitempty"`
+		BusinessId         int      `json:"businessId"`
 		Price              string   `json:"price,omitempty"`
 		Keywords           string   `json:"keywords,omitempty"`
 		DietaryRestriction []string `json:"dietaryRestriction,omitempty"`
@@ -31,6 +34,11 @@ var notificationAdd postEndpoint = addNotificationEndpoint{}
 func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(notificationADDRequest)
 
+	// validate input
+	if err := r.Validate(request); err != nil {
+		return nil, err
+	}
+
 	l := shared.Notification{
 		PhoneId:            request.PhoneId,
 		BusinessId:         request.BusinessId,
@@ -48,6 +56,28 @@ func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, reque
 }
 
 func (r addNotificationEndpoint) Validate(request interface{}) error {
+	req := request.(notificationADDRequest)
+
+	if strings.TrimSpace(req.PhoneId) == "" {
+		return helper.ValidationError{Message: fmt.Sprint("notification add failed, please provide 'phoneId'")}
+	}
+
+	if req.BusinessId == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("notification add failed, please provide 'businessId'")}
+	}
+
+	if strings.TrimSpace(req.Location) == "" && (req.Latitude == 0 || req.Longitude == 0) {
+		return helper.ValidationError{Message: fmt.Sprint("listings search failed, please provide 'location' or 'latitude' and 'longitude'")}
+	}
+
+	for _, dietary := range req.DietaryRestriction {
+		if strings.ToLower(dietary) != "vegetarian" &&
+			strings.ToLower(dietary) != "vegan" &&
+			strings.ToLower(dietary) != "gluten free" {
+			return helper.ValidationError{Message: fmt.Sprint("listings search failed, invalid dietaryRestriction")}
+		}
+	}
+
 	return nil
 }
 

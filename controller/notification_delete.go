@@ -2,6 +2,9 @@ package controller
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/phassans/banana/helper"
 )
 
 type (
@@ -31,6 +34,10 @@ func (r deleteNotificationEndpoint) Execute(ctx context.Context, rtr *router, re
 }
 
 func (r deleteNotificationEndpoint) Validate(request interface{}) error {
+	req := request.(deleteNotificationRequest)
+	if req.NotificationID == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("notification delete failed, please provide 'notificationId'")}
+	}
 	return nil
 }
 
