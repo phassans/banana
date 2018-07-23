@@ -24,7 +24,7 @@ type (
 		AddListingImage(businessName string, imagePath string)
 
 		SearchListings(
-			listingType string,
+			listingType []string,
 			future bool,
 			latitude float64,
 			longitude float64,

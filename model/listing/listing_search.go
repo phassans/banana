@@ -25,7 +25,7 @@ const (
 )
 
 func (l *listingEngine) SearchListings(
-	listingType string,
+	listingTypes []string,
 	future bool,
 	latitude float64,
 	longitude float64,
@@ -41,7 +41,7 @@ func (l *listingEngine) SearchListings(
 	var err error
 
 	//GetListings
-	listings, err = l.GetListings(listingType, keywords, future)
+	listings, err = l.GetListings(listingTypes, keywords, future)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,24 @@ func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter flo
 	return listings, err
 }
 
-func getWhereClause(listingType string, future bool) (string, error) {
+func getListingTypeWhereClause(listingTypes []string) string {
+	var listingTypesClause bytes.Buffer
+	if len(listingTypes) > 0 {
+		listingTypesClause.WriteString("(")
+		i := 1
+		for _, listingType := range listingTypes {
+			if len(listingTypes) == i {
+				listingTypesClause.WriteString(fmt.Sprintf("'%s')", listingType))
+			} else {
+				listingTypesClause.WriteString(fmt.Sprintf("'%s',", listingType))
+			}
+			i++
+		}
+	}
+	return listingTypesClause.String()
+}
+
+func getWhereClause(listingTypes []string, future bool) (string, error) {
 	var whereClause bytes.Buffer
 	if future {
 		var dateClause bytes.Buffer
@@ -127,22 +144,21 @@ func getWhereClause(listingType string, future bool) (string, error) {
 			curr = nextDate
 		}
 		whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
-		if listingType != "" {
-			whereClause.WriteString(fmt.Sprintf(" AND listing_type = '%s'", listingType))
-		}
 	} else {
 		currentDate := time.Now().Format("2006-01-02")
 		currentTime := time.Now().Format("15:04:05.000000")
 
 		whereClause.WriteString(fmt.Sprintf("WHERE listing_date.listing_date = '%s' AND listing_date.end_time >= '%s'", currentDate, currentTime))
-		if listingType != "" {
-			whereClause.WriteString(fmt.Sprintf(" AND listing_type = '%s'", listingType))
-		}
 	}
+
+	if len(listingTypes) > 0 {
+		whereClause.WriteString(fmt.Sprintf(" AND listing_type in %s", getListingTypeWhereClause(listingTypes)))
+	}
+
 	return whereClause.String(), nil
 }
 
-func (l *listingEngine) GetListings(listingType string, keywords string, future bool) ([]shared.Listing, error) {
+func (l *listingEngine) GetListings(listingType []string, keywords string, future bool) ([]shared.Listing, error) {
 	// determine where clause
 	whereClause, err := getWhereClause(listingType, future)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 type (
 	listingsSearchRequest struct {
 		Future         bool     `json:"future"`
-		ListingType    string   `json:"listingType,omitempty"`
+		ListingType    []string `json:"listingTypes,omitempty"`
 		Latitude       float64  `json:"latitude,omitempty"`
 		Longitude      float64  `json:"longitude,omitempty"`
 		Location       string   `json:"location,omitempty"`
@@ -62,9 +62,17 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 func (r listingsSearchEndpoint) Validate(request interface{}) error {
 	req := request.(listingsSearchRequest)
 
-	if strings.TrimSpace(req.ListingType) != "" && strings.ToLower(req.ListingType) != "meal" &&
-		strings.ToLower(req.ListingType) != "happyhour" {
-		return helper.ValidationError{Message: fmt.Sprint("listing search failed, invalid 'listingType'")}
+	for _, listing := range req.ListingType {
+		isValidListing := false
+		for _, definedListings := range shared.ListingTypes {
+			if strings.TrimSpace(strings.ToLower((listing))) == definedListings {
+				isValidListing = true
+				break
+			}
+		}
+		if !isValidListing {
+			return helper.ValidationError{Message: fmt.Sprint("listing search failed, invalid 'listingTypes'")}
+		}
 	}
 
 	if strings.TrimSpace(req.SortBy) != "" && strings.ToLower(req.SortBy) != "distance" &&

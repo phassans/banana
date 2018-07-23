@@ -32,7 +32,8 @@ type (
 		DistanceFromLocation float64  `json:"distanceFromLocation,omitempty"`
 		ListingDate          string   `json:"listingDate,omitempty"`
 		ListingStatus        string   `json:"listingStatus,omitempty"`
-		TimeLeft             int      `json:"timeLeft"`
+		TimeLeft             int      `json:"timeLeft,omitempty"`
+		ImageLink            string   `json:"imageLink,omitempty"`
 	}
 
 	SearchListingResult struct {
