@@ -29,7 +29,6 @@ func (b *businessEngine) AddBusiness(
 	city string,
 	postalCode string,
 	state string,
-	country string,
 	hoursInfo []shared.Hours,
 	cuisine []string,
 ) (int, error) {
@@ -50,7 +49,7 @@ func (b *businessEngine) AddBusiness(
 	xlog.Infof("AddBusinessInfo success with businessID: %d", lastInsertBusinessID)
 
 	// add business address
-	if err = b.AddBusinessAddress(street, city, postalCode, state, country, lastInsertBusinessID); err != nil {
+	if err = b.AddBusinessAddress(street, city, postalCode, state, lastInsertBusinessID); err != nil {
 		return 0, err
 	}
 	xlog.Infof("AddBusinessAddress success with businessID: %d", lastInsertBusinessID)
@@ -86,7 +85,6 @@ func (b *businessEngine) AddBusinessAddress(
 	city string,
 	postalCode string,
 	state string,
-	country string,
 	businessID int,
 ) error {
 	// insert to address table

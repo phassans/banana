@@ -17,7 +17,6 @@ func (b *businessEngine) BusinessEdit(
 	city string,
 	postalCode string,
 	state string,
-	country string,
 	hoursInfo []shared.Hours,
 	cuisine []string,
 	businessID int,

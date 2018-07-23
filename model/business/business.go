@@ -23,7 +23,6 @@ type BusinessEngine interface {
 		city string,
 		postalCode string,
 		state string,
-		country string,
 		hoursInfo []shared.Hours,
 		cuisine []string,
 	) (int, error)
@@ -32,7 +31,6 @@ type BusinessEngine interface {
 		city string,
 		postalCode string,
 		state string,
-		country string,
 		businessID int,
 	) error
 	AddGeoInfo(address string, addressID int, businessID int) error
@@ -59,7 +57,6 @@ type BusinessEngine interface {
 		city string,
 		postalCode string,
 		state string,
-		country string,
 		hoursInfo []shared.Hours,
 		cuisine []string,
 		businessID int,

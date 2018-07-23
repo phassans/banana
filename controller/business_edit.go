@@ -2,7 +2,10 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
+	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
 )
 
@@ -44,6 +47,10 @@ var businessEdit postEndpoint = businessEditEndpoint{}
 func (r businessEditEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(businessEditRequest)
 
+	if err := r.Validate(requestI); err != nil {
+		return nil, err
+	}
+
 	var hoursInfo []shared.Hours
 	for _, day := range request.Hours {
 		h := shared.Hours{day.Day, day.OpenTimeSessionOne, day.CloseTimeSessionOne, day.OpenTimeSessionTwo, day.CloseTimeSessionTwo}
@@ -58,7 +65,6 @@ func (r businessEditEndpoint) Execute(ctx context.Context, rtr *router, requestI
 		request.City,
 		request.PostalCode,
 		request.State,
-		request.Country,
 		hoursInfo,
 		request.Cuisine,
 		request.BusinessID,
@@ -70,6 +76,69 @@ func (r businessEditEndpoint) Execute(ctx context.Context, rtr *router, requestI
 }
 
 func (r businessEditEndpoint) Validate(request interface{}) error {
+	input := request.(businessEditRequest)
+
+	var businessFields = []string{input.Name, input.Phone, input.Street, input.City, input.PostalCode, input.State}
+
+	for _, field := range businessFields {
+		if strings.TrimSpace(field) == "" {
+			return helper.ValidationError{Message: fmt.Sprint("business edit failed, missing mandatory fields")}
+		}
+	}
+
+	if len(input.Hours) == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("business edit failed, please add business hours")}
+	}
+
+	if len(input.Cuisine) == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("business edit failed, please select business cuisne type")}
+	}
+
+	for _, hour := range input.Hours {
+		if hour.Day == "" {
+			return helper.ValidationError{Message: fmt.Sprint("business edit failed, please select business days")}
+		}
+
+		// open time
+		if hour.OpenTimeSessionOne == "" && hour.OpenTimeSessionTwo == "" {
+			return helper.ValidationError{Message: fmt.Sprintf("business edit failed, please select open time for %s", hour.Day)}
+		}
+
+		// close time
+		if hour.CloseTimeSessionOne == "" && hour.CloseTimeSessionTwo == "" {
+			return helper.ValidationError{Message: fmt.Sprintf("business edit failed, please select close time %s", hour.Day)}
+		}
+
+		// close time
+		if hour.OpenTimeSessionOne != "" && hour.CloseTimeSessionOne == "" {
+			return helper.ValidationError{Message: fmt.Sprintf("business edit failed, please select close time %s", hour.Day)}
+		}
+
+		// close time
+		if hour.OpenTimeSessionTwo != "" && hour.CloseTimeSessionTwo == "" {
+			return helper.ValidationError{Message: fmt.Sprintf("business edit failed, please select close time %s", hour.Day)}
+		}
+
+		// open time
+		if hour.CloseTimeSessionOne != "" && hour.OpenTimeSessionOne == "" {
+			return helper.ValidationError{Message: fmt.Sprintf("business edit failed, please select open time %s", hour.Day)}
+		}
+
+		// open time
+		if hour.CloseTimeSessionTwo != "" && hour.OpenTimeSessionTwo == "" {
+			return helper.ValidationError{Message: fmt.Sprintf("business edit failed, please select open time %s", hour.Day)}
+		}
+
+	}
+
+	if input.BusinessID == 0 {
+		return helper.ValidationError{Message: fmt.Sprintf("business edit failed, please provide businessId")}
+	}
+
+	if input.AddressID == 0 {
+		return helper.ValidationError{Message: fmt.Sprintf("business edit failed, please provide addressId")}
+	}
+
 	return nil
 }
 
