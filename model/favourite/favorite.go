@@ -30,7 +30,7 @@ func NewFavoriteEngine(psql *sql.DB, logger xlog.Logger, businessEngine business
 }
 
 func (f *favoriteEngine) AddFavorite(phoneID string, listingID int) error {
-	listing, err := f.listingEngine.GetListingByID(listingID)
+	listing, err := f.listingEngine.GetListingByID(listingID, 0)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]shared.SearchListing
 
 	var listings []shared.Listing
 	for _, id := range IDs {
-		listing, err := f.listingEngine.GetListingByID(id)
+		listing, err := f.listingEngine.GetListingByID(id, 0)
 		if err != nil {
 			return nil, err
 		}

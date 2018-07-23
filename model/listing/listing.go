@@ -37,7 +37,7 @@ type (
 		) ([]shared.SearchListingResult, error)
 
 		GetListingsByBusinessID(businessID int, businessType string) ([]shared.Listing, error)
-		GetListingByID(listingID int) (shared.Listing, error)
+		GetListingByID(listingID int, businessID int) (shared.Listing, error)
 		GetListingInfo(listingID int) (shared.ListingInfo, error)
 		GetListingImage() string
 
@@ -160,7 +160,7 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error
 	var listingInfo shared.ListingInfo
 
 	//GetListingByID
-	listing, err := l.GetListingByID(listingID)
+	listing, err := l.GetListingByID(listingID, 0)
 	if err != nil {
 		return shared.ListingInfo{}, err
 	}
@@ -181,10 +181,13 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error
 	return listingInfo, nil
 }
 
-func (l *listingEngine) GetListingByID(listingID int) (shared.Listing, error) {
+func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Listing, error) {
 
 	var whereClause bytes.Buffer
 	whereClause.WriteString(fmt.Sprintf(" WHERE listing.listing_id = %d", listingID))
+	if businessID != 0 {
+		whereClause.WriteString(fmt.Sprintf(" AND business.business_id = %d", businessID))
+	}
 	query := fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause.String())
 
 	fmt.Println("GetListingByID ", query)
@@ -350,7 +353,7 @@ func (f *listingEngine) filterListingBasedOnStatus(listings []shared.Listing, st
 
 func (f *listingEngine) DeleteListing(listingID int) error {
 
-	listingInfo, err := f.GetListingByID(listingID)
+	listingInfo, err := f.GetListingByID(listingID, 0)
 	if err != nil {
 		return nil
 	}

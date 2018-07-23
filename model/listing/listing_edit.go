@@ -7,7 +7,7 @@ import (
 )
 
 func (l *listingEngine) ListingEdit(listing *shared.Listing) error {
-	listingInfo, err := l.GetListingByID(listing.ListingID)
+	listingInfo, err := l.GetListingByID(listing.ListingID, listing.BusinessID)
 	if err != nil {
 		return err
 	}
