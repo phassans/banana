@@ -1,5 +1,5 @@
 {
-    "memo": "63913dc9e2886d0c95a751e5684936aeb5a6517dc519ad65ecb5496e0bc44ddd",
+    "memo": "de2a3e3c2d51577d30ce257b2d73080363cd1e63561d324251a5b14ce6256c56",
     "projects": [
         {
             "name": "github.com/NYTimes/gziphandler",
@@ -29,6 +29,14 @@
             "name": "github.com/go-chi/chi",
             "branch": "master",
             "revision": "e223a795a06a5598451cf022558c17c779f5a7ab",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/goware/emailx",
+            "branch": "master",
+            "revision": "0bae9679d4e31a54efa4b1cc61dd78eadda83b1a",
             "packages": [
                 "."
             ]

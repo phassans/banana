@@ -3,7 +3,9 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/goware/emailx"
 	"github.com/phassans/banana/helper"
 )
 
@@ -38,9 +40,19 @@ func (r editUserEndpoint) Execute(ctx context.Context, rtr *router, requestI int
 }
 
 func (r editUserEndpoint) Validate(request interface{}) error {
-	input := request.(editUserRequest)
-	if input.Name == "" || input.Email == "" || input.Password == "" {
+	input := request.(addUserRequest)
+	if strings.TrimSpace(input.Name) == "" ||
+		strings.TrimSpace(input.Email) == "" ||
+		strings.TrimSpace(input.Password) == "" {
 		return helper.ValidationError{Message: fmt.Sprint("edit user failed, missing fields")}
+	}
+
+	if len(input.Password) < 6 {
+		return helper.ValidationError{Message: fmt.Sprint("add user failed, password should be atleast 6 characters long")}
+	}
+
+	if err := emailx.Validate(input.Email); err != nil {
+		return helper.ValidationError{Message: fmt.Sprint("edit user failed, invalid email")}
 	}
 
 	return nil
