@@ -2,6 +2,10 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
+	"github.com/phassans/banana/helper"
 )
 
 type (
@@ -32,6 +36,16 @@ func (r deleteFavoriteEndpoint) Execute(ctx context.Context, rtr *router, reques
 }
 
 func (r deleteFavoriteEndpoint) Validate(request interface{}) error {
+	req := request.(deleteFavoriteRequest)
+
+	if strings.TrimSpace(req.PhoneID) == "" {
+		return helper.ValidationError{Message: fmt.Sprint("favorite delete failed, please provide 'phoneId'")}
+	}
+
+	if req.ListingID == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("favorite delete failed, please provide 'listingId'")}
+	}
+
 	return nil
 }
 

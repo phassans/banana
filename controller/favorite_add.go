@@ -2,6 +2,10 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
+	"github.com/phassans/banana/helper"
 )
 
 type (
@@ -32,6 +36,16 @@ func (r addFavoriteEndpoint) Execute(ctx context.Context, rtr *router, requestI 
 }
 
 func (r addFavoriteEndpoint) Validate(request interface{}) error {
+	req := request.(addFavoriteRequest)
+
+	if strings.TrimSpace(req.PhoneID) == "" {
+		return helper.ValidationError{Message: fmt.Sprint("favorite add failed, please provide 'phoneId'")}
+	}
+
+	if req.ListingID == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("favorite add failed, please provide 'listingId'")}
+	}
+
 	return nil
 }
 
