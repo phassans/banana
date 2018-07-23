@@ -2,6 +2,9 @@ package controller
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/phassans/banana/helper"
 )
 
 type (
@@ -31,6 +34,11 @@ func (r deleteListingEndpoint) Execute(ctx context.Context, rtr *router, request
 }
 
 func (r deleteListingEndpoint) Validate(request interface{}) error {
+	input := request.(deleteListingRequest)
+	if input.ListingID == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("listing all failed, missing listingId")}
+	}
+
 	return nil
 }
 

@@ -2,8 +2,11 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"strconv"
+
+	"github.com/phassans/banana/helper"
 )
 
 type (
@@ -13,6 +16,11 @@ type (
 var listingInfo getEndPoint = listingEndpoint{}
 
 func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
+
+	if values.Get("listingId") == "" {
+		return nil, helper.ValidationError{Message: fmt.Sprint("user get failed, missing userId")}
+	}
+
 	listingID, err := strconv.Atoi(values.Get("listingId"))
 	if err != nil {
 		return nil, err

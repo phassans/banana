@@ -2,7 +2,10 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
+	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
 	"github.com/rs/xlog"
 )
@@ -25,7 +28,7 @@ type (
 		Recurring          bool     `json:"recurring"`
 		RecurringDays      []string `json:"recurringDays,omitempty"`
 		RecurringEndDate   string   `json:"recurringEndDate,omitempty"`
-		Type               string   `json:"listingType"`
+		ListingType        string   `json:"listingType"`
 	}
 
 	listingEditResult struct {
@@ -41,6 +44,10 @@ var listingEdit postEndpoint = editListingEndpoint{}
 func (r editListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingEditRequest)
 	xlog.Infof("POST %s query %+v", r.GetPath(), request)
+
+	if err := r.Validate(requestI); err != nil {
+		return nil, err
+	}
 
 	l := shared.Listing{
 		Title:              request.Title,
@@ -58,7 +65,7 @@ func (r editListingEndpoint) Execute(ctx context.Context, rtr *router, requestI 
 		Recurring:          request.Recurring,
 		RecurringDays:      request.RecurringDays,
 		RecurringEndDate:   request.RecurringEndDate,
-		Type:               request.Type,
+		Type:               request.ListingType,
 		ListingID:          request.ListingID,
 	}
 
@@ -68,6 +75,49 @@ func (r editListingEndpoint) Execute(ctx context.Context, rtr *router, requestI 
 }
 
 func (r editListingEndpoint) Validate(request interface{}) error {
+	input := request.(listingEditRequest)
+
+	if input.ListingType != "meal" && input.ListingType != "happyhour" {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, invalid 'listingType'")}
+	}
+
+	var businessFields = []string{input.Title, input.Description, input.StartDate, input.StartTime, input.EndTime}
+	for _, field := range businessFields {
+		if strings.TrimSpace(field) == "" {
+			return helper.ValidationError{Message: fmt.Sprint("listing edit failed, missing mandatory fields")}
+		}
+	}
+
+	if input.ListingType == "meal" && input.NewPrice == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, add 'newPrice' for the meal")}
+	}
+
+	if input.ListingType == "happyhour" && input.Discount == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, add 'discount' for the happyhour")}
+	}
+
+	if input.MultipleDays && input.Recurring {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, listing cannot be multiple days and recurring")}
+	}
+
+	if input.MultipleDays && input.EndDate == "" {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, please provide 'endDate' for multiple days lising")}
+	}
+
+	if input.Recurring && input.RecurringEndDate == "" {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, please provide 'recurringEndDate' for recurring listing")}
+	} else if input.Recurring && len(input.RecurringDays) == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, please provide 'recurringDays' for recurring listing")}
+	}
+
+	if input.ListingID == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, please provide 'listingId' for listing")}
+	}
+
+	if input.BusinessID == 0 {
+		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, please provide 'businessId' for listing")}
+	}
+
 	return nil
 }
 
