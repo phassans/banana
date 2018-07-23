@@ -61,6 +61,7 @@ var (
 		listingsSearch,
 		listingDelete,
 		listingAll,
+		listingEdit,
 
 		notificationAdd,
 		notificationDelete,

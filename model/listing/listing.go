@@ -44,6 +44,8 @@ type (
 		MassageAndPopulateSearchListings([]shared.Listing) ([]shared.SearchListingResult, error)
 
 		DeleteListing(listingId int) error
+
+		ListingEdit(listing *shared.Listing) error
 	}
 )
 

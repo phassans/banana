@@ -8,7 +8,8 @@ import (
 )
 
 type (
-	listingADDRequest struct {
+	listingEditRequest struct {
+		ListingID          int      `json:"listingId"`
 		BusinessID         int      `json:"businessId"`
 		Title              string   `json:"title"`
 		OldPrice           float64  `json:"oldPrice,omitempty"`
@@ -24,21 +25,21 @@ type (
 		Recurring          bool     `json:"recurring"`
 		RecurringDays      []string `json:"recurringDays,omitempty"`
 		RecurringEndDate   string   `json:"recurringEndDate,omitempty"`
-		Type               string   `json:"type"`
+		Type               string   `json:"listingType"`
 	}
 
-	listingADDResult struct {
-		listingADDRequest
+	listingEditResult struct {
+		listingEditRequest
 		Error *APIError `json:"error,omitempty"`
 	}
 
-	addListingEndpoint struct{}
+	editListingEndpoint struct{}
 )
 
-var listingAdd postEndpoint = addListingEndpoint{}
+var listingEdit postEndpoint = editListingEndpoint{}
 
-func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
-	request := requestI.(listingADDRequest)
+func (r editListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
+	request := requestI.(listingEditRequest)
 	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
 	l := shared.Listing{
@@ -58,21 +59,22 @@ func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		RecurringDays:      request.RecurringDays,
 		RecurringEndDate:   request.RecurringEndDate,
 		Type:               request.Type,
+		ListingID:          request.ListingID,
 	}
 
-	err := rtr.engines.AddListing(&l)
-	result := listingADDResult{listingADDRequest: request, Error: NewAPIError(err)}
+	err := rtr.engines.ListingEdit(&l)
+	result := listingEditResult{listingEditRequest: request, Error: NewAPIError(err)}
 	return result, err
 }
 
-func (r addListingEndpoint) Validate(request interface{}) error {
+func (r editListingEndpoint) Validate(request interface{}) error {
 	return nil
 }
 
-func (r addListingEndpoint) GetPath() string {
-	return "/listing/add"
+func (r editListingEndpoint) GetPath() string {
+	return "/listing/edit"
 }
 
-func (r addListingEndpoint) HTTPRequest() interface{} {
-	return listingADDRequest{}
+func (r editListingEndpoint) HTTPRequest() interface{} {
+	return listingEditRequest{}
 }
