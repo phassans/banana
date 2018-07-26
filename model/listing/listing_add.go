@@ -9,14 +9,14 @@ import (
 	"github.com/phassans/banana/shared"
 )
 
-func (l *listingEngine) AddListing(listing *shared.Listing) error {
+func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 	business, err := l.businessEngine.GetBusinessFromID(listing.BusinessID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if business.Name == "" {
-		return helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", listing.BusinessID)}
+		return 0, helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", listing.BusinessID)}
 	}
 
 	if listing.RecurringEndDate == "" {
@@ -33,14 +33,14 @@ func (l *listingEngine) AddListing(listing *shared.Listing) error {
 		listing.Recurring, listing.RecurringEndDate, listing.Type, time.Now()).
 		Scan(&listingID)
 	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
+		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 	listing.ListingID = listingID
 
 	if listing.Recurring {
 		for _, day := range listing.RecurringDays {
 			if err := l.AddRecurring(listingID, day); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -48,19 +48,19 @@ func (l *listingEngine) AddListing(listing *shared.Listing) error {
 	if len(listing.DietaryRestriction) > 0 {
 		for _, restriction := range listing.DietaryRestriction {
 			if err := l.AddDietaryRestriction(listingID, restriction); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
 	// insert into listing_date
 	if err := l.AddListingDates(listing); err != nil {
-		return err
+		return 0, err
 	}
 
-	l.logger.Infof("successfully added a listing %s for business: %s", listing.Title, business.Name)
+	l.logger.Infof("successfully added a listing %s for business: %s with listingId: %d", listing.Title, business.Name, listingID)
 
-	return nil
+	return listingID, nil
 }
 
 func (l *listingEngine) AddListingDates(listing *shared.Listing) error {

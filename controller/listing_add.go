@@ -29,6 +29,8 @@ type (
 		RecurringEndDate   string   `json:"recurringEndDate,omitempty"`
 		ListingType        string   `json:"listingType"`
 		ImageLink          string   `json:"imageLink,omitempty"`
+
+		ListingID int `json:"listingId,omitempty"`
 	}
 
 	listingADDResult struct {
@@ -69,7 +71,9 @@ func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		ImageLink:          request.ImageLink,
 	}
 
-	err := rtr.engines.AddListing(&l)
+	listingID, err := rtr.engines.AddListing(&l)
+	request.ListingID = listingID
+
 	result := listingADDResult{listingADDRequest: request, Error: NewAPIError(err)}
 	return result, err
 }

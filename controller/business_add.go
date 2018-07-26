@@ -28,6 +28,9 @@ type (
 		} `json:"hours"`
 
 		Cuisine []string `json:"cuisine,omitempty"`
+
+		BusinessID int `json:"businessId,omitempty"`
+		AddressID  int `json:"addressId,omitempty"`
 	}
 
 	businessAddResult struct {
@@ -53,7 +56,7 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 		hoursInfo = append(hoursInfo, h)
 	}
 
-	_, err := rtr.engines.AddBusiness(
+	businessID, addressID, err := rtr.engines.AddBusiness(
 		request.Name,
 		request.Phone,
 		request.Website,
@@ -64,6 +67,8 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 		hoursInfo,
 		request.Cuisine,
 	)
+	request.BusinessID = businessID
+	request.AddressID = addressID
 	result := businessAddResult{businessAddRequest: request, Error: NewAPIError(err)}
 
 	return result, err

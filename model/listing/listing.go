@@ -20,7 +20,7 @@ type (
 	}
 
 	ListingEngine interface {
-		AddListing(listing *shared.Listing) error
+		AddListing(listing *shared.Listing) (int, error)
 		AddListingImage(businessName string, imagePath string)
 
 		SearchListings(

@@ -31,43 +31,44 @@ func (b *businessEngine) AddBusiness(
 	state string,
 	hoursInfo []shared.Hours,
 	cuisine []string,
-) (int, error) {
+) (int, int, error) {
 	// check business name unique
 	businessID, err := b.GetBusinessIDFromName(businessName)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	if businessID != 0 {
-		return 0, helper.DuplicateEntity{Name: businessName}
+		return 0, 0, helper.DuplicateEntity{Name: businessName}
 	}
 
 	lastInsertBusinessID, err := b.AddBusinessInfo(businessName, phone, website)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	xlog.Infof("AddBusinessInfo success with businessID: %d", lastInsertBusinessID)
 
 	// add business address
-	if err = b.AddBusinessAddress(street, city, postalCode, state, lastInsertBusinessID); err != nil {
-		return 0, err
+	addressID, err := b.AddBusinessAddress(street, city, postalCode, state, lastInsertBusinessID)
+	if err != nil {
+		return 0, 0, err
 	}
 	xlog.Infof("AddBusinessAddress success with businessID: %d", lastInsertBusinessID)
 
 	// add business hour
 	if err := b.AddBusinessHours(hoursInfo, lastInsertBusinessID); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	xlog.Infof("AddBusinessHours success with businessID: %d", lastInsertBusinessID)
 
 	// add cuisine
 	if err := b.AddBusinessCuisine(cuisine, lastInsertBusinessID); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	xlog.Infof("AddBusinessCuisine success with businessID: %d", lastInsertBusinessID)
 
 	b.logger.Infof("business added successfully with id: %d", lastInsertBusinessID)
-	return lastInsertBusinessID, nil
+	return lastInsertBusinessID, addressID, nil
 }
 
 func (b *businessEngine) AddBusinessInfo(businessName string, phone string, website string) (int, error) {
@@ -86,14 +87,14 @@ func (b *businessEngine) AddBusinessAddress(
 	postalCode string,
 	state string,
 	businessID int,
-) error {
+) (int, error) {
 	// insert to address table
 	var addressID int
 	err := b.sql.QueryRow(insertBusinessAddressSQL, street, city, postalCode,
 		state, shared.CountryID, businessID).
 		Scan(&addressID)
 	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
+		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 	b.logger.Infof("successfully added address with ID: %d for business: %d", addressID, businessID)
 
@@ -101,10 +102,10 @@ func (b *businessEngine) AddBusinessAddress(
 	geoAddress := fmt.Sprintf("%s,%s,%s", street, city, state)
 	err = b.AddGeoInfo(url.QueryEscape(geoAddress), addressID, businessID)
 	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
+		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	return nil
+	return addressID, nil
 }
 
 func (l *businessEngine) AddGeoInfo(address string, addressID int, businessID int) error {

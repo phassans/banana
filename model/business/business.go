@@ -25,14 +25,14 @@ type BusinessEngine interface {
 		state string,
 		hoursInfo []shared.Hours,
 		cuisine []string,
-	) (int, error)
+	) (int, int, error)
 	AddBusinessAddress(
 		street string,
 		city string,
 		postalCode string,
 		state string,
 		businessID int,
-	) error
+	) (int, error)
 	AddGeoInfo(address string, addressID int, businessID int) error
 	AddBusinessHours([]shared.Hours, int) error
 	AddBusinessCuisine(cuisines []string, businessID int) error
