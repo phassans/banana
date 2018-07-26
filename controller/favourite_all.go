@@ -43,8 +43,11 @@ func (r favoritesViewEndpoint) Validate(request interface{}) error {
 		return helper.ValidationError{Message: fmt.Sprint("favorite all failed, please provide 'phoneId'")}
 	}
 
-	if strings.TrimSpace(req.SortBy) != "date added" && strings.ToLower(req.SortBy) != "distance" &&
-		strings.ToLower(req.SortBy) != "timeleft" && strings.ToLower(req.SortBy) != "price" {
+	if strings.TrimSpace(req.SortBy) != "" &&
+		strings.TrimSpace(req.SortBy) != "date added" &&
+		strings.ToLower(req.SortBy) != "distance" &&
+		strings.ToLower(req.SortBy) != "timeleft" &&
+		strings.ToLower(req.SortBy) != "price" {
 		return helper.ValidationError{Message: fmt.Sprint("favorite all failed, invalid 'sortBy'")}
 	}
 
