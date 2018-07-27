@@ -12,13 +12,15 @@ import (
 type (
 	verifyUserRequest struct {
 		Email    string `json:"email"`
-		Password string `json:"password"`
+		Password string `json:"password,omitempty"`
+		FullName string `json:"fullName"`
+
+		UserID int `json:"userId,omitempty"`
 	}
 
 	verifyUserResponse struct {
 		verifyUserRequest
-		UserID int       `json:"user_id"`
-		Error  *APIError `json:"error,omitempty"`
+		Error *APIError `json:"error,omitempty"`
 	}
 
 	verifyUserEndpoint struct{}
@@ -32,8 +34,14 @@ func (r verifyUserEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		return nil, err
 	}
 
-	userID, err := rtr.engines.UserVerify(request.Email, request.Password)
-	result := verifyUserResponse{verifyUserRequest: request, UserID: userID, Error: NewAPIError(err)}
+	userInfo, err := rtr.engines.UserVerify(request.Email, request.Password)
+
+	// set values in request object
+	request.Password = ""
+	request.FullName = userInfo.Name
+	request.UserID = userInfo.UserID
+
+	result := verifyUserResponse{verifyUserRequest: request, Error: NewAPIError(err)}
 	return result, err
 }
 

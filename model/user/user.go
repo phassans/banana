@@ -21,7 +21,7 @@ type UserEngine interface {
 	UserAdd(name string, email string, password string, phone string) error
 	UserEdit(user_id int, name string, email string, password string, phone string) error
 	UserGet(user_id int) (shared.BusinessUser, error)
-	UserVerify(email string, password string) (int, error)
+	UserVerify(email string, password string) (shared.BusinessUser, error)
 }
 
 func NewUserEngine(psql *sql.DB, logger xlog.Logger) UserEngine {
@@ -119,30 +119,30 @@ func (u *userEngine) CheckEmail(email string) (int, error) {
 	return userID, nil
 }
 
-func (u *userEngine) UserVerify(email string, password string) (int, error) {
-	rows, err := u.sql.Query("SELECT user_id FROM business_user where "+
+func (u *userEngine) UserVerify(email string, password string) (shared.BusinessUser, error) {
+	rows, err := u.sql.Query("SELECT user_id, name, email, phone FROM business_user where "+
 		"email = $1 AND password = $2;", email, GetMD5Hash(password))
 	if err != nil {
-		return -1, helper.DatabaseError{DBError: err.Error()}
+		return shared.BusinessUser{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	defer rows.Close()
 
-	var userID int
+	var userInfo shared.BusinessUser
 	if rows.Next() {
-		err := rows.Scan(&userID)
+		err := rows.Scan(&userInfo.UserID, &userInfo.Name, &userInfo.Email, &userInfo.Phone)
 		if err != nil {
-			return -1, helper.DatabaseError{DBError: err.Error()}
+			return shared.BusinessUser{}, helper.DatabaseError{DBError: err.Error()}
 		}
 	} else {
-		return -1, helper.UserError{Message: fmt.Sprintf("user %s password mismatch", email)}
+		return shared.BusinessUser{}, helper.UserError{Message: fmt.Sprintf("user %s password mismatch", email)}
 	}
 
 	if err = rows.Err(); err != nil {
-		return -1, helper.DatabaseError{DBError: err.Error()}
+		return shared.BusinessUser{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	return userID, nil
+	return userInfo, nil
 }
 
 func GetMD5Hash(text string) string {
