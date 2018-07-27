@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS user_to_business
   user_id     INT NULL,
   business_id INT NULL,
   PRIMARY KEY (user_id, business_id),
-  FOREIGN KEY (user_id) REFERENCES user (user_id),
+  FOREIGN KEY (user_id) REFERENCES business_user (user_id),
   FOREIGN KEY (business_id) REFERENCES business (business_id)
 );
 

@@ -29,7 +29,7 @@ func main() {
 
 	// createEngines
 	userEngine := user.NewUserEngine(roach.Db, logger)
-	businessEngine := business.NewBusinessEngine(roach.Db, logger)
+	businessEngine := business.NewBusinessEngine(roach.Db, logger, userEngine)
 	listingEngine := listing.NewListingEngine(roach.Db, logger, businessEngine)
 	favouriteEngine := favourite.NewFavoriteEngine(roach.Db, logger, businessEngine, listingEngine)
 	notificationEngine := notification.NewNotificationEngine(roach.Db, logger, businessEngine)

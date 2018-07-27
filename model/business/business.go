@@ -4,13 +4,15 @@ import (
 	"database/sql"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/model/user"
 	"github.com/phassans/banana/shared"
 	"github.com/rs/xlog"
 )
 
 type businessEngine struct {
-	sql    *sql.DB
-	logger xlog.Logger
+	sql        *sql.DB
+	logger     xlog.Logger
+	userEngine user.UserEngine
 }
 
 type BusinessEngine interface {
@@ -25,6 +27,7 @@ type BusinessEngine interface {
 		state string,
 		hoursInfo []shared.Hours,
 		cuisine []string,
+		UserId int,
 	) (int, int, error)
 	AddBusinessAddress(
 		street string,
@@ -64,8 +67,8 @@ type BusinessEngine interface {
 	) (int, error)
 }
 
-func NewBusinessEngine(psql *sql.DB, logger xlog.Logger) BusinessEngine {
-	return &businessEngine{psql, logger}
+func NewBusinessEngine(psql *sql.DB, logger xlog.Logger, userEngine user.UserEngine) BusinessEngine {
+	return &businessEngine{psql, logger, userEngine}
 }
 
 func (b *businessEngine) GetAllBusiness() ([]shared.Business, error) {

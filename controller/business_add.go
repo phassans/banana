@@ -31,6 +31,7 @@ type (
 
 		BusinessID int `json:"businessId,omitempty"`
 		AddressID  int `json:"addressId,omitempty"`
+		UserID     int `json:"userId,omitempty"`
 	}
 
 	businessAddResult struct {
@@ -66,6 +67,7 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.State,
 		hoursInfo,
 		request.Cuisine,
+		request.UserID,
 	)
 	request.BusinessID = businessID
 	request.AddressID = addressID

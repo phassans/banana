@@ -31,7 +31,20 @@ func (b *businessEngine) AddBusiness(
 	state string,
 	hoursInfo []shared.Hours,
 	cuisine []string,
+	userId int,
 ) (int, int, error) {
+
+	if userId != 0 {
+		bUser, err := b.userEngine.UserGet(userId)
+		if err != nil {
+			return 0, 0, err
+		}
+
+		if bUser.UserID == 0 {
+			return 0, 0, helper.UserError{Message: fmt.Sprintf("user with ID:%d does not exist", bUser.UserID)}
+		}
+	}
+
 	// check business name unique
 	businessID, err := b.GetBusinessIDFromName(businessName)
 	if err != nil {
@@ -66,6 +79,14 @@ func (b *businessEngine) AddBusiness(
 		return 0, 0, err
 	}
 	xlog.Infof("AddBusinessCuisine success with businessID: %d", lastInsertBusinessID)
+
+	// associate user to business
+	if userId != 0 {
+		if err := b.associateUserToBusiness(lastInsertBusinessID, userId); err != nil {
+			return 0, 0, err
+		}
+		xlog.Infof("Associate user to business success with businessID: %d", lastInsertBusinessID)
+	}
 
 	b.logger.Infof("business added successfully with id: %d", lastInsertBusinessID)
 	return lastInsertBusinessID, addressID, nil
@@ -193,5 +214,18 @@ func (l *businessEngine) addCuisine(businessID int, cuisine string) error {
 	}
 
 	l.logger.Infof("add cuisine successful for businessID:%d", businessID)
+	return nil
+}
+
+func (l *businessEngine) associateUserToBusiness(businessID int, userID int) error {
+	associateUserToBusinessSQL := "INSERT INTO user_to_business(business_id,user_id) " +
+		"VALUES($1,$2);"
+
+	_, err := l.sql.Query(associateUserToBusinessSQL, businessID, userID)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	l.logger.Infof("associateUserToBusiness successful for businessID:%d", businessID)
 	return nil
 }
