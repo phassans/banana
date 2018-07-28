@@ -131,10 +131,11 @@ func (l *listingEngine) InsertListingDate(lDate shared.ListingDate) error {
 	addListingDietRestrictionSQL := "INSERT INTO listing_date(listing_id,listing_date,start_time,end_time) " +
 		"VALUES($1,$2,$3,$4);"
 
-	_, err := l.sql.Query(addListingDietRestrictionSQL, lDate.ListingID, lDate.ListingDate, lDate.StartTime, lDate.EndTime)
+	rows, err := l.sql.Query(addListingDietRestrictionSQL, lDate.ListingID, lDate.ListingDate, lDate.StartTime, lDate.EndTime)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+	defer rows.Close()
 
 	l.logger.Infof("InsertListingDate successful for listing:%d", lDate.ListingID)
 	return nil
@@ -144,10 +145,11 @@ func (l *listingEngine) AddRecurring(listingID int, day string) error {
 	addListingRecurringSQL := "INSERT INTO recurring_listing(listing_id,day) " +
 		"VALUES($1,$2);"
 
-	_, err := l.sql.Query(addListingRecurringSQL, listingID, day)
+	rows, err := l.sql.Query(addListingRecurringSQL, listingID, day)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+	defer rows.Close()
 
 	l.logger.Infof("add recurring successful for listing:%d", listingID)
 	return nil
@@ -157,10 +159,11 @@ func (l *listingEngine) AddDietaryRestriction(listingID int, restriction string)
 	addListingDietRestrictionSQL := "INSERT INTO listing_dietary_restrictions(listing_id,restriction) " +
 		"VALUES($1,$2);"
 
-	_, err := l.sql.Query(addListingDietRestrictionSQL, listingID, restriction)
+	rows, err := l.sql.Query(addListingDietRestrictionSQL, listingID, restriction)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+	defer rows.Close()
 
 	l.logger.Infof("add listing_dietary_restrictions successful for listing:%d", listingID)
 	return nil

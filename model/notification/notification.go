@@ -69,10 +69,11 @@ func (l *notificationEngine) AddNotificationDietaryRestriction(restriction strin
 	addNotificationDietRestrictionSQL := "INSERT INTO notifications_dietary_restrictions(notification_id,restriction) " +
 		"VALUES($1,$2);"
 
-	_, err := l.sql.Query(addNotificationDietRestrictionSQL, notificationID, restriction)
+	rows, err := l.sql.Query(addNotificationDietRestrictionSQL, notificationID, restriction)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+	defer rows.Close()
 
 	l.logger.Infof("add notifications_dietary_restrictions successful for notification:%d", notificationID)
 	return nil

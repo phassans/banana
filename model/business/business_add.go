@@ -176,10 +176,11 @@ func (l *businessEngine) addHours(day string, openTime string, closeTime string,
 	addBusinessHoursSQL := "INSERT INTO business_hours(business_id,day,open_time,close_time) " +
 		"VALUES($1,$2,$3,$4);"
 
-	_, err := l.sql.Query(addBusinessHoursSQL, businessID, day, openTime, closeTime)
+	rows, err := l.sql.Query(addBusinessHoursSQL, businessID, day, openTime, closeTime)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+	defer rows.Close()
 
 	l.logger.Infof("add hours succesfull for businessID:%d", businessID)
 	return nil
@@ -208,10 +209,11 @@ func (l *businessEngine) addCuisine(businessID int, cuisine string) error {
 	addBusinessCuisineSQL := "INSERT INTO business_cuisine(business_id,cuisine) " +
 		"VALUES($1,$2);"
 
-	_, err := l.sql.Query(addBusinessCuisineSQL, businessID, cuisine)
+	rows, err := l.sql.Query(addBusinessCuisineSQL, businessID, cuisine)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+	defer rows.Close()
 
 	l.logger.Infof("add cuisine successful for businessID:%d", businessID)
 	return nil
@@ -221,10 +223,11 @@ func (l *businessEngine) associateUserToBusiness(businessID int, userID int) err
 	associateUserToBusinessSQL := "INSERT INTO user_to_business(business_id,user_id) " +
 		"VALUES($1,$2);"
 
-	_, err := l.sql.Query(associateUserToBusinessSQL, businessID, userID)
+	rows, err := l.sql.Query(associateUserToBusinessSQL, businessID, userID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+	defer rows.Close()
 
 	l.logger.Infof("associateUserToBusiness successful for businessID:%d", businessID)
 	return nil
