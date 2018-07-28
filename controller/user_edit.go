@@ -40,7 +40,7 @@ func (r editUserEndpoint) Execute(ctx context.Context, rtr *router, requestI int
 }
 
 func (r editUserEndpoint) Validate(request interface{}) error {
-	input := request.(addUserRequest)
+	input := request.(editUserRequest)
 	if strings.TrimSpace(input.Name) == "" ||
 		strings.TrimSpace(input.Email) == "" ||
 		strings.TrimSpace(input.Password) == "" {
