@@ -169,6 +169,13 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error
 		return shared.ListingInfo{}, helper.ListingDoesNotExist{ListingID: listingID}
 	}
 
+	// add dietary req's
+	reqs, err := l.GetDietaryRestriction(listing.ListingID)
+	if err != nil {
+		return shared.ListingInfo{}, helper.DatabaseError{DBError: err.Error()}
+	}
+	listing.DietaryRestriction = reqs
+
 	searchListingResult, err := l.MassageAndPopulateSearchListings([]shared.Listing{listing})
 	listingInfo.Listing = searchListingResult[0]
 

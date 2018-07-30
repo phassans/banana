@@ -61,6 +61,6 @@ func IsHardError(err error) bool {
 	case hystrix.CircuitError:
 		return true
 	default:
-		return true
+		return false
 	}
 }

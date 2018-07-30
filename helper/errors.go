@@ -11,7 +11,7 @@ type ValidationError struct {
 
 func (v ValidationError) Error() string {
 	b, _ := json.Marshal(v)
-	return fmt.Sprintf("validation failed with error: %s", string(b))
+	return fmt.Sprintf("validation error: %s", string(b))
 }
 
 type UserError struct {

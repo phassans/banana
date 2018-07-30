@@ -37,7 +37,7 @@ func (u *userEngine) UserAdd(name string, email string, password string, phone s
 	}
 
 	if userID != 0 {
-		return helper.DuplicateEntity{Name: email}
+		return helper.UserError{Message: fmt.Sprintf("user with %s is already registered!", email)}
 	}
 
 	err = u.sql.QueryRow("INSERT INTO business_user(name,email,password,phone) "+
