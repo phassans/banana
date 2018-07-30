@@ -38,7 +38,7 @@ type (
 
 		GetListingsByBusinessID(businessID int, businessType string) ([]shared.Listing, error)
 		GetListingByID(listingID int, businessID int) (shared.Listing, error)
-		GetListingInfo(listingID int) (shared.ListingInfo, error)
+		GetListingInfo(listingID int) (shared.Listing, error)
 		GetListingImage() string
 
 		MassageAndPopulateSearchListings([]shared.Listing) ([]shared.SearchListingResult, error)
@@ -156,7 +156,7 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	return rests, nil
 }
 
-func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error) {
+/*func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error) {
 	var listingInfo shared.ListingInfo
 
 	//GetListingByID
@@ -186,6 +186,35 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error
 	}
 	listingInfo.Business = businessInfo
 	return listingInfo, nil
+}*/
+
+func (l *listingEngine) GetListingInfo(listingID int) (shared.Listing, error) {
+	//var listingInfo shared.Listing
+
+	//GetListingByID
+	listing, err := l.GetListingByID(listingID, 0)
+	if err != nil {
+		return shared.Listing{}, err
+	}
+
+	if listing.ListingID == 0 {
+		return shared.Listing{}, helper.ListingDoesNotExist{ListingID: listingID}
+	}
+
+	// add dietary req's
+	reqs, err := l.GetDietaryRestriction(listing.ListingID)
+	if err != nil {
+		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+	}
+	listing.DietaryRestriction = reqs
+
+	//GetBusinessInfo
+	businessInfo, err := l.businessEngine.GetBusinessInfo(listing.BusinessID)
+	if err != nil {
+		return shared.Listing{}, err
+	}
+	listing.Business = businessInfo
+	return listing, nil
 }
 
 func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Listing, error) {
