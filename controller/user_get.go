@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/phassans/banana/helper"
+	"github.com/rs/xlog"
 )
 
 type (
@@ -16,6 +17,7 @@ type (
 var userGet getEndPoint = userEndpoint{}
 
 func (r userEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
+	xlog.Infof("GET %s query %+v", r.GetPath(), values)
 
 	if values.Get("userId") == "" {
 		return nil, helper.ValidationError{Message: fmt.Sprint("user get failed, missing userId")}

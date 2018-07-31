@@ -7,6 +7,7 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
+	"github.com/rs/xlog"
 )
 
 type (
@@ -33,6 +34,7 @@ var notificationAdd postEndpoint = addNotificationEndpoint{}
 
 func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(notificationADDRequest)
+	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
 	// validate input
 	if err := r.Validate(request); err != nil {

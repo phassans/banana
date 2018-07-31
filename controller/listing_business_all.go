@@ -6,6 +6,7 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
+	"github.com/rs/xlog"
 )
 
 type (
@@ -26,6 +27,7 @@ var listingAll postEndpoint = listingAllEndpoint{}
 
 func (r listingAllEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingAllRequest)
+	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
 	if err := r.Validate(requestI); err != nil {
 		return nil, err

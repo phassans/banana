@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/phassans/banana/helper"
+	"github.com/rs/xlog"
 )
 
 type (
@@ -24,6 +25,8 @@ var listingDelete postEndpoint = deleteListingEndpoint{}
 
 func (r deleteListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(deleteListingRequest)
+	xlog.Infof("POST %s query %+v", r.GetPath(), request)
+
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
 	}

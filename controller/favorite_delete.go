@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/phassans/banana/helper"
+	"github.com/rs/xlog"
 )
 
 type (
@@ -26,6 +27,8 @@ var favouriteDelete postEndpoint = deleteFavoriteEndpoint{}
 
 func (r deleteFavoriteEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(deleteFavoriteRequest)
+	xlog.Infof("POST %s query %+v", r.GetPath(), request)
+
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
 	}

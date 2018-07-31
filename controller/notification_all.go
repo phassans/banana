@@ -8,6 +8,7 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
+	"github.com/rs/xlog"
 )
 
 type (
@@ -27,6 +28,8 @@ var notificationAll postEndpoint = notificationAllEndpoint{}
 
 func (r notificationAllEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(notificationAllRequest)
+	xlog.Infof("POST %s query %+v", r.GetPath(), request)
+
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
 	}
