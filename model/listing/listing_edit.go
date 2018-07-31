@@ -16,10 +16,6 @@ func (l *listingEngine) ListingEdit(listing *shared.Listing) error {
 		return helper.ListingDoesNotExist{ListingID: listing.ListingID}
 	}
 
-	if listing.RecurringEndDate == "" {
-		listing.RecurringEndDate = "01/01/2000"
-	}
-
 	// edit listing info
 	if err := l.editListingInfo(listing); err != nil {
 		return err

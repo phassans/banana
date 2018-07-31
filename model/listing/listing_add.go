@@ -20,10 +20,6 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 		return 0, helper.BusinessError{Message: fmt.Sprintf("business with id %d does not exist", listing.BusinessID)}
 	}
 
-	if listing.RecurringEndDate == "" {
-		listing.RecurringEndDate = "01/01/2000"
-	}
-
 	var listingID int
 	const insertListingSQL = "INSERT INTO listing(business_id, title, old_price, new_price, discount, description," +
 		"start_date, start_time, end_time, multiple_days, end_date, recurring, recurring_end_date, listing_type, listing_create_date) " +
