@@ -26,6 +26,12 @@ func (l *listingEngine) ListingEdit(listing *shared.Listing) error {
 	}
 	xlog.Infof("editListingInfo success for listing: %d", listing.ListingID)
 
+	// edit listing image
+	if err := l.editListingImage(listing); err != nil {
+		return err
+	}
+	xlog.Infof("editListingImage success for listing: %d", listing.ListingID)
+
 	// edit recurring days
 	if err := l.editRecurringDays(listing); err != nil {
 		return err
@@ -114,6 +120,23 @@ func (l *listingEngine) editListingInfo(listing *shared.Listing) error {
 		listing.ListingID,
 		listing.BusinessID,
 		listing.Type,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *listingEngine) editListingImage(listing *shared.Listing) error {
+	updateListingImageSQL := `
+	UPDATE listing_image
+	SET path = $1
+	WHERE listing_id = $2`
+
+	_, err := l.sql.Exec(
+		updateListingImageSQL,
+		listing.ImageLink,
+		listing.ListingID,
 	)
 	if err != nil {
 		return err

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"math/rand"
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
@@ -21,7 +20,7 @@ type (
 
 	ListingEngine interface {
 		AddListing(listing *shared.Listing) (int, error)
-		AddListingImage(businessName string, imagePath string)
+		AddListingImage(listingID int, imageLink string) error
 
 		SearchListings(
 			listingType []string,
@@ -40,7 +39,7 @@ type (
 		GetListingsByBusinessID(businessID int, businessType string) ([]shared.Listing, error)
 		GetListingByID(listingID int, businessID int) (shared.Listing, error)
 		GetListingInfo(listingID int) (shared.Listing, error)
-		GetListingImage() string
+		GetListingImage(listingID int) (string, error)
 
 		MassageAndPopulateSearchListings([]shared.Listing) ([]shared.SearchListingResult, error)
 
@@ -108,28 +107,54 @@ func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
 	return days, nil
 }
 
-func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listing) ([]shared.Listing, error) {
+func (l *listingEngine) AddDietaryRestrictionsAndImageToListings(listings []shared.Listing) ([]shared.Listing, error) {
 	// get dietary restriction
 	var listingsResult []shared.Listing
 	for _, listing := range listings {
+		// add dietary restriction
 		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
 		if err != nil {
 			return nil, err
 		}
 		listing.DietaryRestriction = rests
-		listing.ListingImage = l.GetListingImage()
+
+		// add image Link
+		imageLink, err := l.GetListingImage(listing.ListingID)
+		if err != nil {
+			return nil, err
+		}
+		listing.ListingImage = imageLink
+
 		listingsResult = append(listingsResult, listing)
 	}
 	return listingsResult, nil
 }
 
-func (l *listingEngine) GetListingImage() string {
-	imgRand := random(1, 6)
-	return fmt.Sprintf("%s/static/%d.jpg", shared.ImageBaseURL, imgRand)
-}
+func (l *listingEngine) GetListingImage(listingID int) (string, error) {
+	rows, err := l.sql.Query("SELECT path FROM listing_image where listing_id = $1;", listingID)
+	if err != nil {
+		return "", err
+	}
 
-func random(min, max int) int {
-	return rand.Intn(max-min) + min
+	defer rows.Close()
+
+	var imageLink string
+	if rows.Next() {
+		err := rows.Scan(&imageLink)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return "", err
+	}
+
+	if imageLink == "" {
+		imageLink = "https://res.cloudinary.com/itshungryhour/image/upload/v1533011858/listing/NoPicAvailable.png"
+	}
+
+	return imageLink, nil
 }
 
 func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, error) {
@@ -201,6 +226,13 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.Listing, error) {
 	if listing.ListingID == 0 {
 		return shared.Listing{}, helper.ListingDoesNotExist{ListingID: listingID}
 	}
+
+	// add listing image
+	imageLink, err := l.GetListingImage(listingID)
+	if err != nil {
+		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+	}
+	listing.ImageLink = imageLink
 
 	// add dietary req's
 	reqs, err := l.GetDietaryRestriction(listing.ListingID)

@@ -29,6 +29,7 @@ type (
 		RecurringDays      []string `json:"recurringDays,omitempty"`
 		RecurringEndDate   string   `json:"recurringEndDate,omitempty"`
 		ListingType        string   `json:"listingType"`
+		ImageLink          string   `json:"imageLink,omitempty"`
 	}
 
 	listingEditResult struct {
@@ -67,6 +68,7 @@ func (r editListingEndpoint) Execute(ctx context.Context, rtr *router, requestI 
 		RecurringEndDate:   request.RecurringEndDate,
 		Type:               request.ListingType,
 		ListingID:          request.ListingID,
+		ImageLink:          request.ImageLink,
 	}
 
 	err := rtr.engines.ListingEdit(&l)

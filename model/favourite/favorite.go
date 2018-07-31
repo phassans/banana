@@ -71,7 +71,12 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]shared.SearchListing
 		if err != nil {
 			return nil, err
 		}
-		listing.ListingImage = f.listingEngine.GetListingImage()
+
+		imageLink, err := f.listingEngine.GetListingImage(id)
+		if err != nil {
+			return nil, err
+		}
+		listing.ListingImage = imageLink
 		listings = append(listings, listing)
 	}
 

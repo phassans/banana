@@ -7,6 +7,7 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
+	"github.com/rs/xlog"
 )
 
 func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
@@ -36,6 +37,15 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 	listing.ListingID = listingID
+
+	// add listing image
+	if listing.ImageLink != "" {
+		if err := l.AddListingImage(listingID, listing.ImageLink); err != nil {
+			return 0, err
+		}
+	} else {
+		xlog.Info("no image link")
+	}
 
 	if listing.Recurring {
 		for _, day := range listing.RecurringDays {
@@ -141,6 +151,20 @@ func (l *listingEngine) InsertListingDate(lDate shared.ListingDate) error {
 	return nil
 }
 
+func (l *listingEngine) AddListingImage(listingID int, imageLink string) error {
+	addListingRecurringSQL := "INSERT INTO listing_image(listing_id,path) " +
+		"VALUES($1,$2);"
+
+	rows, err := l.sql.Query(addListingRecurringSQL, listingID, imageLink)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+	defer rows.Close()
+
+	l.logger.Infof("add AddListingImage successful for listing:%d", listingID)
+	return nil
+}
+
 func (l *listingEngine) AddRecurring(listingID int, day string) error {
 	addListingRecurringSQL := "INSERT INTO recurring_listing(listing_id,day) " +
 		"VALUES($1,$2);"
@@ -167,8 +191,4 @@ func (l *listingEngine) AddDietaryRestriction(listingID int, restriction string)
 
 	l.logger.Infof("add listing_dietary_restrictions successful for listing:%d", listingID)
 	return nil
-}
-
-func (l *listingEngine) AddListingImage(businessName string, imagePath string) {
-	return
 }

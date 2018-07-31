@@ -49,7 +49,7 @@ func (l *listingEngine) SearchListings(
 	xlog.Infof("total number of listing found: %d", len(listings))
 
 	// addDietaryRestrictionsToListings
-	listings, err = l.AddDietaryRestrictionsToListings(listings)
+	listings, err = l.AddDietaryRestrictionsAndImageToListings(listings)
 	if err != nil {
 		return nil, err
 	}
@@ -258,6 +258,10 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 }
 
 func CalculateTimeLeft(listingDate string, listingTime string) (int, error) {
+	if listingDate == "" || listingTime == "" {
+		return 0, nil
+	}
+
 	// get current date and time
 	currentDateTime := time.Now().Format(shared.DateTimeFormat)
 	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)
