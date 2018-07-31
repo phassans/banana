@@ -270,6 +270,8 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Li
 	defer rows.Close()
 
 	var listing shared.Listing
+	var sqlEndDate sql.NullString
+	var sqlRecurringEndDate sql.NullString
 	if rows.Next() {
 		err := rows.Scan(
 			&listing.Title,
@@ -278,10 +280,11 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Li
 			&listing.Discount,
 			&listing.Description,
 			&listing.StartDate,
-			&listing.EndDate,
+			&sqlEndDate,
 			&listing.StartTime,
 			&listing.EndTime,
 			&listing.Recurring,
+			&sqlRecurringEndDate,
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
@@ -292,6 +295,8 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Li
 			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
 	}
+	listing.StartDate = sqlEndDate.String
+	listing.RecurringEndDate = sqlRecurringEndDate.String
 
 	if err = rows.Err(); err != nil {
 		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}

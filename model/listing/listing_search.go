@@ -2,6 +2,7 @@ package listing
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -16,7 +17,8 @@ const (
 	searchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
 		"listing.discount as discount, listing.description as description, listing.start_date as start_date," +
 		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
-		"listing.recurring as recurring, listing.listing_type as listing_type, listing.business_id as business_id," +
+		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
+		"listing.business_id as business_id," +
 		"listing.listing_id as listing_id, business.name as bname, listing_date.listing_date as listing_date"
 
 	fromClause = "FROM listing " +
@@ -177,7 +179,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 	var searchQuery string
 	if keywords != "" {
 		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, description, start_date, end_date, "+
-			"start_time, end_time, recurring, listing_type, business_id, listing_id, bname, listing_date "+
+			"start_time, end_time, recurring, recurring_date, listing_type, business_id, listing_id, bname, listing_date "+
 			"FROM (%s, "+
 			"to_tsvector(business.name) || "+
 			"to_tsvector(listing.title) || "+
@@ -198,6 +200,8 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 	defer rows.Close()
 
 	var listings []shared.Listing
+	var sqlEndDate sql.NullString
+	var sqlRecurringEndDate sql.NullString
 	for rows.Next() {
 		var listing shared.Listing
 		err := rows.Scan(
@@ -207,10 +211,11 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 			&listing.Discount,
 			&listing.Description,
 			&listing.StartDate,
-			&listing.EndDate,
+			&sqlEndDate,
 			&listing.StartTime,
 			&listing.EndTime,
 			&listing.Recurring,
+			&sqlRecurringEndDate,
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
@@ -220,6 +225,8 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}
+		listing.EndDate = sqlEndDate.String
+		listing.RecurringEndDate = sqlRecurringEndDate.String
 		listings = append(listings, listing)
 	}
 

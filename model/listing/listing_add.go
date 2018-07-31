@@ -26,8 +26,8 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning listing_id"
 
 	err = l.sql.QueryRow(insertListingSQL, listing.BusinessID, listing.Title, listing.OldPrice, listing.NewPrice, listing.Discount,
-		listing.Description, listing.StartDate, listing.StartTime, listing.EndTime, listing.MultipleDays, listing.EndDate,
-		listing.Recurring, listing.RecurringEndDate, listing.Type, time.Now()).
+		listing.Description, listing.StartDate, listing.StartTime, listing.EndTime, listing.MultipleDays, shared.NewNullString(listing.EndDate),
+		listing.Recurring, shared.NewNullString(listing.RecurringEndDate), listing.Type, time.Now()).
 		Scan(&listingID)
 	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
