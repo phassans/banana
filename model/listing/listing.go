@@ -34,6 +34,7 @@ type (
 			distanceFilter string,
 			keywords string,
 			sortBy string,
+			phoneID string,
 		) ([]shared.SearchListingResult, error)
 
 		GetListingsByBusinessID(businessID int, businessType string) ([]shared.Listing, error)
@@ -336,128 +337,41 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 	return l.filterListingBasedOnStatus(listings, status), nil
 }
 
-func (f *listingEngine) getListingStatus(listing shared.Listing) string {
-
-	startDateTimeLeft, err := CalculateTimeLeft(listing.StartDate, listing.EndTime)
-	if err != nil {
-		return ""
-	}
-
-	if startDateTimeLeft > 1 {
-		return "scheduled"
-	} else if startDateTimeLeft < 0 && !listing.MultipleDays && !listing.Recurring {
-		return "ended"
-	}
-
-	if listing.MultipleDays {
-		endDateTimeLeft, err := CalculateTimeLeft(listing.EndDate, listing.EndTime)
-		if err != nil {
-			return ""
-		}
-
-		if endDateTimeLeft < 0 {
-			return "ended"
-		}
-	} else if listing.Recurring {
-		recurringEndDateTimeLeft, err := CalculateTimeLeft(listing.RecurringEndDate, listing.EndTime)
-		if err != nil {
-			return ""
-		}
-
-		if recurringEndDateTimeLeft < 0 {
-			return "ended"
-		}
-	}
-
-	return "active"
-}
-
-func (f *listingEngine) filterListingBasedOnStatus(listings []shared.Listing, status string) []shared.Listing {
-	if status == "all" || status == "" {
-		return listings
-	}
-
-	var resultListings []shared.Listing
+func (l *listingEngine) tagListingsAsFavorites(listings []shared.Listing, phoneID string) []shared.Listing {
+	// get dietary restriction
+	var result []shared.Listing
 	for _, listing := range listings {
-		if listing.ListingStatus == status {
-			resultListings = append(resultListings, listing)
+		if l.isFavorite(phoneID, listing.ListingID) {
+			listing.IsFavorite = true
+		}
+		result = append(result, listing)
+	}
+	return result
+}
+
+func (f *listingEngine) isFavorite(phoneID string, listingID int) bool {
+	rows, err := f.sql.Query("SELECT favorite_id FROM favorites where phone_id = $1 AND listing_id = $2;", phoneID, listingID)
+	if err != nil {
+		return false
+	}
+
+	defer rows.Close()
+
+	var favoriteID int
+	if rows.Next() {
+		err := rows.Scan(&favoriteID)
+		if err != nil {
+			return false
 		}
 	}
 
-	return resultListings
-}
-
-func (f *listingEngine) DeleteListing(listingID int) error {
-
-	listingInfo, err := f.GetListingByID(listingID, 0)
-	if err != nil {
-		return nil
+	if err = rows.Err(); err != nil {
+		return false
 	}
 
-	if listingInfo.ListingID == 0 {
-		return helper.ListingDoesNotExist{ListingID: listingID}
+	if favoriteID != 0 {
+		return true
 	}
 
-	if err := f.deleteListingImage(listingID); err != nil {
-		return nil
-	}
-
-	if err := f.deleteListingDietaryRestriction(listingID); err != nil {
-		return nil
-	}
-
-	if err := f.deleteListingDate(listingID); err != nil {
-		return nil
-	}
-
-	if err := f.deleteListingRecurring(listingID); err != nil {
-		return nil
-	}
-
-	if err := f.deleteListing(listingID); err != nil {
-		return nil
-	}
-
-	f.logger.Infof("successfully delete listing: %d", listingID)
-	return nil
-}
-
-func (f *listingEngine) deleteListing(listingID int) error {
-	sqlStatement := `DELETE FROM listing WHERE listing_id = $1;`
-	f.logger.Infof("deleting listing with query: %s and listing: %d", sqlStatement, listingID)
-
-	_, err := f.sql.Exec(sqlStatement, listingID)
-	return err
-}
-
-func (f *listingEngine) deleteListingDate(listingID int) error {
-	sqlStatement := `DELETE FROM listing_date WHERE listing_id = $1;`
-	f.logger.Infof("deleting listing_date with query: %s and listing: %d", sqlStatement, listingID)
-
-	_, err := f.sql.Exec(sqlStatement, listingID)
-	return err
-}
-
-func (f *listingEngine) deleteListingRecurring(listingID int) error {
-	sqlStatement := `DELETE FROM recurring_listing WHERE listing_id = $1;`
-	f.logger.Infof("deleting recurring_listing with query: %s and listing: %d", sqlStatement, listingID)
-
-	_, err := f.sql.Exec(sqlStatement, listingID)
-	return err
-}
-
-func (f *listingEngine) deleteListingDietaryRestriction(listingID int) error {
-	sqlStatement := `DELETE FROM listing_dietary_restrictions WHERE listing_id = $1;`
-	f.logger.Infof("deleting listing_dietary_restrictions with query: %s and listing: %d", sqlStatement, listingID)
-
-	_, err := f.sql.Exec(sqlStatement, listingID)
-	return err
-}
-
-func (f *listingEngine) deleteListingImage(listingID int) error {
-	sqlStatement := `DELETE FROM listing_image WHERE listing_id = $1;`
-	f.logger.Infof("deleting listing_image with query: %s and listing: %d", sqlStatement, listingID)
-
-	_, err := f.sql.Exec(sqlStatement, listingID)
-	return err
+	return false
 }

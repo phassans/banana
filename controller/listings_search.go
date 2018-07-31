@@ -14,7 +14,7 @@ import (
 type (
 	listingsSearchRequest struct {
 		Future         bool     `json:"future"`
-		ListingType    []string `json:"listingTypes,omitempty"`
+		ListingTypes   []string `json:"listingTypes,omitempty"`
 		Latitude       float64  `json:"latitude,omitempty"`
 		Longitude      float64  `json:"longitude,omitempty"`
 		Location       string   `json:"location,omitempty"`
@@ -23,6 +23,8 @@ type (
 		DistanceFilter string   `json:"distanceFilter,omitempty"`
 		Keywords       string   `json:"keywords,omitempty"`
 		SortBy         string   `json:"sortBy,omitempty"`
+
+		PhoneID string `json:"phoneId"`
 	}
 
 	listingsSearchResult struct {
@@ -45,7 +47,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 	}
 
 	result, err := rtr.engines.SearchListings(
-		request.ListingType,
+		request.ListingTypes,
 		request.Future,
 		request.Latitude,
 		request.Longitude,
@@ -55,6 +57,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.DistanceFilter,
 		request.Keywords,
 		request.SortBy,
+		request.PhoneID,
 	)
 	return listingsSearchResult{Result: result, Error: NewAPIError(err)}, err
 }
@@ -62,7 +65,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 func (r listingsSearchEndpoint) Validate(request interface{}) error {
 	req := request.(listingsSearchRequest)
 
-	for _, listing := range req.ListingType {
+	for _, listing := range req.ListingTypes {
 		isValidListing := false
 		for _, definedListings := range shared.ListingTypes {
 			if strings.TrimSpace(strings.ToLower((listing))) == definedListings {

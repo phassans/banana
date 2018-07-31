@@ -35,6 +35,7 @@ func (l *listingEngine) SearchListings(
 	distanceFilter string,
 	keywords string,
 	sortBy string,
+	phoneID string,
 ) ([]shared.SearchListingResult, error) {
 
 	var listings []shared.Listing
@@ -77,6 +78,11 @@ func (l *listingEngine) SearchListings(
 	// filterResults
 	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter)
 	xlog.Infof("applied filters. number of listings: %d", len(listings))
+
+	if phoneID != "" {
+		listings = l.tagListingsAsFavorites(listings, phoneID)
+		xlog.Infof("tagging listings as favourites")
+	}
 
 	// populate searchResult
 	return l.MassageAndPopulateSearchListings(listings)
@@ -244,6 +250,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			TimeLeft:             timeLeft,
 			ListingImage:         listing.ListingImage,
 			DistanceFromLocation: listing.DistanceFromLocation,
+			IsFavorite:           listing.IsFavorite,
 		}
 		listingsResult = append(listingsResult, sr)
 	}

@@ -47,7 +47,7 @@ func (f *favoriteEngine) AddFavorite(phoneID string, listingID int) error {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
 
-	f.logger.Infof("successfully added a user with ID: %d", favoriteID)
+	f.logger.Infof("successfully added a favorites with ID: %d", favoriteID)
 	return nil
 }
 

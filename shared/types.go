@@ -35,6 +35,7 @@ type (
 		TimeLeft             int          `json:"timeLeft,omitempty"`
 		ImageLink            string       `json:"imageLink,omitempty"`
 		Business             BusinessInfo `json:"businessInfo"`
+		IsFavorite           bool         `json:"isFavorite"`
 	}
 
 	SearchListingResult struct {
@@ -50,6 +51,7 @@ type (
 		TimeLeft             int      `json:"timeLeft"`
 		ListingImage         string   `json:"listingImage"`
 		DistanceFromLocation float64  `json:"distanceFromLocation"`
+		IsFavorite           bool     `json:"isFavorite"`
 	}
 
 	ListingInfo struct {
