@@ -323,6 +323,8 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 	defer rows.Close()
 
 	var listings []shared.Listing
+	var sqlEndDate sql.NullString
+	var sqlRecurringEndDate sql.NullString
 	for rows.Next() {
 		var listing shared.Listing
 		err := rows.Scan(
@@ -333,11 +335,11 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 			&listing.Description,
 			&listing.StartDate,
 			&listing.MultipleDays,
-			&listing.EndDate,
+			&sqlEndDate,
 			&listing.StartTime,
 			&listing.EndTime,
 			&listing.Recurring,
-			&listing.RecurringEndDate,
+			&sqlRecurringEndDate,
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
@@ -346,6 +348,8 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 		if err != nil {
 			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
+		listing.EndDate = sqlEndDate.String
+		listing.RecurringEndDate = sqlRecurringEndDate.String
 
 		// add dietary req's
 		reqs, err := l.GetDietaryRestriction(listing.ListingID)
