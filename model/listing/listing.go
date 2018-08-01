@@ -246,7 +246,7 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.Listing, error) {
 	if err != nil {
 		return shared.Listing{}, err
 	}
-	listing.Business = businessInfo
+	listing.Business = &businessInfo
 
 	dateTimeRange, err := DetermineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
 	if err != nil {

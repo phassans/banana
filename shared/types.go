@@ -10,33 +10,33 @@ type (
 	}
 
 	Listing struct {
-		ListingID            int          `json:"listingId,omitempty"`
-		Title                string       `json:"title,omitempty"`
-		BusinessID           int          `json:"businessId,omitempty"`
-		BusinessName         string       `json:"businessName,omitempty"`
-		OldPrice             float64      `json:"oldPrice,omitempty"`
-		NewPrice             float64      `json:"newPrice,omitempty"`
-		Discount             float64      `json:"discount,omitempty"`
-		DietaryRestriction   []string     `json:"dietaryRestriction,omitempty"`
-		Description          string       `json:"description,omitempty"`
-		StartDate            string       `json:"startDate,omitempty"`
-		StartTime            string       `json:"startTime,omitempty"`
-		EndTime              string       `json:"endTime,omitempty"`
-		MultipleDays         bool         `json:"multipleDays"`
-		EndDate              string       `json:"endDate,omitempty"`
-		Recurring            bool         `json:"recurring"`
-		RecurringDays        []string     `json:"recurringDays,omitempty"`
-		RecurringEndDate     string       `json:"recurringEndDate,omitempty"`
-		Type                 string       `json:"listingType,omitempty"`
-		ListingImage         string       `json:"listingImage,omitempty"`
-		DistanceFromLocation float64      `json:"distanceFromLocation,omitempty"`
-		ListingDate          string       `json:"listingDate,omitempty"`
-		ListingStatus        string       `json:"listingStatus,omitempty"`
-		TimeLeft             int          `json:"timeLeft,omitempty"`
-		ImageLink            string       `json:"imageLink,omitempty"`
-		Business             BusinessInfo `json:"businessInfo"`
-		IsFavorite           bool         `json:"isFavorite"`
-		DateTimeRange        string       `json:"dateTimeRange,omitempty"`
+		ListingID            int           `json:"listingId,omitempty"`
+		Title                string        `json:"title,omitempty"`
+		BusinessID           int           `json:"businessId,omitempty"`
+		BusinessName         string        `json:"businessName,omitempty"`
+		OldPrice             float64       `json:"oldPrice,omitempty"`
+		NewPrice             float64       `json:"newPrice,omitempty"`
+		Discount             float64       `json:"discount,omitempty"`
+		DietaryRestriction   []string      `json:"dietaryRestriction,omitempty"`
+		Description          string        `json:"description,omitempty"`
+		StartDate            string        `json:"startDate,omitempty"`
+		StartTime            string        `json:"startTime,omitempty"`
+		EndTime              string        `json:"endTime,omitempty"`
+		MultipleDays         bool          `json:"multipleDays"`
+		EndDate              string        `json:"endDate,omitempty"`
+		Recurring            bool          `json:"recurring"`
+		RecurringDays        []string      `json:"recurringDays,omitempty"`
+		RecurringEndDate     string        `json:"recurringEndDate,omitempty"`
+		Type                 string        `json:"listingType,omitempty"`
+		ListingImage         string        `json:"listingImage,omitempty"`
+		DistanceFromLocation float64       `json:"distanceFromLocation,omitempty"`
+		ListingDate          string        `json:"listingDate,omitempty"`
+		ListingStatus        string        `json:"listingStatus,omitempty"`
+		TimeLeft             int           `json:"timeLeft,omitempty"`
+		ImageLink            string        `json:"imageLink,omitempty"`
+		Business             *BusinessInfo `json:"businessInfo,omitempty"`
+		IsFavorite           bool          `json:"isFavorite"`
+		DateTimeRange        string        `json:"dateTimeRange,omitempty"`
 	}
 
 	SearchListingResult struct {
