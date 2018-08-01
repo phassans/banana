@@ -36,7 +36,7 @@ type (
 		ImageLink            string       `json:"imageLink,omitempty"`
 		Business             BusinessInfo `json:"businessInfo"`
 		IsFavorite           bool         `json:"isFavorite"`
-		DateTimeRange        string       `json:dateTimeRange,omitempty`
+		DateTimeRange        string       `json:"dateTimeRange,omitempty"`
 	}
 
 	SearchListingResult struct {
@@ -53,7 +53,7 @@ type (
 		ListingImage         string   `json:"listingImage"`
 		DistanceFromLocation float64  `json:"distanceFromLocation"`
 		IsFavorite           bool     `json:"isFavorite"`
-		DateTimeRange        string   `json:dateTimeRange`
+		DateTimeRange        string   `json:"dateTimeRange"`
 	}
 
 	ListingInfo struct {

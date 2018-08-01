@@ -153,8 +153,8 @@ func getWhereClause(listingTypes []string, future bool) (string, error) {
 		}
 		whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
 	} else {
-		currentDate := time.Now().Format("2006-01-02")
-		currentTime := time.Now().Format("15:04:05.000000")
+		currentDate := time.Now().Format(shared.DateFormatSQL) //"2006-01-02"
+		currentTime := time.Now().Format(shared.TimeLayout24Hour)
 
 		whereClause.WriteString(fmt.Sprintf("WHERE listing_date.listing_date = '%s' AND listing_date.end_time >= '%s'", currentDate, currentTime))
 	}
@@ -300,7 +300,7 @@ func DetermineDealDateTimeRange(listingDate string, listingStartTime string, lis
 	}
 
 	// get listingDate in format
-	listingDateFormatted, err := time.Parse(shared.DateFormat1, strings.Split(listingDate, "T")[0])
+	listingDateFormatted, err := time.Parse(shared.DateFormatSQL, strings.Split(listingDate, "T")[0])
 	if err != nil {
 		return "", nil
 	}
