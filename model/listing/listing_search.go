@@ -249,7 +249,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 		if err != nil {
 			return nil, err
 		}
-		xlog.Infof("dateTimeRange: %s", dateTimeRange)
+		//xlog.Infof("dateTimeRange: %s", dateTimeRange)
 
 		sr := shared.SearchListingResult{
 			ListingID:            listing.ListingID,
