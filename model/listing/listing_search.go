@@ -64,6 +64,7 @@ func (l *listingEngine) SearchListings(
 			return nil, err
 		}
 		currentLocation = shared.CurrentLocation{Latitude: resp.Lat, Longitude: resp.Lon}
+		xlog.Infof("resp from google lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
 	} else {
 		currentLocation = shared.CurrentLocation{Latitude: latitude, Longitude: longitude}
 	}

@@ -2,7 +2,6 @@ package business
 
 import (
 	"fmt"
-	"net/url"
 
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
@@ -121,7 +120,7 @@ func (b *businessEngine) AddBusinessAddress(
 
 	// add lat, long to database
 	geoAddress := fmt.Sprintf("%s,%s,%s", street, city, state)
-	err = b.AddGeoInfo(url.QueryEscape(geoAddress), addressID, businessID)
+	err = b.AddGeoInfo(geoAddress, addressID, businessID)
 	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
