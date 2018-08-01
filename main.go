@@ -34,13 +34,13 @@ func main() {
 	favouriteEngine := favourite.NewFavoriteEngine(roach.Db, logger, businessEngine, listingEngine)
 	notificationEngine := notification.NewNotificationEngine(roach.Db, logger, businessEngine)
 
-	engines := model.NewGenericEngine(businessEngine, userEngine, listingEngine, favouriteEngine, notificationEngine)
-
-	handerPrefix := "/static/"
-	path := "./images/"
-	maxConnections := 1
-	InitHandler(handerPrefix, path, maxConnections)
-	go func() { serverErrChannel <- http.ListenAndServe(":3001", nil) }()
+	engines := model.NewGenericEngine(
+		businessEngine,
+		userEngine,
+		listingEngine,
+		favouriteEngine,
+		notificationEngine,
+	)
 
 	// start the server
 	server = http.Server{Addr: net.JoinHostPort("", serverPort), Handler: route.APIServerHandler(engines)}

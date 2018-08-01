@@ -25,10 +25,24 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 		"start_date, start_time, end_time, multiple_days, end_date, recurring, recurring_end_date, listing_type, listing_create_date) " +
 		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning listing_id"
 
-	err = l.sql.QueryRow(insertListingSQL, listing.BusinessID, listing.Title, listing.OldPrice, listing.NewPrice, listing.Discount,
-		listing.Description, listing.StartDate, listing.StartTime, listing.EndTime, listing.MultipleDays, shared.NewNullString(listing.EndDate),
-		listing.Recurring, shared.NewNullString(listing.RecurringEndDate), listing.Type, time.Now()).
+	err = l.sql.QueryRow(insertListingSQL,
+		listing.BusinessID,
+		listing.Title,
+		listing.OldPrice,
+		listing.NewPrice,
+		listing.Discount,
+		listing.Description,
+		listing.StartDate,
+		listing.StartTime,
+		listing.EndTime,
+		listing.MultipleDays,
+		shared.NewNullString(listing.EndDate),
+		listing.Recurring,
+		shared.NewNullString(listing.RecurringEndDate),
+		listing.Type,
+		time.Now()).
 		Scan(&listingID)
+
 	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
@@ -72,7 +86,7 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 	// current listing date
 	listings := []shared.ListingDate{
-		shared.ListingDate{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime},
+		{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime},
 	}
 
 	listingDate, err := time.Parse(shared.DateFormat, strings.Split(listing.StartDate, "T")[0])

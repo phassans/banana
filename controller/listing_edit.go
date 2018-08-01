@@ -79,7 +79,7 @@ func (r editListingEndpoint) Execute(ctx context.Context, rtr *router, requestI 
 func (r editListingEndpoint) Validate(request interface{}) error {
 	input := request.(listingEditRequest)
 
-	if input.ListingType != "meal" && input.ListingType != "happyhour" {
+	if input.ListingType != shared.ListingTypeMeal && input.ListingType != shared.ListingTypeHappyHour {
 		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, invalid 'listingType'")}
 	}
 
@@ -90,11 +90,11 @@ func (r editListingEndpoint) Validate(request interface{}) error {
 		}
 	}
 
-	if input.ListingType == "meal" && input.NewPrice == 0 {
+	if input.ListingType == shared.ListingTypeMeal && input.NewPrice == 0 {
 		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, add 'newPrice' for the meal")}
 	}
 
-	if input.ListingType == "happyhour" && input.Discount == 0 {
+	if input.ListingType == shared.ListingTypeHappyHour && (input.Discount == 0 && input.NewPrice == 0) {
 		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, add 'discount' for the happyhour")}
 	}
 

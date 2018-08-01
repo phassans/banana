@@ -43,7 +43,6 @@ type BusinessEngine interface {
 	// Select
 	GetBusinessIDFromName(businessName string) (int, error)
 	GetBusinessFromID(businessID int) (shared.Business, error)
-	GetBusinessAddressFromID(businessID int) (shared.BusinessAddress, error)
 	GetBusinessInfo(businessID int) (shared.BusinessInfo, error)
 	GetAllBusiness() ([]shared.Business, error)
 
@@ -142,7 +141,32 @@ func (l *businessEngine) GetBusinessFromID(businessID int) (shared.Business, err
 	return business, nil
 }
 
-func (l *businessEngine) GetBusinessAddressFromID(businessID int) (shared.BusinessAddress, error) {
+func (l *businessEngine) GetBusinessInfo(businessID int) (shared.BusinessInfo, error) {
+	business, err := l.GetBusinessFromID(businessID)
+	if err != nil {
+		return shared.BusinessInfo{}, err
+	}
+
+	businessAddress, err := l.getBusinessAddressFromID(businessID)
+	if err != nil {
+		return shared.BusinessInfo{}, err
+	}
+
+	businessHours, err := l.getBusinessHoursFromID(businessID)
+	if err != nil {
+		return shared.BusinessInfo{}, err
+	}
+
+	businessCuisine, err := l.getBusinessCuisineFromID(businessID)
+	if err != nil {
+		return shared.BusinessInfo{}, err
+	}
+
+	return shared.BusinessInfo{Business: business, BusinessAddress: businessAddress, Hours: businessHours, BusinessCuisine: businessCuisine}, nil
+
+}
+
+func (l *businessEngine) getBusinessAddressFromID(businessID int) (shared.BusinessAddress, error) {
 	rows, err := l.sql.Query("SELECT street, city, postal_code, state, business_id, address_id FROM address where business_id = $1;", businessID)
 	if err != nil {
 		return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
@@ -172,7 +196,7 @@ func (l *businessEngine) GetBusinessAddressFromID(businessID int) (shared.Busine
 	return businessAddress, nil
 }
 
-func (l *businessEngine) GetBusinessHoursFromID(businessID int) ([]shared.Bhour, error) {
+func (l *businessEngine) getBusinessHoursFromID(businessID int) ([]shared.Bhour, error) {
 	rows, err := l.sql.Query("SELECT day, open_time, close_time FROM business_hours where business_id = $1;", businessID)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
@@ -197,7 +221,7 @@ func (l *businessEngine) GetBusinessHoursFromID(businessID int) ([]shared.Bhour,
 	return businessHours, nil
 }
 
-func (l *businessEngine) GetBusinessCuisineFromID(businessID int) (shared.BusinessCuisine, error) {
+func (l *businessEngine) getBusinessCuisineFromID(businessID int) (shared.BusinessCuisine, error) {
 	rows, err := l.sql.Query("SELECT cuisine FROM business_cuisine where business_id = $1;", businessID)
 	if err != nil {
 		return shared.BusinessCuisine{}, helper.DatabaseError{DBError: err.Error()}
@@ -220,29 +244,4 @@ func (l *businessEngine) GetBusinessCuisineFromID(businessID int) (shared.Busine
 	}
 
 	return shared.BusinessCuisine{Cuisine: businessCuisines}, nil
-}
-
-func (l *businessEngine) GetBusinessInfo(businessID int) (shared.BusinessInfo, error) {
-	business, err := l.GetBusinessFromID(businessID)
-	if err != nil {
-		return shared.BusinessInfo{}, err
-	}
-
-	businessAddress, err := l.GetBusinessAddressFromID(businessID)
-	if err != nil {
-		return shared.BusinessInfo{}, err
-	}
-
-	businessHours, err := l.GetBusinessHoursFromID(businessID)
-	if err != nil {
-		return shared.BusinessInfo{}, err
-	}
-
-	businessCuisine, err := l.GetBusinessCuisineFromID(businessID)
-	if err != nil {
-		return shared.BusinessInfo{}, err
-	}
-
-	return shared.BusinessInfo{Business: business, BusinessAddress: businessAddress, Hours: businessHours, BusinessCuisine: businessCuisine}, nil
-
 }

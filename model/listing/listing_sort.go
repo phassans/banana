@@ -26,12 +26,6 @@ type (
 	}
 )
 
-const (
-	sortByDistance = "distance"
-	sortByPrice    = "price"
-	sortByTimeLeft = "timeLeft"
-)
-
 func NewSortListingEngine(listings []shared.Listing, sortingType string,
 	currentLocation shared.CurrentLocation, sql *sql.DB) SortListingEngine {
 	return &sortListingEngine{listings, sortingType, currentLocation, sql}
@@ -42,9 +36,9 @@ func (l *sortListingEngine) SortListings() ([]shared.Listing, error) {
 	// have to sort by distance, in order to calculate distanceFromLocation
 	l.SortListingsByDistance()
 
-	if l.sortingType == sortByPrice {
+	if l.sortingType == shared.SortByPrice {
 		l.SortListingsByPrice()
-	} else if l.sortingType == sortByTimeLeft {
+	} else if l.sortingType == shared.SortByTimeLeft {
 		l.SortListingsByTimeLeft()
 	}
 
@@ -66,7 +60,7 @@ func (l *sortListingEngine) SortListingsByTimeLeft() error {
 
 	// put in listing struct
 	var listingsResult []shared.Listing
-	for _, view := range l.orderListings(ll, sortByTimeLeft) {
+	for _, view := range l.orderListings(ll, shared.SortByTimeLeft) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
 	l.listings = listingsResult
@@ -77,7 +71,7 @@ func (l *sortListingEngine) SortListingsByPrice() error {
 	var ll []shared.SortView
 	var happyHourDiscountListings []shared.Listing
 	for _, listing := range l.listings {
-		if listing.Type == "happyhour" && listing.NewPrice == 0 {
+		if listing.Type == shared.ListingTypeHappyHour && listing.NewPrice == 0 {
 			happyHourDiscountListings = append(happyHourDiscountListings, listing)
 			continue
 		}
@@ -88,7 +82,7 @@ func (l *sortListingEngine) SortListingsByPrice() error {
 
 	// put in listing struct
 	var listingsResult []shared.Listing
-	for _, view := range l.orderListings(ll, sortByPrice) {
+	for _, view := range l.orderListings(ll, shared.SortByPrice) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
 
@@ -120,7 +114,7 @@ func (l *sortListingEngine) SortListingsByDistance() error {
 
 	// put in listing struct
 	var listingsResult []shared.Listing
-	for _, view := range l.orderListings(ll, sortByDistance) {
+	for _, view := range l.orderListings(ll, shared.SortByDistance) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
 	l.listings = listingsResult
@@ -130,17 +124,17 @@ func (l *sortListingEngine) SortListingsByDistance() error {
 
 func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType string) []shared.SortView {
 	switch orderType {
-	case sortByTimeLeft:
+	case shared.SortByTimeLeft:
 		sort.Slice(listings, func(i, j int) bool {
 			return listings[i].TimeLeft < listings[j].TimeLeft
 		})
 		return listings
-	case sortByPrice:
+	case shared.SortByPrice:
 		sort.Slice(listings, func(i, j int) bool {
 			return listings[i].Price < listings[j].Price
 		})
 		return listings
-	case sortByDistance:
+	case shared.SortByDistance:
 		sort.Slice(listings, func(i, j int) bool {
 			return listings[i].Mile < listings[j].Mile
 		})

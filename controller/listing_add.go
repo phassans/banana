@@ -81,7 +81,7 @@ func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 func (r addListingEndpoint) Validate(request interface{}) error {
 	input := request.(listingADDRequest)
 
-	if input.ListingType != "meal" && input.ListingType != "happyhour" {
+	if input.ListingType != shared.ListingTypeMeal && input.ListingType != shared.ListingTypeHappyHour {
 		return helper.ValidationError{Message: fmt.Sprint("listing add failed, invalid 'listingType'")}
 	}
 
@@ -92,11 +92,11 @@ func (r addListingEndpoint) Validate(request interface{}) error {
 		}
 	}
 
-	if input.ListingType == "meal" && input.NewPrice == 0 {
+	if input.ListingType == shared.ListingTypeMeal && input.NewPrice == 0 {
 		return helper.ValidationError{Message: fmt.Sprint("listing add failed, add 'newPrice' for the meal")}
 	}
 
-	if input.ListingType == "happyhour" && (input.Discount == 0 && input.NewPrice == 0) {
+	if input.ListingType == shared.ListingTypeHappyHour && (input.Discount == 0 && input.NewPrice == 0) {
 		return helper.ValidationError{Message: fmt.Sprint("listing add failed, add 'discount or newPrice' for the happyhour")}
 	}
 
