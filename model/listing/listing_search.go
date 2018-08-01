@@ -244,6 +244,13 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 		if err != nil {
 			return nil, err
 		}
+
+		dateTimeRange, err := DetermineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
+		if err != nil {
+			return nil, err
+		}
+		xlog.Infof("dateTimeRange: %s", dateTimeRange)
+
 		sr := shared.SearchListingResult{
 			ListingID:            listing.ListingID,
 			ListingType:          listing.Type,
@@ -258,6 +265,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			ListingImage:         listing.ListingImage,
 			DistanceFromLocation: listing.DistanceFromLocation,
 			IsFavorite:           listing.IsFavorite,
+			DateTimeRange:        dateTimeRange,
 		}
 		listingsResult = append(listingsResult, sr)
 	}
@@ -284,4 +292,41 @@ func CalculateTimeLeft(listingDate string, listingTime string) (int, error) {
 
 	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Hours()
 	return int(timeLeftInHours), nil
+}
+
+func DetermineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string) (string, error) {
+	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
+		return "", nil
+	}
+
+	// get listingDate in format
+	listingDateFormatted, err := time.Parse(shared.DateFormat1, strings.Split(listingDate, "T")[0])
+	if err != nil {
+		return "", nil
+	}
+
+	// see if current day and listing day are same
+	var buffer bytes.Buffer
+	if time.Now().Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
+		buffer.WriteString(listingDateFormatted.Weekday().String() + ": ")
+	}
+
+	// determine startTime in format
+	st, err := time.Parse(shared.TimeLayout24Hour, strings.TrimSuffix(strings.Split(listingStartTime, "T")[1], "Z"))
+	if err != nil {
+		fmt.Println(err)
+		return "", nil
+	}
+	sTime := st.Format(shared.TimeLayout12Hour)
+
+	// determine endTime in format
+	et, err := time.Parse(shared.TimeLayout24Hour, strings.TrimSuffix(strings.Split(listingEndTime, "T")[1], "Z"))
+	if err != nil {
+		fmt.Println(err)
+		return "", nil
+	}
+	eTime := et.Format(shared.TimeLayout12Hour)
+
+	buffer.WriteString(sTime + "-" + eTime)
+	return buffer.String(), nil
 }

@@ -247,6 +247,13 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.Listing, error) {
 		return shared.Listing{}, err
 	}
 	listing.Business = businessInfo
+
+	dateTimeRange, err := DetermineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
+	if err != nil {
+		return shared.Listing{}, err
+	}
+	listing.DateTimeRange = dateTimeRange
+
 	return listing, nil
 }
 

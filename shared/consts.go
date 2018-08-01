@@ -2,9 +2,12 @@ package shared
 
 const (
 	// See http://golang.org/pkg/time/#Parse
-	DateTimeFormat = "2006-01-02T15:04:05Z"
-	DateFormat     = "01/02/2006" //07/11/2018
-	CountryID      = 1
+	DateTimeFormat   = "2006-01-02T15:04:05Z"
+	DateFormat       = "01/02/2006" //07/11/2018
+	DateFormat1      = "2006-01-02" //07/11/2018
+	TimeLayout24Hour = "15:04:05"
+	TimeLayout12Hour = "03:04pm"
+	CountryID        = 1
 
 	SortByDistance = "distance"
 	SortByPrice    = "price"
