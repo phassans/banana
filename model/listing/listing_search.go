@@ -312,20 +312,16 @@ func DetermineDealDateTimeRange(listingDate string, listingStartTime string, lis
 	}
 
 	// determine startTime in format
-	st, err := time.Parse(shared.TimeLayout24Hour, strings.TrimSuffix(strings.Split(listingStartTime, "T")[1], "Z"))
+	sTime, err := shared.GetTimeIn12HourFormat(listingStartTime)
 	if err != nil {
-		fmt.Println(err)
 		return "", nil
 	}
-	sTime := st.Format(shared.TimeLayout12Hour)
 
 	// determine endTime in format
-	et, err := time.Parse(shared.TimeLayout24Hour, strings.TrimSuffix(strings.Split(listingEndTime, "T")[1], "Z"))
+	eTime, err := shared.GetTimeIn12HourFormat(listingEndTime)
 	if err != nil {
-		fmt.Println(err)
 		return "", nil
 	}
-	eTime := et.Format(shared.TimeLayout12Hour)
 
 	buffer.WriteString(sTime + "-" + eTime)
 	return buffer.String(), nil

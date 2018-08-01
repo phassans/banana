@@ -3,6 +3,10 @@ package business
 import (
 	"database/sql"
 
+	"bytes"
+
+	"strings"
+
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/user"
 	"github.com/phassans/banana/shared"
@@ -157,13 +161,45 @@ func (l *businessEngine) GetBusinessInfo(businessID int) (shared.BusinessInfo, e
 		return shared.BusinessInfo{}, err
 	}
 
+	businessHoursFormatted, err := getBusinessHoursFormatted(businessHours)
+	if err != nil {
+		return shared.BusinessInfo{}, err
+	}
+
 	businessCuisine, err := l.getBusinessCuisineFromID(businessID)
 	if err != nil {
 		return shared.BusinessInfo{}, err
 	}
 
-	return shared.BusinessInfo{Business: business, BusinessAddress: businessAddress, Hours: businessHours, BusinessCuisine: businessCuisine}, nil
+	return shared.BusinessInfo{Business: business, BusinessAddress: businessAddress, BusinessCuisine: businessCuisine, HoursFormatted: businessHoursFormatted}, nil
 
+}
+
+func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
+	var bHoursFormatted []string
+	for _, hour := range bHours {
+		var buffer bytes.Buffer
+		// determine startTime in format
+		oTime, err := shared.GetTimeIn12HourFormat(hour.OpenTime)
+		if err != nil {
+			return nil, err
+		}
+
+		// determine startTime in format
+		cTime, err := shared.GetTimeIn12HourFormat(hour.CloseTime)
+		if err != nil {
+			return nil, err
+		}
+
+		buffer.WriteString(strings.Title(hour.Day))
+		buffer.WriteString(": ")
+		buffer.WriteString(oTime)
+		buffer.WriteString("-")
+		buffer.WriteString(cTime)
+
+		bHoursFormatted = append(bHoursFormatted, buffer.String())
+	}
+	return bHoursFormatted, nil
 }
 
 func (l *businessEngine) getBusinessAddressFromID(businessID int) (shared.BusinessAddress, error) {

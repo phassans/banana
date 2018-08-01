@@ -130,7 +130,8 @@ type (
 		Business        Business        `json:"business"`
 		BusinessAddress BusinessAddress `json:"businessAddress"`
 		BusinessCuisine BusinessCuisine `json:"businessCuisine"`
-		Hours           []Bhour         `json:"businessHours"`
+		Hours           []Bhour         `json:"businessHours,omitempty"`
+		HoursFormatted  []string        `json:"businessHoursFormatted,omitempty"`
 	}
 
 	SortView struct {
