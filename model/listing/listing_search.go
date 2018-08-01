@@ -190,7 +190,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 		searchQuery = fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause)
 	}
 
-	xlog.Infof("search Query: %s", searchQuery)
+	//xlog.Infof("search Query: %s", searchQuery)
 
 	rows, err := l.sql.Query(searchQuery)
 	if err != nil {
