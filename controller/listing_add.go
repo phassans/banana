@@ -96,8 +96,8 @@ func (r addListingEndpoint) Validate(request interface{}) error {
 		return helper.ValidationError{Message: fmt.Sprint("listing add failed, add 'newPrice' for the meal")}
 	}
 
-	if input.ListingType == "happyhour" && input.Discount == 0 {
-		return helper.ValidationError{Message: fmt.Sprint("listing add failed, add 'discount' for the happyhour")}
+	if input.ListingType == "happyhour" && (input.Discount == 0 && input.NewPrice == 0) {
+		return helper.ValidationError{Message: fmt.Sprint("listing add failed, add 'discount or newPrice' for the happyhour")}
 	}
 
 	if input.MultipleDays && input.Recurring {
