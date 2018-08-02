@@ -88,7 +88,7 @@ func (r listingsSearchEndpoint) Validate(request interface{}) error {
 	}
 
 	for _, dietary := range req.DietaryFilters {
-		if strings.ToLower(dietary) != "vegetarian" || strings.ToLower(dietary) != "vegan" || strings.ToLower(dietary) != "gluten free" {
+		if strings.ToLower(dietary) != "vegetarian" && strings.ToLower(dietary) != "vegan" && strings.ToLower(dietary) != "gluten free" {
 			return helper.ValidationError{Message: fmt.Sprint("listings search failed, invalid dietaryFilters")}
 		}
 	}
