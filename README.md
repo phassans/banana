@@ -1,6 +1,8 @@
-# banana
+# banana 
 
-## Requirement:
+Backend that drives the mobile APP HungryHour
+
+## requirements
 
 Golang (version 1.9.3)
 
