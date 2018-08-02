@@ -40,7 +40,6 @@ type BusinessEngine interface {
 		state string,
 		businessID int,
 	) (int, error)
-	AddGeoInfo(address string, addressID int, businessID int) error
 	AddBusinessHours([]shared.Hours, int) error
 	AddBusinessCuisine(cuisines []string, businessID int) error
 
@@ -203,7 +202,7 @@ func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 }
 
 func (l *businessEngine) getBusinessAddressFromID(businessID int) (shared.BusinessAddress, error) {
-	rows, err := l.sql.Query("SELECT street, city, postal_code, state, business_id, address_id FROM address where business_id = $1;", businessID)
+	rows, err := l.sql.Query("SELECT street, city, postal_code, state, business_id, address_id FROM business_address where business_id = $1;", businessID)
 	if err != nil {
 		return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
 	}

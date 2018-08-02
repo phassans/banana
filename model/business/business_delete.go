@@ -1,7 +1,7 @@
 package business
 
 func (b *businessEngine) DeleteBusinessAddressFromID(addressID int) error {
-	sqlStatement := `DELETE FROM address WHERE address_id = $1;`
+	sqlStatement := `DELETE FROM business_address WHERE address_id = $1;`
 	b.logger.Infof("deleting address with query: %s and business_id: %d", sqlStatement, addressID)
 
 	_, err := b.sql.Exec(sqlStatement, addressID)

@@ -76,39 +76,19 @@ func (b *businessEngine) editBusinessInfo(businessName string, phone string, web
 
 func (b *businessEngine) editBusinessAddress(street string, city string, postalCode string, state string, businessID int, addressID int) error {
 
-	updateBusinessAddressSQL := `
-	UPDATE address
-	SET street = $1, city = $2, postal_code = $3, state =$4
-	WHERE business_id = $5 AND address_id = $6;`
-
-	_, err := b.sql.Exec(updateBusinessAddressSQL, street, city, postalCode, state, businessID, addressID)
-	if err != nil {
-		return err
-	}
-
-	// edit business address
-	geoAddress := fmt.Sprintf("%s,%s,%s", street, city, state)
-	if err := b.editBusinessAddressGeo(geoAddress, businessID, addressID); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (b *businessEngine) editBusinessAddressGeo(geoAddress string, businessID int, addressID int) error {
-
 	// edit lat, long to database
+	geoAddress := fmt.Sprintf("%s,%s,%s", street, city, state)
 	resp, err := clients.GetLatLong(geoAddress)
 	if err != nil {
 		return err
 	}
 
-	updateBusinessAddressGeoSQL := `
-	UPDATE address_geo
-	SET latitude = $1, longitude = $2
-	WHERE address_id = $3 AND business_id=$4;`
+	updateBusinessAddressSQL := `
+	UPDATE business_address
+	SET street = $1, city = $2, postal_code = $3, state =$4, latitude=$5, longitude=$6
+	WHERE business_id = $7 AND address_id = $8;`
 
-	_, err = b.sql.Exec(updateBusinessAddressGeoSQL, resp.Lat, resp.Lon, addressID, businessID)
+	_, err = b.sql.Exec(updateBusinessAddressSQL, street, city, postalCode, state, resp.Lat, resp.Lon, businessID, addressID)
 	if err != nil {
 		return err
 	}

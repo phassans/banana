@@ -13,11 +13,8 @@ const (
 	insertBusinessSQL = "INSERT INTO business(name,phone,website) " +
 		"VALUES($1,$2,$3) returning business_id;"
 
-	insertBusinessAddressSQL = "INSERT INTO address(street,city,postal_code,state,country_id,business_id) " +
-		"VALUES($1,$2,$3,$4,$5,$6) returning address_id;"
-
-	insertBusinessAddressGEOSQL = "INSERT INTO address_geo(address_id,business_id,latitude,longitude) " +
-		"VALUES($1,$2,$3,$4) returning geo_id;"
+	insertBusinessAddressSQL = "INSERT INTO business_address(business_id,street,city,postal_code,state,country_id,latitude,longitude) " +
+		"VALUES($1,$2,$3,$4,$5,$6,$7,$8) returning address_id;"
 )
 
 func (b *businessEngine) AddBusiness(
@@ -108,39 +105,31 @@ func (b *businessEngine) AddBusinessAddress(
 	state string,
 	businessID int,
 ) (int, error) {
+
+	geoAddress := fmt.Sprintf("%s,%s,%s", street, city, state)
+	resp, err := clients.GetLatLong(geoAddress)
+	if err != nil {
+		return 0, err
+	}
+
 	// insert to address table
 	var addressID int
-	err := b.sql.QueryRow(insertBusinessAddressSQL, street, city, postalCode,
-		state, shared.CountryID, businessID).
-		Scan(&addressID)
+	err = b.sql.QueryRow(insertBusinessAddressSQL,
+		businessID,
+		street,
+		city,
+		postalCode,
+		state,
+		shared.CountryID,
+		resp.Lat,
+		resp.Lon,
+	).Scan(&addressID)
 	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
+
 	b.logger.Infof("successfully added address with ID: %d for business: %d", addressID, businessID)
-
-	// add lat, long to database
-	geoAddress := fmt.Sprintf("%s,%s,%s", street, city, state)
-	err = b.AddGeoInfo(geoAddress, addressID, businessID)
-	if err != nil {
-		return 0, helper.DatabaseError{DBError: err.Error()}
-	}
-
 	return addressID, nil
-}
-
-func (l *businessEngine) AddGeoInfo(address string, addressID int, businessID int) error {
-	resp, err := clients.GetLatLong(address)
-	var geoID int
-
-	err = l.sql.QueryRow(insertBusinessAddressGEOSQL, addressID, businessID, resp.Lat, resp.Lon).
-		Scan(&geoID)
-	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
-	}
-
-	l.logger.Infof("successfully added a geoLocation %s for address: %s", geoID, address)
-
-	return err
 }
 
 func (l *businessEngine) AddBusinessHours(days []shared.Hours, businessID int) error {

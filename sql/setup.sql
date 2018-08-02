@@ -10,7 +10,7 @@ CREATE TYPE days_of_month AS ENUM (
 );
 
 CREATE TYPE dietary_restrictions AS ENUM (
-  'gluten_free',
+  'gluten free',
   'vegan',
   'vegetarian',
   'spicy'
@@ -60,14 +60,14 @@ CREATE TABLE IF NOT EXISTS user_to_business
   FOREIGN KEY (business_id) REFERENCES business (business_id)
 );
 
-CREATE TABLE IF NOT EXISTS country
+CREATE TABLE IF NOT EXISTS business_country
 (
   country_id SERIAL,
   NAME       TEXT NOT NULL,
   PRIMARY KEY (country_id)
 );
 
-CREATE TABLE IF NOT EXISTS address
+CREATE TABLE IF NOT EXISTS business_address
 (
   address_id    SERIAL UNIQUE,
   business_id   INT  NOT NULL,
@@ -76,30 +76,10 @@ CREATE TABLE IF NOT EXISTS address
   postal_code   INT  NOT NULL,
   state         TEXT NOT NULL,
   country_id    INT  NOT NULL,
-  other_details TEXT,
+  latitude      NUMERIC NOT NULL,
+  longitude     NUMERIC NOT NULL,
   PRIMARY KEY (address_id, business_id),
-  FOREIGN KEY (country_id) REFERENCES country (country_id)
-);
-
-CREATE TABLE IF NOT EXISTS address_geo
-(
-  geo_id      SERIAL,
-  address_id  INT NOT NULL,
-  business_id INT NOT NULL,
-  latitude    NUMERIC,
-  longitude   NUMERIC,
-  PRIMARY KEY (geo_id, address_id),
-  FOREIGN KEY (address_id) REFERENCES address (address_id),
-  FOREIGN KEY (business_id) REFERENCES business (business_id)
-);
-
-CREATE TABLE IF NOT EXISTS business_image
-(
-  image_id    SERIAL,
-  business_id INT  NOT NULL,
-  path        TEXT NOT NULL,
-  PRIMARY KEY (image_id, business_id),
-  FOREIGN KEY (business_id) REFERENCES business (business_id)
+  FOREIGN KEY (country_id) REFERENCES business_country (country_id)
 );
 
 CREATE TABLE IF NOT EXISTS listing
@@ -132,7 +112,7 @@ CREATE TABLE IF NOT EXISTS listing_date
   end_time     TIME
 );
 
-CREATE TABLE IF NOT EXISTS recurring_listing
+CREATE TABLE IF NOT EXISTS listing_recurring
 (
   listing_id INT           NOT NULL,
   day        days_of_month NOT NULL,
@@ -190,4 +170,4 @@ CREATE TABLE IF NOT EXISTS notifications_dietary_restrictions
 );
 
 
-INSERT INTO country (name) VALUES ('USA');
+INSERT INTO business_country (name) VALUES ('USA');

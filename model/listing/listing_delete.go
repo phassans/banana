@@ -54,8 +54,8 @@ func (f *listingEngine) deleteListingDate(listingID int) error {
 }
 
 func (f *listingEngine) deleteListingRecurring(listingID int) error {
-	sqlStatement := `DELETE FROM recurring_listing WHERE listing_id = $1;`
-	f.logger.Infof("deleting recurring_listing with query: %s and listing: %d", sqlStatement, listingID)
+	sqlStatement := `DELETE FROM listing_recurring WHERE listing_id = $1;`
+	f.logger.Infof("deleting listing_recurring with query: %s and listing: %d", sqlStatement, listingID)
 
 	_, err := f.sql.Exec(sqlStatement, listingID)
 	return err

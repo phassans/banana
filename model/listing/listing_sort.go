@@ -144,7 +144,7 @@ func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType 
 }
 
 func (l *sortListingEngine) GetListingsLatLon(businessID int) (shared.AddressGeo, error) {
-	rows, err := l.sql.Query("SELECT address_id, business_id, latitude, longitude  FROM address_geo WHERE business_id = $1", businessID)
+	rows, err := l.sql.Query("SELECT address_id, business_id, latitude, longitude  FROM business_address WHERE business_id = $1", businessID)
 	defer rows.Close()
 
 	if err != nil {

@@ -176,7 +176,7 @@ func (l *listingEngine) AddListingImage(listingID int, imageLink string) error {
 }
 
 func (l *listingEngine) AddRecurring(listingID int, day string) error {
-	addListingRecurringSQL := "INSERT INTO recurring_listing(listing_id,day) " +
+	addListingRecurringSQL := "INSERT INTO listing_recurring(listing_id,day) " +
 		"VALUES($1,$2);"
 
 	rows, err := l.sql.Query(addListingRecurringSQL, listingID, day)

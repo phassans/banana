@@ -81,7 +81,7 @@ func (l *listingEngine) GetDietaryRestriction(listingID int) ([]string, error) {
 }
 
 func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
-	rows, err := l.sql.Query("SELECT day FROM recurring_listing where "+
+	rows, err := l.sql.Query("SELECT day FROM listing_recurring where "+
 		"listing_id = $1;", listingID)
 	if err != nil {
 		return []string{}, helper.DatabaseError{DBError: err.Error()}
