@@ -19,7 +19,7 @@ var listingInfo getEndPoint = listingEndpoint{}
 func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
 	xlog.Infof("GET %s query %+v", r.GetPath(), values)
 
-	if values.Get("listingId") == "" {
+	if values.Get("listingId") == "" || values.Get("listingId") == "undefined" {
 		return nil, helper.ValidationError{Message: fmt.Sprint("user get failed, missing userId")}
 	}
 
@@ -29,7 +29,7 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 	}
 
 	var listingDateID int
-	if values.Get("listingDateId") != "" {
+	if values.Get("listingDateId") != "" && values.Get("listingId") != "undefined" {
 		listingDateID, err = strconv.Atoi(values.Get("listingDateId"))
 		if err != nil {
 			return nil, err
