@@ -43,7 +43,8 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 
 	if strings.TrimSpace(request.Location) == "" && (request.Latitude == 0 || request.Longitude == 0) {
 		if request.PhoneID == "955840FA-72B5-4C9E-8422-EFE49C2D5A0B" {
-			request.Location = "94086"
+			request.Latitude = 37.371859
+			request.Longitude = -122.0212337
 		}
 	}
 
