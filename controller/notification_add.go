@@ -12,8 +12,8 @@ import (
 
 type (
 	notificationADDRequest struct {
-		PhoneId            string   `json:"phoneId"`
-		BusinessId         int      `json:"businessId"`
+		PhoneID            string   `json:"phoneId"`
+		BusinessID         int      `json:"businessId"`
 		Price              string   `json:"price,omitempty"`
 		Keywords           string   `json:"keywords,omitempty"`
 		DietaryRestriction []string `json:"dietaryRestriction,omitempty"`
@@ -42,8 +42,8 @@ func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, reque
 	}
 
 	l := shared.Notification{
-		PhoneId:            request.PhoneId,
-		BusinessId:         request.BusinessId,
+		PhoneID:            request.PhoneID,
+		BusinessID:         request.BusinessID,
 		Price:              request.Price,
 		Keywords:           request.Keywords,
 		DietaryRestriction: request.DietaryRestriction,
@@ -60,11 +60,11 @@ func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, reque
 func (r addNotificationEndpoint) Validate(request interface{}) error {
 	req := request.(notificationADDRequest)
 
-	if strings.TrimSpace(req.PhoneId) == "" {
+	if strings.TrimSpace(req.PhoneID) == "" {
 		return helper.ValidationError{Message: fmt.Sprint("notification add failed, please provide 'phoneId'")}
 	}
 
-	if req.BusinessId == 0 {
+	if req.BusinessID == 0 {
 		return helper.ValidationError{Message: fmt.Sprint("notification add failed, please provide 'businessId'")}
 	}
 

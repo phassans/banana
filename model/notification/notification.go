@@ -17,6 +17,7 @@ type (
 		businessEngine business.BusinessEngine
 	}
 
+	// NotificationEngine interface
 	NotificationEngine interface {
 		AddNotification(notification shared.Notification) error
 		DeleteNotification(notificationID int) error
@@ -24,6 +25,7 @@ type (
 	}
 )
 
+// NewNotificationEngine returns an instance of notificationEngine
 func NewNotificationEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine) NotificationEngine {
 	return &notificationEngine{psql, logger, businessEngine}
 }
@@ -45,7 +47,7 @@ func (n *notificationEngine) AddNotification(notification shared.Notification) e
 	// Add Notification
 	err := n.sql.QueryRow("INSERT INTO notifications(phone_id,business_id,price,keywords,location,latitude,longitude) "+
 		"VALUES($1,$2,$3,$4,$5,$6,$7) returning notification_id;",
-		notification.PhoneId, notification.BusinessId, notification.Price, notification.Keywords,
+		notification.PhoneID, notification.BusinessID, notification.Price, notification.Keywords,
 		notification.Location, notification.Latitude, notification.Longitude).Scan(&notificationID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
@@ -65,17 +67,17 @@ func (n *notificationEngine) AddNotification(notification shared.Notification) e
 	return nil
 }
 
-func (l *notificationEngine) AddNotificationDietaryRestriction(restriction string, notificationID int) error {
+func (n *notificationEngine) AddNotificationDietaryRestriction(restriction string, notificationID int) error {
 	addNotificationDietRestrictionSQL := "INSERT INTO notifications_dietary_restrictions(notification_id,restriction) " +
 		"VALUES($1,$2);"
 
-	rows, err := l.sql.Query(addNotificationDietRestrictionSQL, notificationID, restriction)
+	rows, err := n.sql.Query(addNotificationDietRestrictionSQL, notificationID, restriction)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
 	defer rows.Close()
 
-	l.logger.Infof("add notifications_dietary_restrictions successful for notification:%d", notificationID)
+	n.logger.Infof("add notifications_dietary_restrictions successful for notification:%d", notificationID)
 	return nil
 }
 
@@ -120,10 +122,10 @@ func (n *notificationEngine) GetAllNotifications(phoneID string) ([]shared.Notif
 	var notifications []shared.Notification
 	for rows.Next() {
 		var notific shared.Notification
-		err := rows.Scan(
+		err = rows.Scan(
 			&notific.NotificationID,
-			&notific.PhoneId,
-			&notific.BusinessId,
+			&notific.PhoneID,
+			&notific.BusinessID,
 			&notific.Price,
 			&notific.Keywords,
 			&notific.Location,

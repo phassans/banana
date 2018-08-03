@@ -10,6 +10,7 @@ import (
 	"github.com/phassans/banana/model"
 )
 
+// APIServerHandler returns a Gzip handler
 func APIServerHandler(engines model.Engine) http.Handler {
 	r := newAPIRouter(engines)
 	return gziphandler.GzipHandler(r)

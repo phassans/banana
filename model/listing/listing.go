@@ -18,10 +18,13 @@ type (
 		businessEngine business.BusinessEngine
 	}
 
+	// ListingEngine interface which holds all listing methods
 	ListingEngine interface {
-		AddListing(listing *shared.Listing) (int, error)
-		AddListingImage(listingID int, imageLink string) error
 
+		// AddListing is to add a listing
+		AddListing(listing *shared.Listing) (int, error)
+
+		// SearchListings is to search for listings
 		SearchListings(
 			listingType []string,
 			future bool,
@@ -36,19 +39,30 @@ type (
 			phoneID string,
 		) ([]shared.SearchListingResult, error)
 
+		// GetListingsByBusinessID returns listing based on businessID
 		GetListingsByBusinessID(businessID int, businessType string) ([]shared.Listing, error)
+
+		// GetListingByID returns listing based on ID
 		GetListingByID(listingID int, businessID int) (shared.Listing, error)
+
+		// GetListingInfo returns listing info
 		GetListingInfo(listingID int) (shared.Listing, error)
+
+		// GetListingImage returns image of the listing
 		GetListingImage(listingID int) (string, error)
 
+		// MassageAndPopulateSearchListings to massage and populate search result
 		MassageAndPopulateSearchListings([]shared.Listing) ([]shared.SearchListingResult, error)
 
-		DeleteListing(listingId int) error
+		// DeleteListing to delete the listing
+		DeleteListing(listingID int) error
 
+		// ListingEdit is to edit the listing
 		ListingEdit(listing *shared.Listing) error
 	}
 )
 
+// NewListingEngine returns a instance of listingEngine
 func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine) ListingEngine {
 	return &listingEngine{psql, logger, businessEngine}
 }
@@ -64,7 +78,7 @@ func (l *listingEngine) GetDietaryRestriction(listingID int) ([]string, error) {
 	var dietaryReqs []string
 	for rows.Next() {
 		var diet string
-		err := rows.Scan(
+		err = rows.Scan(
 			&diet,
 		)
 		if err != nil {
@@ -91,7 +105,7 @@ func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
 	var days []string
 	for rows.Next() {
 		var day string
-		err := rows.Scan(
+		err = rows.Scan(
 			&day,
 		)
 		if err != nil {
@@ -140,7 +154,7 @@ func (l *listingEngine) GetListingImage(listingID int) (string, error) {
 
 	var imageLink string
 	if rows.Next() {
-		err := rows.Scan(&imageLink)
+		err = rows.Scan(&imageLink)
 		if err != nil {
 			return "", err
 		}
@@ -168,7 +182,7 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	var rests []string
 	for rows.Next() {
 		var rest string
-		err := rows.Scan(&rest)
+		err = rows.Scan(&rest)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}
@@ -248,7 +262,7 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.Listing, error) {
 	}
 	listing.Business = &businessInfo
 
-	dateTimeRange, err := DetermineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
+	dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
 	if err != nil {
 		return shared.Listing{}, err
 	}
@@ -280,7 +294,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Li
 	var sqlEndDate sql.NullString
 	var sqlRecurringEndDate sql.NullString
 	if rows.Next() {
-		err := rows.Scan(
+		err = rows.Scan(
 			&listing.Title,
 			&listing.OldPrice,
 			&listing.NewPrice,
@@ -306,7 +320,6 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Li
 	listing.RecurringEndDate = sqlRecurringEndDate.String
 
 	if err = rows.Err(); err != nil {
-		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
@@ -334,7 +347,7 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 	var sqlRecurringEndDate sql.NullString
 	for rows.Next() {
 		var listing shared.Listing
-		err := rows.Scan(
+		err = rows.Scan(
 			&listing.Title,
 			&listing.OldPrice,
 			&listing.NewPrice,
@@ -359,14 +372,16 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 		listing.RecurringEndDate = sqlRecurringEndDate.String
 
 		// add dietary req's
-		reqs, err := l.GetDietaryRestriction(listing.ListingID)
+		var reqs []string
+		reqs, err = l.GetDietaryRestriction(listing.ListingID)
 		if err != nil {
 			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
 		listing.DietaryRestriction = reqs
 
 		// add recurring listing
-		recurring, err := l.GetRecurringListing(listing.ListingID)
+		var recurring []string
+		recurring, err = l.GetRecurringListing(listing.ListingID)
 		if err != nil {
 			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
@@ -397,8 +412,8 @@ func (l *listingEngine) tagListingsAsFavorites(listings []shared.Listing, phoneI
 	return result
 }
 
-func (f *listingEngine) isFavorite(phoneID string, listingID int) bool {
-	rows, err := f.sql.Query("SELECT favorite_id FROM favorites where phone_id = $1 AND listing_id = $2;", phoneID, listingID)
+func (l *listingEngine) isFavorite(phoneID string, listingID int) bool {
+	rows, err := l.sql.Query("SELECT favorite_id FROM favorites where phone_id = $1 AND listing_id = $2;", phoneID, listingID)
 	if err != nil {
 		return false
 	}
@@ -407,7 +422,7 @@ func (f *listingEngine) isFavorite(phoneID string, listingID int) bool {
 
 	var favoriteID int
 	if rows.Next() {
-		err := rows.Scan(&favoriteID)
+		err = rows.Scan(&favoriteID)
 		if err != nil {
 			return false
 		}

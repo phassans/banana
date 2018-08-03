@@ -52,7 +52,7 @@ func main() {
 	// wait for any server error
 	select {
 	case err := <-serverErrChannel:
-		logger.Fatalf("%s service stopped due to error %v with uptime %v", err, time.Since(serverStartTime))
-		roach.Close()
+		logger.Fatalf("service stopped due to error %v with uptime %v", err, time.Since(serverStartTime))
+		roach.Close() // nolint: errcheck
 	}
 }

@@ -12,7 +12,7 @@ import (
 
 type (
 	editUserRequest struct {
-		UserId   int    `json:"userId"`
+		UserID   int    `json:"userId"`
 		Name     string `json:"name"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -37,7 +37,7 @@ func (r editUserEndpoint) Execute(ctx context.Context, rtr *router, requestI int
 		return nil, err
 	}
 
-	err := rtr.engines.UserEdit(request.UserId, request.Name, request.Email, request.Password, request.Phone)
+	err := rtr.engines.UserEdit(request.UserID, request.Name, request.Email, request.Password, request.Phone)
 	result := editUserResponse{editUserRequest: request, Error: NewAPIError(err)}
 	return result, err
 }

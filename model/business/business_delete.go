@@ -1,6 +1,6 @@
 package business
 
-func (b *businessEngine) DeleteBusinessAddressFromID(addressID int) error {
+func (b *businessEngine) deleteBusinessAddressFromID(addressID int) error {
 	sqlStatement := `DELETE FROM business_address WHERE address_id = $1;`
 	b.logger.Infof("deleting address with query: %s and business_id: %d", sqlStatement, addressID)
 
@@ -8,7 +8,7 @@ func (b *businessEngine) DeleteBusinessAddressFromID(addressID int) error {
 	return err
 }
 
-func (b *businessEngine) DeleteBusinessFromID(businessID int) error {
+func (b *businessEngine) deleteBusinessFromID(businessID int) error {
 	sqlStatement := `DELETE FROM business WHERE business_id = $1;`
 	b.logger.Infof("deleting business with query: %s and business_id: %d", sqlStatement, businessID)
 
@@ -16,7 +16,7 @@ func (b *businessEngine) DeleteBusinessFromID(businessID int) error {
 	return err
 }
 
-func (b *businessEngine) DeleteBusinessCuisineFromID(businessID int) error {
+func (b *businessEngine) deleteBusinessCuisineFromID(businessID int) error {
 	sqlStatement := `DELETE FROM business_cuisine WHERE business_id = $1;`
 	b.logger.Infof("deleting business_cuisine with query: %s and business_id: %d", sqlStatement, businessID)
 
@@ -24,7 +24,7 @@ func (b *businessEngine) DeleteBusinessCuisineFromID(businessID int) error {
 	return err
 }
 
-func (b *businessEngine) DeleteBusinessHoursFromID(businessID int) error {
+func (b *businessEngine) deleteBusinessHoursFromID(businessID int) error {
 	sqlStatement := `DELETE FROM business_hours WHERE business_id = $1;`
 	b.logger.Infof("deleting business_hours with query: %s and business_id: %d", sqlStatement, businessID)
 

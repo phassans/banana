@@ -7,7 +7,8 @@ const (
 	DateFormatSQL    = "2006-01-02" //07/11/2018
 	TimeLayout24Hour = "15:04:05"
 	TimeLayout12Hour = "03:04pm"
-	CountryID        = 1
+
+	CountryID = 1
 
 	SortByDistance = "distance"
 	SortByPrice    = "price"
@@ -15,6 +16,11 @@ const (
 
 	ListingTypeMeal      = "meal"
 	ListingTypeHappyHour = "happyhour"
+
+	ListingEnded     = "ended"
+	ListingScheduled = "scheduled"
+	ListingActive    = "active"
+	ListingAll       = "all"
 )
 
 var (

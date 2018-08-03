@@ -70,8 +70,8 @@ type (
 
 	Notification struct {
 		NotificationID     int
-		PhoneId            string
-		BusinessId         int
+		PhoneID            string
+		BusinessID         int
 		Price              string
 		Keywords           string
 		DietaryRestriction []string

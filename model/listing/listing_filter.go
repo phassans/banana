@@ -64,44 +64,44 @@ func (l *listingEngine) FilterByDietaryRestrictions(listings []shared.Listing, d
 	return listingsResult, nil
 }
 
-func (f *listingEngine) getListingStatus(listing shared.Listing) string {
+func (l *listingEngine) getListingStatus(listing shared.Listing) string {
 
-	startDateTimeLeft, err := CalculateTimeLeft(listing.StartDate, listing.EndTime)
+	startDateTimeLeft, err := calculateTimeLeft(listing.StartDate, listing.EndTime)
 	if err != nil {
 		return ""
 	}
 
 	if startDateTimeLeft > 1 {
-		return "scheduled"
+		return shared.ListingScheduled
 	} else if startDateTimeLeft < 0 && !listing.MultipleDays && !listing.Recurring {
-		return "ended"
+		return shared.ListingEnded
 	}
 
 	if listing.MultipleDays {
-		endDateTimeLeft, err := CalculateTimeLeft(listing.EndDate, listing.EndTime)
+		endDateTimeLeft, err := calculateTimeLeft(listing.EndDate, listing.EndTime)
 		if err != nil {
 			return ""
 		}
 
 		if endDateTimeLeft < 0 {
-			return "ended"
+			return shared.ListingEnded
 		}
 	} else if listing.Recurring {
-		recurringEndDateTimeLeft, err := CalculateTimeLeft(listing.RecurringEndDate, listing.EndTime)
+		recurringEndDateTimeLeft, err := calculateTimeLeft(listing.RecurringEndDate, listing.EndTime)
 		if err != nil {
 			return ""
 		}
 
 		if recurringEndDateTimeLeft < 0 {
-			return "ended"
+			return shared.ListingEnded
 		}
 	}
 
-	return "active"
+	return shared.ListingActive
 }
 
-func (f *listingEngine) filterListingBasedOnStatus(listings []shared.Listing, status string) []shared.Listing {
-	if status == "all" || status == "" {
+func (l *listingEngine) filterListingBasedOnStatus(listings []shared.Listing, status string) []shared.Listing {
+	if status == shared.ListingAll || status == "" {
 		return listings
 	}
 

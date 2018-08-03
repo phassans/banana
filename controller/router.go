@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -74,7 +73,7 @@ var (
 	}
 )
 
-// NewRestAPIRouter construct a Router interface for Restful API.
+// NewRESTRouter construct a Router interface for Restful API.
 func NewRESTRouter(engines model.Engine) http.Handler {
 	rtr := &router{
 		engines,
@@ -123,6 +122,5 @@ func (rtr *router) cleanup(e *error, w http.ResponseWriter) {
 }
 
 func hystrixCall(endpoint endpoint, f func() error) error {
-	name := fmt.Sprintf("%s", endpoint.GetPath())
-	return hystrix.Do(name, f, nil)
+	return hystrix.Do(endpoint.GetPath(), f, nil)
 }

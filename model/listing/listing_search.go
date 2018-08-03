@@ -57,9 +57,10 @@ func (l *listingEngine) SearchListings(
 	}
 
 	var currentLocation shared.CurrentLocation
+	var resp clients.LatLong
 	if location != "" {
 		// getLatLonFromLocation
-		resp, err := clients.GetLatLong(location)
+		resp, err = clients.GetLatLong(location)
 		if err != nil {
 			return nil, err
 		}
@@ -80,6 +81,9 @@ func (l *listingEngine) SearchListings(
 
 	// filterResults
 	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter)
+	if err != nil {
+		return nil, err
+	}
 	xlog.Infof("applied filters. number of listings: %d", len(listings))
 
 	if phoneID != "" {
@@ -205,7 +209,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 	var sqlRecurringEndDate sql.NullString
 	for rows.Next() {
 		var listing shared.Listing
-		err := rows.Scan(
+		err = rows.Scan(
 			&listing.Title,
 			&listing.OldPrice,
 			&listing.NewPrice,
@@ -241,12 +245,12 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing) ([]shared.SearchListingResult, error) {
 	var listingsResult []shared.SearchListingResult
 	for _, listing := range listings {
-		timeLeft, err := CalculateTimeLeft(listing.ListingDate, listing.EndTime)
+		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
 		if err != nil {
 			return nil, err
 		}
 
-		dateTimeRange, err := DetermineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
+		dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -273,7 +277,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 	return listingsResult, nil
 }
 
-func CalculateTimeLeft(listingDate string, listingTime string) (int, error) {
+func calculateTimeLeft(listingDate string, listingTime string) (int, error) {
 	if listingDate == "" || listingTime == "" {
 		return 0, nil
 	}
@@ -285,7 +289,7 @@ func CalculateTimeLeft(listingDate string, listingTime string) (int, error) {
 		return 0, err
 	}
 
-	listingEndTime := GetListingDateTime(listingDate, listingTime)
+	listingEndTime := getListingDateTime(listingDate, listingTime)
 	listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, listingEndTime)
 	if err != nil {
 		return 0, err
@@ -295,7 +299,7 @@ func CalculateTimeLeft(listingDate string, listingTime string) (int, error) {
 	return int(timeLeftInHours), nil
 }
 
-func DetermineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string) (string, error) {
+func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string) (string, error) {
 	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
 		return "", nil
 	}

@@ -28,9 +28,8 @@ func (rtr *router) newGetHandler(endpoint getEndPoint) http.HandlerFunc {
 		if err != nil {
 			xlog.Warnf("GET %s query %+v error %d: %s", endpoint.GetPath(), r.URL.RawQuery, GetErrorStatus(err), err.Error())
 			return
-		} else {
-			xlog.Infof("GET %s query %+v success %d", endpoint.GetPath(), r.URL.RawQuery, GetErrorStatus(err))
 		}
+		xlog.Infof("GET %s query %+v success %d", endpoint.GetPath(), r.URL.RawQuery, GetErrorStatus(err))
 
 		err = json.NewEncoder(w).Encode(result)
 	}

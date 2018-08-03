@@ -99,12 +99,12 @@ func (b *businessEngine) editBusinessAddress(street string, city string, postalC
 func (b *businessEngine) editBusinessHours(bhours []shared.Hours, businessID int) error {
 
 	// delete and add cuisine
-	if err := b.DeleteBusinessHoursFromID(businessID); err != nil {
+	if err := b.deleteBusinessHoursFromID(businessID); err != nil {
 		return err
 	}
 
 	// add cuisine
-	if err := b.AddBusinessHours(bhours, businessID); err != nil {
+	if err := b.addBusinessHours(bhours, businessID); err != nil {
 		return err
 	}
 
@@ -114,12 +114,12 @@ func (b *businessEngine) editBusinessHours(bhours []shared.Hours, businessID int
 func (b *businessEngine) editBusinessCuisine(cuisines []string, businessID int) error {
 
 	// delete and add cuisine
-	if err := b.DeleteBusinessCuisineFromID(businessID); err != nil {
+	if err := b.deleteBusinessCuisineFromID(businessID); err != nil {
 		return err
 	}
 
 	// add cuisine
-	if err := b.AddBusinessCuisine(cuisines, businessID); err != nil {
+	if err := b.addBusinessCuisine(cuisines, businessID); err != nil {
 		return err
 	}
 

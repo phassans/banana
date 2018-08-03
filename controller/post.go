@@ -36,9 +36,8 @@ func (rtr *router) newPostHandler(endpoint postEndpoint) http.HandlerFunc {
 		if err != nil {
 			xlog.Warnf("POST %s query %+v error %d: %s", endpoint.GetPath(), request.Elem().Interface(), GetErrorStatus(err), err.Error())
 			return
-		} else {
-			xlog.Infof("POST %s success: %d", endpoint.GetPath(), GetErrorStatus(err))
 		}
+		xlog.Infof("POST %s success: %d", endpoint.GetPath(), GetErrorStatus(err))
 
 		err = json.NewEncoder(w).Encode(result)
 	}

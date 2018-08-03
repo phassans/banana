@@ -55,7 +55,13 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 
 	var hoursInfo []shared.Hours
 	for _, day := range request.Hours {
-		h := shared.Hours{day.Day, day.OpenTimeSessionOne, day.CloseTimeSessionOne, day.OpenTimeSessionTwo, day.CloseTimeSessionTwo}
+		h := shared.Hours{
+			Day:                 day.Day,
+			OpenTimeSessionOne:  day.OpenTimeSessionOne,
+			CloseTimeSessionOne: day.CloseTimeSessionOne,
+			OpenTimeSessionTwo:  day.OpenTimeSessionTwo,
+			CloseTimeSessionTwo: day.CloseTimeSessionTwo,
+		}
 		hoursInfo = append(hoursInfo, h)
 	}
 

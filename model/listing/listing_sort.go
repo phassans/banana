@@ -21,11 +21,13 @@ type (
 		sql             *sql.DB
 	}
 
+	// SortListingEngine interface
 	SortListingEngine interface {
 		SortListings() ([]shared.Listing, error)
 	}
 )
 
+// NewSortListingEngine returns an instance of sortListingEngine
 func NewSortListingEngine(listings []shared.Listing, sortingType string,
 	currentLocation shared.CurrentLocation, sql *sql.DB) SortListingEngine {
 	return &sortListingEngine{listings, sortingType, currentLocation, sql}
@@ -34,22 +36,22 @@ func NewSortListingEngine(listings []shared.Listing, sortingType string,
 func (l *sortListingEngine) SortListings() ([]shared.Listing, error) {
 
 	// have to sort by distance, in order to calculate distanceFromLocation
-	l.SortListingsByDistance()
+	l.sortListingsByDistance()
 
 	if l.sortingType == shared.SortByPrice {
-		l.SortListingsByPrice()
+		l.sortListingsByPrice()
 	} else if l.sortingType == shared.SortByTimeLeft {
-		l.SortListingsByTimeLeft()
+		l.sortListingsByTimeLeft()
 	}
 
 	return l.listings, nil
 }
 
-func (l *sortListingEngine) SortListingsByTimeLeft() error {
+func (l *sortListingEngine) sortListingsByTimeLeft() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 
-		timeLeft, err := CalculateTimeLeft(listing.ListingDate, listing.EndTime)
+		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
 		if err != nil {
 			return err
 		}
@@ -67,7 +69,7 @@ func (l *sortListingEngine) SortListingsByTimeLeft() error {
 	return nil
 }
 
-func (l *sortListingEngine) SortListingsByPrice() error {
+func (l *sortListingEngine) sortListingsByPrice() error {
 	var ll []shared.SortView
 	var happyHourDiscountListings []shared.Listing
 	for _, listing := range l.listings {
@@ -93,7 +95,7 @@ func (l *sortListingEngine) SortListingsByPrice() error {
 	return nil
 }
 
-func (l *sortListingEngine) SortListingsByDistance() error {
+func (l *sortListingEngine) sortListingsByDistance() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 		// get LatLon
@@ -155,7 +157,7 @@ func (l *sortListingEngine) GetListingsLatLon(businessID int) (shared.AddressGeo
 
 	geo := shared.AddressGeo{}
 	if rows.Next() {
-		err := rows.Scan(&geo.AddressID, &geo.BusinessID, &geo.Latitude, &geo.Longitude)
+		err = rows.Scan(&geo.AddressID, &geo.BusinessID, &geo.Latitude, &geo.Longitude)
 		if err != nil {
 			return shared.AddressGeo{}, helper.DatabaseError{DBError: err.Error()}
 		}
@@ -168,7 +170,7 @@ func (l *sortListingEngine) GetListingsLatLon(businessID int) (shared.AddressGeo
 	return geo, nil
 }
 
-func GetListingDateTime(endDate string, endTime string) string {
+func getListingDateTime(endDate string, endTime string) string {
 	listingEndDate := strings.Split(endDate, "T")[0]
 	listingEndTime := strings.Split(endTime, "T")[1]
 	return fmt.Sprintf("%sT%s", listingEndDate, listingEndTime)

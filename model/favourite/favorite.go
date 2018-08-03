@@ -18,6 +18,7 @@ type (
 		listingEngine  listing.ListingEngine
 	}
 
+	// FavoriteEngine interface which holds all methods
 	FavoriteEngine interface {
 		AddFavorite(phoneID string, listingID int) error
 		DeleteFavorite(phoneID string, listingID int) error
@@ -25,6 +26,7 @@ type (
 	}
 )
 
+// NewFavoriteEngine returns an instance of favoriteEngine
 func NewFavoriteEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine, listingEngine listing.ListingEngine) FavoriteEngine {
 	return &favoriteEngine{psql, logger, businessEngine, listingEngine}
 }
@@ -94,7 +96,7 @@ func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]int, error) {
 	var listingIDs []int
 	for rows.Next() {
 		var listingID int
-		err := rows.Scan(&listingID)
+		err = rows.Scan(&listingID)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}

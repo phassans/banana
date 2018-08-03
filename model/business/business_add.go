@@ -27,11 +27,11 @@ func (b *businessEngine) AddBusiness(
 	state string,
 	hoursInfo []shared.Hours,
 	cuisine []string,
-	userId int,
+	userID int,
 ) (int, int, error) {
 
-	if userId != 0 {
-		bUser, err := b.userEngine.UserGet(userId)
+	if userID != 0 {
+		bUser, err := b.userEngine.UserGet(userID)
 		if err != nil {
 			return 0, 0, err
 		}
@@ -51,44 +51,44 @@ func (b *businessEngine) AddBusiness(
 		return 0, 0, helper.DuplicateEntity{Name: businessName}
 	}
 
-	lastInsertBusinessID, err := b.AddBusinessInfo(businessName, phone, website)
+	lastInsertBusinessID, err := b.addBusinessInfo(businessName, phone, website)
 	if err != nil {
 		return 0, 0, err
 	}
-	xlog.Infof("AddBusinessInfo success with businessID: %d", lastInsertBusinessID)
+	xlog.Infof("addBusinessInfo success with businessID: %d", lastInsertBusinessID)
 
 	// add business address
-	addressID, err := b.AddBusinessAddress(street, city, postalCode, state, lastInsertBusinessID)
+	addressID, err := b.addBusinessAddress(street, city, postalCode, state, lastInsertBusinessID)
 	if err != nil {
 		return 0, 0, err
 	}
-	xlog.Infof("AddBusinessAddress success with businessID: %d", lastInsertBusinessID)
+	xlog.Infof("addBusinessAddress success with businessID: %d", lastInsertBusinessID)
 
 	// add business hour
-	if err := b.AddBusinessHours(hoursInfo, lastInsertBusinessID); err != nil {
+	if err := b.addBusinessHours(hoursInfo, lastInsertBusinessID); err != nil {
 		return 0, 0, err
 	}
-	xlog.Infof("AddBusinessHours success with businessID: %d", lastInsertBusinessID)
+	xlog.Infof("addBusinessHours success with businessID: %d", lastInsertBusinessID)
 
 	// add cuisine
-	if err := b.AddBusinessCuisine(cuisine, lastInsertBusinessID); err != nil {
+	if err := b.addBusinessCuisine(cuisine, lastInsertBusinessID); err != nil {
 		return 0, 0, err
 	}
-	xlog.Infof("AddBusinessCuisine success with businessID: %d", lastInsertBusinessID)
+	xlog.Infof("addBusinessCuisine success with businessID: %d", lastInsertBusinessID)
 
 	// associate user to business
-	if userId != 0 {
-		if err := b.associateUserToBusiness(lastInsertBusinessID, userId); err != nil {
+	if userID != 0 {
+		if err := b.associateUserToBusiness(lastInsertBusinessID, userID); err != nil {
 			return 0, 0, err
 		}
-		xlog.Infof("Associate user to business success with businessID: %d", lastInsertBusinessID)
+		xlog.Infof("associate user to business success with businessID: %d", lastInsertBusinessID)
 	}
 
 	b.logger.Infof("business added successfully with id: %d", lastInsertBusinessID)
 	return lastInsertBusinessID, addressID, nil
 }
 
-func (b *businessEngine) AddBusinessInfo(businessName string, phone string, website string) (int, error) {
+func (b *businessEngine) addBusinessInfo(businessName string, phone string, website string) (int, error) {
 	// insert business
 	var lastInsertBusinessID int
 	err := b.sql.QueryRow(insertBusinessSQL, businessName, phone, website).Scan(&lastInsertBusinessID)
@@ -98,7 +98,7 @@ func (b *businessEngine) AddBusinessInfo(businessName string, phone string, webs
 	return lastInsertBusinessID, nil
 }
 
-func (b *businessEngine) AddBusinessAddress(
+func (b *businessEngine) addBusinessAddress(
 	street string,
 	city string,
 	postalCode string,
@@ -132,8 +132,8 @@ func (b *businessEngine) AddBusinessAddress(
 	return addressID, nil
 }
 
-func (l *businessEngine) AddBusinessHours(days []shared.Hours, businessID int) error {
-	business, err := l.GetBusinessFromID(businessID)
+func (b *businessEngine) addBusinessHours(days []shared.Hours, businessID int) error {
+	business, err := b.GetBusinessFromID(businessID)
 	if err != nil {
 		return err
 	}
@@ -145,13 +145,13 @@ func (l *businessEngine) AddBusinessHours(days []shared.Hours, businessID int) e
 	for _, day := range days {
 		if day.Day != "" {
 			if day.OpenTimeSessionOne != "" && day.CloseTimeSessionOne != "" {
-				if err := l.addHours(day.Day, day.OpenTimeSessionOne, day.CloseTimeSessionOne, businessID); err != nil {
+				if err := b.addHours(day.Day, day.OpenTimeSessionOne, day.CloseTimeSessionOne, businessID); err != nil {
 					return err
 				}
 			}
 
 			if day.OpenTimeSessionTwo != "" && day.CloseTimeSessionTwo != "" {
-				if err := l.addHours(day.Day, day.OpenTimeSessionTwo, day.CloseTimeSessionTwo, businessID); err != nil {
+				if err := b.addHours(day.Day, day.OpenTimeSessionTwo, day.CloseTimeSessionTwo, businessID); err != nil {
 					return err
 				}
 			}
@@ -160,22 +160,22 @@ func (l *businessEngine) AddBusinessHours(days []shared.Hours, businessID int) e
 	return nil
 }
 
-func (l *businessEngine) addHours(day string, openTime string, closeTime string, businessID int) error {
+func (b *businessEngine) addHours(day string, openTime string, closeTime string, businessID int) error {
 	addBusinessHoursSQL := "INSERT INTO business_hours(business_id,day,open_time,close_time) " +
 		"VALUES($1,$2,$3,$4);"
 
-	rows, err := l.sql.Query(addBusinessHoursSQL, businessID, day, openTime, closeTime)
+	rows, err := b.sql.Query(addBusinessHoursSQL, businessID, day, openTime, closeTime)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
 	defer rows.Close()
 
-	l.logger.Infof("add hours succesfull for businessID:%d", businessID)
+	b.logger.Infof("add hours succesfull for businessID:%d", businessID)
 	return nil
 }
 
-func (l *businessEngine) AddBusinessCuisine(cuisines []string, businessID int) error {
-	business, err := l.GetBusinessFromID(businessID)
+func (b *businessEngine) addBusinessCuisine(cuisines []string, businessID int) error {
+	business, err := b.GetBusinessFromID(businessID)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (l *businessEngine) AddBusinessCuisine(cuisines []string, businessID int) e
 	}
 
 	for _, cuisine := range cuisines {
-		if err := l.addCuisine(businessID, cuisine); err != nil {
+		if err := b.addCuisine(businessID, cuisine); err != nil {
 			return err
 		}
 	}
@@ -193,30 +193,30 @@ func (l *businessEngine) AddBusinessCuisine(cuisines []string, businessID int) e
 	return nil
 }
 
-func (l *businessEngine) addCuisine(businessID int, cuisine string) error {
+func (b *businessEngine) addCuisine(businessID int, cuisine string) error {
 	addBusinessCuisineSQL := "INSERT INTO business_cuisine(business_id,cuisine) " +
 		"VALUES($1,$2);"
 
-	rows, err := l.sql.Query(addBusinessCuisineSQL, businessID, cuisine)
+	rows, err := b.sql.Query(addBusinessCuisineSQL, businessID, cuisine)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
 	defer rows.Close()
 
-	l.logger.Infof("add cuisine successful for businessID:%d", businessID)
+	b.logger.Infof("add cuisine successful for businessID:%d", businessID)
 	return nil
 }
 
-func (l *businessEngine) associateUserToBusiness(businessID int, userID int) error {
+func (b *businessEngine) associateUserToBusiness(businessID int, userID int) error {
 	associateUserToBusinessSQL := "INSERT INTO user_to_business(business_id,user_id) " +
 		"VALUES($1,$2);"
 
-	rows, err := l.sql.Query(associateUserToBusinessSQL, businessID, userID)
+	rows, err := b.sql.Query(associateUserToBusinessSQL, businessID, userID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
 	defer rows.Close()
 
-	l.logger.Infof("associateUserToBusiness successful for businessID:%d", businessID)
+	b.logger.Infof("associateUserToBusiness successful for businessID:%d", businessID)
 	return nil
 }
