@@ -58,7 +58,7 @@ func (l *listingEngine) SearchListings(
 
 	var currentLocation shared.CurrentLocation
 	var resp clients.LatLong
-	if location != "" && latitude != 0 && longitude != 0 {
+	if location != "" && latitude == 0 && longitude == 0 {
 		// getLatLonFromLocation
 		resp, err = clients.GetLatLong(location)
 		if err != nil {
