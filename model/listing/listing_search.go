@@ -15,8 +15,9 @@ import (
 
 const (
 	searchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
-		"listing.discount as discount, listing.description as description, listing.start_date as start_date," +
+		"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
 		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
+		"listing.multiple_days as multiple_days," +
 		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
 		"listing.business_id as business_id, listing.listing_id as listing_id, " +
 		"business.name as bname, " +
@@ -25,6 +26,14 @@ const (
 	fromClause = "FROM listing " +
 		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id " +
 		"INNER JOIN business ON listing.business_id = business.business_id"
+)
+
+var (
+	Schema = map[string][]string{
+		"listing": {"listing_id", "business_id", "title", "old_price", "new_price", "discount", "discount_description", "description",
+			"start_date", "start_time", "end_time", "multiple_days", "end_date", "recurring", "recurring_end_date", "listing_type", "listing_create_date"},
+		"listing_date": {"listing_date_id", "listing_id", "listing_date", "start_time", "end_time"},
+	}
 )
 
 func (l *listingEngine) SearchListings(
@@ -184,8 +193,8 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 
 	var searchQuery string
 	if keywords != "" {
-		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, description, start_date, end_date, "+
-			"start_time, end_time, recurring, recurring_date, listing_type, business_id, listing_id, bname, listing_date "+
+		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, discount_description, description, start_date, end_date, "+
+			"start_time, end_time, multiple_days, recurring, recurring_date, listing_type, business_id, listing_id, bname, listing_date_id, listing_date "+
 			"FROM (%s, "+
 			"to_tsvector(business.name) || "+
 			"to_tsvector(listing.title) || "+
@@ -196,7 +205,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 		searchQuery = fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause)
 	}
 
-	//xlog.Infof("search Query: %s", searchQuery)
+	xlog.Infof("search Query: %s", searchQuery)
 
 	rows, err := l.sql.Query(searchQuery)
 	if err != nil {
@@ -215,11 +224,13 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 			&listing.OldPrice,
 			&listing.NewPrice,
 			&listing.Discount,
+			&listing.DiscountDescription,
 			&listing.Description,
 			&listing.StartDate,
 			&sqlEndDate,
 			&listing.StartTime,
 			&listing.EndTime,
+			&listing.MultipleDays,
 			&listing.Recurring,
 			&sqlRecurringEndDate,
 			&listing.Type,
@@ -267,6 +278,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			BusinessName:         listing.BusinessName,
 			Price:                listing.NewPrice,
 			Discount:             listing.Discount,
+			DiscountDescription:  listing.DiscountDescription,
 			DietaryRestrictions:  listing.DietaryRestrictions,
 			TimeLeft:             timeLeft,
 			ListingImage:         listing.ListingImage,

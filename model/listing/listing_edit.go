@@ -95,9 +95,9 @@ func (l *listingEngine) editListingDates(listing *shared.Listing) error {
 func (l *listingEngine) editListingInfo(listing *shared.Listing) error {
 	updateListingInfoSQL := `
 	UPDATE listing
-	SET title = $1, old_price = $2, new_price = $3, discount = $4, description = $5, start_date = $6, start_time = $7, 
-	end_time = $8, multiple_days = $9, end_date = $10, recurring = $11, recurring_end_date = $12
-	WHERE listing_id = $13 AND business_id = $14 AND listing_type = $15;`
+	SET title = $1, old_price = $2, new_price = $3, discount = $4, discount_description = $5, description = $6, start_date = $7, start_time = $8, 
+	end_time = $9, multiple_days = $10, end_date = $11, recurring = $12, recurring_end_date = $13
+	WHERE listing_id = $14 AND business_id = $15 AND listing_type = $16;`
 
 	_, err := l.sql.Exec(
 		updateListingInfoSQL,
@@ -105,6 +105,7 @@ func (l *listingEngine) editListingInfo(listing *shared.Listing) error {
 		listing.OldPrice,
 		listing.NewPrice,
 		listing.Discount,
+		listing.DiscountDescription,
 		listing.Description,
 		listing.StartDate,
 		listing.StartTime,

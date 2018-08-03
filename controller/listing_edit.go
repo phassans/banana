@@ -12,24 +12,25 @@ import (
 
 type (
 	listingEditRequest struct {
-		ListingID          int      `json:"listingId"`
-		BusinessID         int      `json:"businessId"`
-		Title              string   `json:"title"`
-		OldPrice           float64  `json:"oldPrice,omitempty"`
-		NewPrice           float64  `json:"newPrice"`
-		Discount           float64  `json:"discount,omitempty"`
-		DietaryRestriction []string `json:"dietaryRestriction,omitempty"`
-		Description        string   `json:"description"`
-		StartDate          string   `json:"startDate"`
-		StartTime          string   `json:"startTime"`
-		EndTime            string   `json:"endTime,omitempty"`
-		MultipleDays       bool     `json:"multipleDays"`
-		EndDate            string   `json:"endDate,omitempty"`
-		Recurring          bool     `json:"recurring"`
-		RecurringDays      []string `json:"recurringDays,omitempty"`
-		RecurringEndDate   string   `json:"recurringEndDate,omitempty"`
-		ListingType        string   `json:"listingType"`
-		ImageLink          string   `json:"imageLink,omitempty"`
+		ListingID           int      `json:"listingId"`
+		BusinessID          int      `json:"businessId"`
+		Title               string   `json:"title"`
+		OldPrice            float64  `json:"oldPrice,omitempty"`
+		NewPrice            float64  `json:"newPrice"`
+		Discount            float64  `json:"discount,omitempty"`
+		DiscountDescription string   `json:"discountDescription,omitempty"`
+		DietaryRestriction  []string `json:"dietaryRestriction,omitempty"`
+		Description         string   `json:"description"`
+		StartDate           string   `json:"startDate"`
+		StartTime           string   `json:"startTime"`
+		EndTime             string   `json:"endTime,omitempty"`
+		MultipleDays        bool     `json:"multipleDays"`
+		EndDate             string   `json:"endDate,omitempty"`
+		Recurring           bool     `json:"recurring"`
+		RecurringDays       []string `json:"recurringDays,omitempty"`
+		RecurringEndDate    string   `json:"recurringEndDate,omitempty"`
+		ListingType         string   `json:"listingType"`
+		ImageLink           string   `json:"imageLink,omitempty"`
 	}
 
 	listingEditResult struct {
@@ -55,6 +56,7 @@ func (r editListingEndpoint) Execute(ctx context.Context, rtr *router, requestI 
 		OldPrice:            request.OldPrice,
 		NewPrice:            request.NewPrice,
 		Discount:            request.Discount,
+		DiscountDescription: request.DiscountDescription,
 		DietaryRestrictions: request.DietaryRestriction,
 		Description:         request.Description,
 		StartDate:           request.StartDate,
@@ -90,12 +92,8 @@ func (r editListingEndpoint) Validate(request interface{}) error {
 		}
 	}
 
-	if input.ListingType == shared.ListingTypeMeal && input.NewPrice == 0 {
-		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, add 'newPrice' for the meal")}
-	}
-
-	if input.ListingType == shared.ListingTypeHappyHour && (input.Discount == 0 && input.NewPrice == 0) {
-		return helper.ValidationError{Message: fmt.Sprint("listing edit failed, add 'discount' for the happyhour")}
+	if input.Discount == 0 && input.NewPrice == 0 && input.DiscountDescription == "" {
+		return helper.ValidationError{Message: fmt.Sprint("listing add failed, add 'newPrice' or 'discount' or 'discountDescription' for the listing")}
 	}
 
 	if input.MultipleDays && input.Recurring {

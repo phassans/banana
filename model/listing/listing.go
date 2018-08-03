@@ -306,11 +306,13 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 			&listing.OldPrice,
 			&listing.NewPrice,
 			&listing.Discount,
+			&listing.DiscountDescription,
 			&listing.Description,
 			&listing.StartDate,
 			&sqlEndDate,
 			&listing.StartTime,
 			&listing.EndTime,
+			&listing.MultipleDays,
 			&listing.Recurring,
 			&sqlRecurringEndDate,
 			&listing.Type,
@@ -335,10 +337,12 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 }
 
 func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) ([]shared.Listing, error) {
-	getListingsQuery := "SELECT listing.title, listing.old_price, listing.new_price, listing.discount, listing.description," +
-		"listing.start_date, listing.multiple_days, listing.end_date, listing.start_time, listing.end_time, listing.recurring, " +
-		"listing.recurring_end_date, listing.listing_type, " +
-		"business.business_id, listing_id, business.name " +
+	getListingsQuery := "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
+		"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
+		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
+		"listing.multiple_days as multiple_days," +
+		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
+		"business.business_id as business_id, listing.listing_id as listing_id, business.name as bname " +
 		"FROM listing " +
 		"INNER JOIN business ON listing.business_id = business.business_id " +
 		"WHERE " +
@@ -360,12 +364,13 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 			&listing.OldPrice,
 			&listing.NewPrice,
 			&listing.Discount,
+			&listing.DiscountDescription,
 			&listing.Description,
 			&listing.StartDate,
-			&listing.MultipleDays,
 			&sqlEndDate,
 			&listing.StartTime,
 			&listing.EndTime,
+			&listing.MultipleDays,
 			&listing.Recurring,
 			&sqlRecurringEndDate,
 			&listing.Type,

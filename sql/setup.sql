@@ -69,48 +69,49 @@ CREATE TABLE IF NOT EXISTS business_country
 
 CREATE TABLE IF NOT EXISTS business_address
 (
-  address_id    SERIAL UNIQUE,
-  business_id   INT  NOT NULL,
-  street        TEXT NOT NULL,
-  city          TEXT NOT NULL,
-  postal_code   INT  NOT NULL,
-  state         TEXT NOT NULL,
-  country_id    INT  NOT NULL,
-  latitude      NUMERIC NOT NULL,
-  longitude     NUMERIC NOT NULL,
+  address_id  SERIAL UNIQUE,
+  business_id INT     NOT NULL,
+  street      TEXT    NOT NULL,
+  city        TEXT    NOT NULL,
+  postal_code INT     NOT NULL,
+  state       TEXT    NOT NULL,
+  country_id  INT     NOT NULL,
+  latitude    NUMERIC NOT NULL,
+  longitude   NUMERIC NOT NULL,
   PRIMARY KEY (address_id, business_id),
   FOREIGN KEY (country_id) REFERENCES business_country (country_id)
 );
 
 CREATE TABLE IF NOT EXISTS listing
 (
-  listing_id          SERIAL UNIQUE,
-  business_id         INT       NOT NULL,
-  title               TEXT      NOT NULL,
-  old_price           DECIMAL,
-  new_price           DECIMAL,
-  discount            DECIMAL,
-  description         TEXT,
-  start_date          DATE      NOT NULL,
-  start_time          TIME      NOT NULL,
-  end_time            TIME      NOT NULL,
-  multiple_days       BOOLEAN   NOT NULL,
-  end_date            DATE,
-  recurring           BOOLEAN   NOT NULL,
-  recurring_end_date  DATE,
-  listing_type        TEXT      NOT NULL,
-  listing_create_date TIMESTAMP NOT NULL,
+  listing_id           SERIAL UNIQUE,
+  business_id          INT       NOT NULL,
+  title                TEXT      NOT NULL,
+  old_price            DECIMAL,
+  new_price            DECIMAL,
+  discount             DECIMAL,
+  discount_description TEXT,
+  description          TEXT,
+  start_date           DATE      NOT NULL,
+  start_time           TIME      NOT NULL,
+  end_time             TIME      NOT NULL,
+  multiple_days        BOOLEAN   NOT NULL,
+  end_date             DATE,
+  recurring            BOOLEAN   NOT NULL,
+  recurring_end_date   DATE,
+  listing_type         TEXT      NOT NULL,
+  listing_create_date  TIMESTAMP NOT NULL,
   PRIMARY KEY (listing_id),
   FOREIGN KEY (business_id) REFERENCES business (business_id)
 );
 
 CREATE TABLE IF NOT EXISTS listing_date
 (
-  listing_date_id   SERIAL UNIQUE,
-  listing_id   INT  NOT NULL,
-  listing_date DATE NOT NULL,
-  start_time   TIME,
-  end_time     TIME
+  listing_date_id SERIAL UNIQUE,
+  listing_id      INT  NOT NULL,
+  listing_date    DATE NOT NULL,
+  start_time      TIME,
+  end_time        TIME
 );
 
 CREATE TABLE IF NOT EXISTS listing_recurring
@@ -171,4 +172,5 @@ CREATE TABLE IF NOT EXISTS notifications_dietary_restrictions
 );
 
 
-INSERT INTO business_country (name) VALUES ('USA');
+INSERT INTO business_country (name)
+VALUES ('USA');

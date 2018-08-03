@@ -21,9 +21,9 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 	}
 
 	var listingID int
-	const insertListingSQL = "INSERT INTO listing(business_id, title, old_price, new_price, discount, description," +
+	const insertListingSQL = "INSERT INTO listing(business_id, title, old_price, new_price, discount, discount_description, description," +
 		"start_date, start_time, end_time, multiple_days, end_date, recurring, recurring_end_date, listing_type, listing_create_date) " +
-		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) returning listing_id"
+		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) returning listing_id"
 
 	err = l.sql.QueryRow(insertListingSQL,
 		listing.BusinessID,
@@ -31,6 +31,7 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 		listing.OldPrice,
 		listing.NewPrice,
 		listing.Discount,
+		listing.DiscountDescription,
 		listing.Description,
 		listing.StartDate,
 		listing.StartTime,
