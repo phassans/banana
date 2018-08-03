@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// NewNullString returns a null able sql string
 func NewNullString(s string) sql.NullString {
 	if len(s) == 0 {
 		return sql.NullString{}
@@ -17,6 +18,7 @@ func NewNullString(s string) sql.NullString {
 	}
 }
 
+// GetTimeIn12HourFormat returns string time in 12 hour format
 func GetTimeIn12HourFormat(lTime string) (string, error) {
 	if lTime == "" {
 		return "", nil

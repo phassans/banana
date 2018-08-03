@@ -2,28 +2,57 @@ package shared
 
 const (
 	// See http://golang.org/pkg/time/#Parse
-	DateTimeFormat   = "2006-01-02T15:04:05Z"
-	DateFormat       = "01/02/2006" //07/11/2018
-	DateFormatSQL    = "2006-01-02" //07/11/2018
+
+	// DateTimeFormat used in service
+	DateTimeFormat = "2006-01-02T15:04:05Z"
+
+	// DateFormat used to enter data
+	DateFormat = "01/02/2006" //07/11/2018
+
+	// DateFormatSQL used to get data from SQL
+	DateFormatSQL = "2006-01-02" //07/11/2018
+
+	// TimeLayout24Hour ...
 	TimeLayout24Hour = "15:04:05"
+
+	// TimeLayout12Hour ...
 	TimeLayout12Hour = "03:04pm"
 
+	// CountryID default USA
 	CountryID = 1
 
+	// SortByDistance ...
 	SortByDistance = "distance"
-	SortByPrice    = "price"
+
+	// SortByPrice ...
+	SortByPrice = "price"
+
+	// SortByTimeLeft ...
 	SortByTimeLeft = "timeLeft"
 
-	ListingTypeMeal      = "meal"
+	// ListingTypeMeal ...
+	ListingTypeMeal = "meal"
+
+	// ListingTypeHappyHour ...
 	ListingTypeHappyHour = "happyhour"
 
-	ListingEnded     = "ended"
+	// ListingEnded ...
+	ListingEnded = "ended"
+
+	// ListingScheduled ...
 	ListingScheduled = "scheduled"
-	ListingActive    = "active"
-	ListingAll       = "all"
+
+	// ListingActive ...
+	ListingActive = "active"
+
+	// ListingAll ...
+	ListingAll = "all"
 )
 
 var (
-	DayMap       = map[string]int{"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
+	// DayMap of week days
+	DayMap = map[string]int{"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
+
+	// ListingTypes possible
 	ListingTypes = []string{"", "meal", "happyhour"}
 )

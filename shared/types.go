@@ -1,6 +1,8 @@
 package shared
 
 type (
+
+	// BusinessUser info
 	BusinessUser struct {
 		UserID   int    `json:"userId"`
 		Name     string `json:"name"`
@@ -9,6 +11,7 @@ type (
 		Phone    string `json:"phone,omitempty"`
 	}
 
+	// Listing all fields
 	Listing struct {
 		ListingID            int           `json:"listingId,omitempty"`
 		Title                string        `json:"title,omitempty"`
@@ -39,6 +42,7 @@ type (
 		DateTimeRange        string        `json:"dateTimeRange,omitempty"`
 	}
 
+	// SearchListingResult result of search
 	SearchListingResult struct {
 		ListingID            int      `json:"listingId"`
 		ListingType          string   `json:"listingType"`
@@ -56,11 +60,13 @@ type (
 		DateTimeRange        string   `json:"dateTimeRange"`
 	}
 
+	// ListingInfo combination of Business and Listing
 	ListingInfo struct {
 		Business BusinessInfo        `json:"businessInfo"`
 		Listing  SearchListingResult `json:"listing"`
 	}
 
+	// ListingDate fields
 	ListingDate struct {
 		ListingID   int
 		ListingDate string
@@ -68,6 +74,7 @@ type (
 		EndTime     string
 	}
 
+	// Notification fields
 	Notification struct {
 		NotificationID     int
 		PhoneID            string
@@ -80,6 +87,7 @@ type (
 		Location           string
 	}
 
+	// Hours fields
 	Hours struct {
 		Day                 string
 		OpenTimeSessionOne  string
@@ -88,17 +96,20 @@ type (
 		CloseTimeSessionTwo string
 	}
 
+	// BusinessHours combination of business with hours
 	BusinessHours struct {
 		BusinessID int
 		HoursInfo  []Hours
 	}
 
+	// Bhour fields of business hour
 	Bhour struct {
 		Day       string `json:"day"`
 		OpenTime  string `json:"openTime"`
 		CloseTime string `json:"closeTime"`
 	}
 
+	// AddressGeo holds lat & lon of address
 	AddressGeo struct {
 		AddressID  int
 		BusinessID int
@@ -106,6 +117,7 @@ type (
 		Longitude  float64
 	}
 
+	// Business fields
 	Business struct {
 		BusinessID int    `json:"businessId"`
 		Name       string `json:"name"`
@@ -113,6 +125,7 @@ type (
 		Website    string `json:"website"`
 	}
 
+	// BusinessAddress fields of business address
 	BusinessAddress struct {
 		Street     string `json:"street"`
 		City       string `json:"city"`
@@ -122,10 +135,12 @@ type (
 		AddressID  int    `json:"addressID"`
 	}
 
+	// BusinessCuisine list of business cuisines
 	BusinessCuisine struct {
 		Cuisine []string `json:"cuisine"`
 	}
 
+	// BusinessInfo all business fields
 	BusinessInfo struct {
 		Business        Business        `json:"business"`
 		BusinessAddress BusinessAddress `json:"businessAddress"`
@@ -134,6 +149,7 @@ type (
 		HoursFormatted  []string        `json:"businessHoursFormatted,omitempty"`
 	}
 
+	// SortView possible types
 	SortView struct {
 		Listing  Listing
 		Mile     float64
@@ -141,6 +157,7 @@ type (
 		TimeLeft float64
 	}
 
+	// CurrentLocation ...
 	CurrentLocation struct {
 		Latitude  float64
 		Longitude float64
