@@ -41,6 +41,12 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 	request := requestI.(listingsSearchRequest)
 	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
+	if strings.TrimSpace(request.Location) == "" && (request.Latitude == 0 || request.Longitude == 0) {
+		if request.PhoneID == "955840FA-72B5-4C9E-8422-EFE49C2D5A0B" {
+			request.Location = "94086"
+		}
+	}
+
 	// validate input
 	if err := r.Validate(request); err != nil {
 		return nil, err
