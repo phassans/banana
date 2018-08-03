@@ -1,0 +1,3 @@
+#!/bin/bash
+
+gometalinter --exclude vendor/ --disable-all --enable=errcheck --enable=vet --enable=vetshadow --enable=unused --enable=deadcode  --enable=maligned --enable=goconst --enable=unconvert --enable=interfacer --enable=ineffassign --enable=megacheck --enable=golint ./...
