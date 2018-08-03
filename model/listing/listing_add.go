@@ -65,8 +65,8 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 		}
 	}
 
-	if len(listing.DietaryRestriction) > 0 {
-		for _, restriction := range listing.DietaryRestriction {
+	if len(listing.DietaryRestrictions) > 0 {
+		for _, restriction := range listing.DietaryRestrictions {
 			if err := l.AddDietaryRestriction(listingID, restriction); err != nil {
 				return 0, err
 			}

@@ -265,7 +265,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			BusinessName:         listing.BusinessName,
 			Price:                listing.NewPrice,
 			Discount:             listing.Discount,
-			DietaryRestriction:   listing.DietaryRestriction,
+			DietaryRestrictions:  listing.DietaryRestrictions,
 			TimeLeft:             timeLeft,
 			ListingImage:         listing.ListingImage,
 			DistanceFromLocation: listing.DistanceFromLocation,

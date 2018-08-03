@@ -20,7 +20,7 @@ type (
 		OldPrice             float64       `json:"oldPrice,omitempty"`
 		NewPrice             float64       `json:"newPrice,omitempty"`
 		Discount             float64       `json:"discount,omitempty"`
-		DietaryRestriction   []string      `json:"dietaryRestriction,omitempty"`
+		DietaryRestrictions  []string      `json:"dietaryRestrictions,omitempty"`
 		Description          string        `json:"description,omitempty"`
 		StartDate            string        `json:"startDate,omitempty"`
 		StartTime            string        `json:"startTime,omitempty"`
@@ -52,7 +52,7 @@ type (
 		BusinessName         string   `json:"businessName"`
 		Price                float64  `json:"price"`
 		Discount             float64  `json:"discount"`
-		DietaryRestriction   []string `json:"dietaryRestriction"`
+		DietaryRestrictions  []string `json:"dietaryRestrictions"`
 		TimeLeft             int      `json:"timeLeft"`
 		ListingImage         string   `json:"listingImage"`
 		DistanceFromLocation float64  `json:"distanceFromLocation"`

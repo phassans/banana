@@ -130,7 +130,7 @@ func (l *listingEngine) AddDietaryRestrictionsAndImageToListings(listings []shar
 		if err != nil {
 			return nil, err
 		}
-		listing.DietaryRestriction = rests
+		listing.DietaryRestrictions = rests
 
 		// add image Link
 		imageLink, err := l.GetListingImage(listing.ListingID)
@@ -253,7 +253,7 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.Listing, error) {
 	if err != nil {
 		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
-	listing.DietaryRestriction = reqs
+	listing.DietaryRestrictions = reqs
 
 	//GetBusinessInfo
 	businessInfo, err := l.businessEngine.GetBusinessInfo(listing.BusinessID)
@@ -377,7 +377,7 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 		if err != nil {
 			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
-		listing.DietaryRestriction = reqs
+		listing.DietaryRestrictions = reqs
 
 		// add recurring listing
 		var recurring []string
