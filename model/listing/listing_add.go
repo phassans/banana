@@ -139,7 +139,7 @@ func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 	}
 
 	for _, listing := range listings {
-		err := l.InsertListingDate(listing)
+		_, err := l.InsertListingDate(listing)
 		if err != nil {
 			return err
 		}
@@ -147,18 +147,19 @@ func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 	return nil
 }
 
-func (l *listingEngine) InsertListingDate(lDate shared.ListingDate) error {
+func (l *listingEngine) InsertListingDate(lDate shared.ListingDate) (int, error) {
 	addListingDietRestrictionSQL := "INSERT INTO listing_date(listing_id,listing_date,start_time,end_time) " +
-		"VALUES($1,$2,$3,$4);"
+		"VALUES($1,$2,$3,$4) returning listing_date_id;"
 
-	rows, err := l.sql.Query(addListingDietRestrictionSQL, lDate.ListingID, lDate.ListingDate, lDate.StartTime, lDate.EndTime)
+	var listingDateID int
+	err := l.sql.QueryRow(addListingDietRestrictionSQL, lDate.ListingID, lDate.ListingDate, lDate.StartTime, lDate.EndTime).
+		Scan(&listingDateID)
 	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
+		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
-	defer rows.Close()
 
 	l.logger.Infof("InsertListingDate successful for listing:%d", lDate.ListingID)
-	return nil
+	return listingDateID, nil
 }
 
 func (l *listingEngine) AddListingImage(listingID int, imageLink string) error {

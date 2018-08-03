@@ -4,7 +4,7 @@ import "github.com/phassans/banana/helper"
 
 func (f *listingEngine) DeleteListing(listingID int) error {
 
-	listingInfo, err := f.GetListingByID(listingID, 0)
+	listingInfo, err := f.GetListingByID(listingID, 0, 0)
 	if err != nil {
 		return nil
 	}

@@ -28,7 +28,12 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 		return nil, err
 	}
 
-	listingInfo, err := rtr.engines.GetListingInfo(listingID)
+	listingDateID, err := strconv.Atoi(values.Get("listingDateId"))
+	if err != nil {
+		return nil, err
+	}
+
+	listingInfo, err := rtr.engines.GetListingInfo(listingID, listingDateID)
 	if err != nil {
 		return nil, err
 	}

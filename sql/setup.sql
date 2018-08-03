@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS listing
 
 CREATE TABLE IF NOT EXISTS listing_date
 (
+  listing_date_id   SERIAL UNIQUE,
   listing_id   INT  NOT NULL,
   listing_date DATE NOT NULL,
   start_time   TIME,

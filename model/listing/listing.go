@@ -43,10 +43,10 @@ type (
 		GetListingsByBusinessID(businessID int, businessType string) ([]shared.Listing, error)
 
 		// GetListingByID returns listing based on ID
-		GetListingByID(listingID int, businessID int) (shared.Listing, error)
+		GetListingByID(listingID int, businessID int, listingDateID int) (shared.Listing, error)
 
 		// GetListingInfo returns listing info
-		GetListingInfo(listingID int) (shared.Listing, error)
+		GetListingInfo(listingID int, listingDateID int) (shared.Listing, error)
 
 		// GetListingImage returns image of the listing
 		GetListingImage(listingID int) (string, error)
@@ -228,11 +228,11 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	return listingInfo, nil
 }*/
 
-func (l *listingEngine) GetListingInfo(listingID int) (shared.Listing, error) {
+func (l *listingEngine) GetListingInfo(listingID int, listingDateID int) (shared.Listing, error) {
 	//var listingInfo shared.Listing
 
 	//GetListingByID
-	listing, err := l.GetListingByID(listingID, 0)
+	listing, err := l.GetListingByID(listingID, 0, listingDateID)
 	if err != nil {
 		return shared.Listing{}, err
 	}
@@ -262,21 +262,25 @@ func (l *listingEngine) GetListingInfo(listingID int) (shared.Listing, error) {
 	}
 	listing.Business = &businessInfo
 
-	dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
+	weekday, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
 	if err != nil {
 		return shared.Listing{}, err
 	}
+	listing.ListingWeekDay = weekday
 	listing.DateTimeRange = dateTimeRange
 
 	return listing, nil
 }
 
-func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Listing, error) {
+func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDateID int) (shared.Listing, error) {
 
 	var whereClause bytes.Buffer
 	whereClause.WriteString(fmt.Sprintf(" WHERE listing.listing_id = %d", listingID))
 	if businessID != 0 {
 		whereClause.WriteString(fmt.Sprintf(" AND business.business_id = %d", businessID))
+	}
+	if listingDateID != 0 {
+		whereClause.WriteString(fmt.Sprintf(" AND listing_date.listing_date_id = %d", listingDateID))
 	}
 	query := fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause.String())
 
@@ -310,6 +314,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int) (shared.Li
 			&listing.BusinessID,
 			&listing.ListingID,
 			&listing.BusinessName,
+			&listing.ListingDateID,
 			&listing.ListingDate,
 		)
 		if err != nil {

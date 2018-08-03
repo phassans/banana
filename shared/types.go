@@ -40,6 +40,8 @@ type (
 		Business             *BusinessInfo `json:"businessInfo,omitempty"`
 		IsFavorite           bool          `json:"isFavorite"`
 		DateTimeRange        string        `json:"dateTimeRange,omitempty"`
+		ListingWeekDay       string        `json:"listingWeekDay,omitempty"`
+		ListingDateID        int           `json:"listingDateId,omitempty"`
 	}
 
 	// SearchListingResult result of search
@@ -58,6 +60,7 @@ type (
 		DistanceFromLocation float64  `json:"distanceFromLocation"`
 		IsFavorite           bool     `json:"isFavorite"`
 		DateTimeRange        string   `json:"dateTimeRange"`
+		ListingDateID        int      `json:"listingDateId,omitempty"`
 	}
 
 	// ListingInfo combination of Business and Listing
