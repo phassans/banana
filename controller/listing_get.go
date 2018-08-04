@@ -28,8 +28,10 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 		return nil, err
 	}
 
+	xlog.Info(values)
+
 	var listingDateID int
-	if values.Get("listingDateId") != "" && values.Get("listingId") != "undefined" {
+	if values.Get("listingDateId") != "" && values.Get("listingDateId") != "undefined" {
 		listingDateID, err = strconv.Atoi(values.Get("listingDateId"))
 		if err != nil {
 			return nil, err

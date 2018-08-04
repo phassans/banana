@@ -258,7 +258,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing) ([]shared.SearchListingResult, error) {
 	var listingsResult []shared.SearchListingResult
 	for _, listing := range listings {
-		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
+		timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
 		if err != nil {
 			return nil, err
 		}
@@ -292,8 +292,8 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 	return listingsResult, nil
 }
 
-func calculateTimeLeft(listingDate string, listingTime string) (int, error) {
-	if listingDate == "" || listingTime == "" {
+func calculateTimeLeftForSearch(listingDate string, listingStartTime string, listingEndTime string) (int, error) {
+	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
 		return 0, nil
 	}
 
@@ -304,14 +304,50 @@ func calculateTimeLeft(listingDate string, listingTime string) (int, error) {
 		return 0, err
 	}
 
-	listingEndTime := getListingDateTime(listingDate, listingTime)
-	listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, listingEndTime)
+	lStartTime := getListingDateTime(listingDate, listingStartTime)
+	listingStartTimeFormatted, err := time.Parse(shared.DateTimeFormat, lStartTime)
+	if err != nil {
+		return 0, err
+	}
+
+	lEndTime := getListingDateTime(listingDate, listingEndTime)
+	listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, lEndTime)
+	if err != nil {
+		return 0, err
+	}
+
+	if !inTimeSpan(listingStartTimeFormatted, listingEndTimeFormatted, currentDateTimeFormatted) {
+		return 0, nil
+	}
+
+	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Hours()
+	return int(timeLeftInHours), nil
+}
+
+func calculateTimeLeft(listingDate string, listingEndTime string) (int, error) {
+	if listingDate == "" || listingEndTime == "" {
+		return 0, nil
+	}
+
+	// get current date and time
+	currentDateTime := time.Now().Format(shared.DateTimeFormat)
+	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)
+	if err != nil {
+		return 0, err
+	}
+
+	lEndTime := getListingDateTime(listingDate, listingEndTime)
+	listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, lEndTime)
 	if err != nil {
 		return 0, err
 	}
 
 	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Hours()
 	return int(timeLeftInHours), nil
+}
+
+func inTimeSpan(start, end, check time.Time) bool {
+	return check.After(start) && check.Before(end)
 }
 
 func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string) (string, string, error) {

@@ -269,7 +269,7 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int) (shared
 	listing.ListingWeekDay = weekday
 	listing.DateTimeRange = dateTimeRange
 
-	timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
+	timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
 	listing.TimeLeft = timeLeft
 
 	return listing, nil
