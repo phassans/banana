@@ -94,6 +94,7 @@ func NewRESTRouter(engines model.Engine) http.Handler {
 
 	rtr.Use(
 		helper.SetJSONContentResponse,
+		helper.SetFieldsInLogger,
 	)
 
 	rtr.Route(apiVersion, func(r chi.Router) {

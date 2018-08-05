@@ -1,5 +1,11 @@
 package shared
 
+import (
+	"os"
+
+	"github.com/rs/zerolog"
+)
+
 type (
 
 	// BusinessUser info
@@ -168,3 +174,17 @@ type (
 		Longitude float64
 	}
 )
+
+var logger zerolog.Logger
+
+func InitLogger() {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	logger = zerolog.New(os.Stdout).With().
+		Timestamp().
+		Str("service", "hungryhour").
+		Logger()
+}
+
+func GetLogger() zerolog.Logger {
+	return logger
+}

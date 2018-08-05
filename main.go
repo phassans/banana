@@ -13,12 +13,13 @@ import (
 	"github.com/phassans/banana/model/notification"
 	"github.com/phassans/banana/model/user"
 	"github.com/phassans/banana/route"
+	"github.com/phassans/banana/shared"
 )
 
 func main() {
 	// set up defaults and configs
 	config()
-
+	logger := shared.GetLogger()
 	// set up DB
 	roach, err := db.New(db.Config{Host: "localhost", Port: "5432", User: "pshashidhara", Password: "banana123", Database: "banana"})
 	if err != nil {

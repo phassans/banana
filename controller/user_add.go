@@ -7,7 +7,6 @@ import (
 
 	"github.com/goware/emailx"
 	"github.com/phassans/banana/helper"
-	"github.com/rs/xlog"
 )
 
 type (
@@ -30,8 +29,6 @@ var userAdd postEndpoint = addUserEndpoint{}
 
 func (r addUserEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(addUserRequest)
-	xlog.Infof("add request", xlog.F{"path": r.GetPath(), "request": request})
-
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
 	}
