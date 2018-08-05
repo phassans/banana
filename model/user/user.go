@@ -9,12 +9,12 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
+	"github.com/rs/zerolog"
 )
 
 type userEngine struct {
 	sql    *sql.DB
-	logger xlog.Logger
+	logger zerolog.Logger
 }
 
 // UserEngine interface
@@ -26,7 +26,7 @@ type UserEngine interface {
 }
 
 // NewUserEngine returns an instance of userEngine
-func NewUserEngine(psql *sql.DB, logger xlog.Logger) UserEngine {
+func NewUserEngine(psql *sql.DB, logger zerolog.Logger) UserEngine {
 	return &userEngine{psql, logger}
 }
 
@@ -49,7 +49,7 @@ func (u *userEngine) UserAdd(name string, email string, password string, phone s
 		return helper.DatabaseError{DBError: err.Error()}
 	}
 
-	u.logger.Infof("successfully added a user with ID: %d", userID)
+	u.logger.Info().Msgf("successfully added a user with ID: %d", userID)
 
 	return nil
 }

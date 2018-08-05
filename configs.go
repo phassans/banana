@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/afex/hystrix-go/hystrix"
-	"github.com/rs/xlog"
+	"github.com/rs/zerolog"
 )
 
 var (
-	logger          xlog.Logger
+	logger          zerolog.Logger
 	server          http.Server
 	serverStartTime time.Time
 )
@@ -32,11 +32,12 @@ func config() {
 	hystrix.DefaultTimeout = int(hystrixHTTPTimeout / time.Millisecond)
 	hystrix.DefaultMaxConcurrent = maxHTTPConcurrency
 
-	// set logger level and output format based on env
-	level := xlog.LevelInfo
-	if enableDebugLogging {
-		level = xlog.LevelDebug
-	}
-	logger = xlog.New(xlog.Config{Level: level, Output: xlog.NewJSONOutput(os.Stdout)})
-	xlog.SetLogger(logger)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	logger = zerolog.New(os.Stdout).With().
+		Timestamp().
+		Str("role", "my-service").
+		Str("host", "hungryhour").
+		Logger()
+	logger.Info().Msg("please json")
+
 }

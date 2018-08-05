@@ -8,12 +8,13 @@ import (
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/shared"
 	"github.com/rs/xlog"
+	"github.com/rs/zerolog"
 )
 
 type (
 	notificationEngine struct {
 		sql            *sql.DB
-		logger         xlog.Logger
+		logger         zerolog.Logger
 		businessEngine business.BusinessEngine
 	}
 
@@ -26,7 +27,7 @@ type (
 )
 
 // NewNotificationEngine returns an instance of notificationEngine
-func NewNotificationEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine) NotificationEngine {
+func NewNotificationEngine(psql *sql.DB, logger zerolog.Logger, businessEngine business.BusinessEngine) NotificationEngine {
 	return &notificationEngine{psql, logger, businessEngine}
 }
 
@@ -63,7 +64,7 @@ func (n *notificationEngine) AddNotification(notification shared.Notification) e
 		}
 	}
 
-	n.logger.Infof("successfully added a notification with ID: %d", notificationID)
+	n.logger.Info().Msgf("successfully added a notification with ID: %d", notificationID)
 	return nil
 }
 
@@ -77,7 +78,7 @@ func (n *notificationEngine) AddNotificationDietaryRestriction(restriction strin
 	}
 	defer rows.Close()
 
-	n.logger.Infof("add notifications_dietary_restrictions successful for notification:%d", notificationID)
+	n.logger.Info().Msgf("add notifications_dietary_restrictions successful for notification:%d", notificationID)
 	return nil
 }
 
@@ -95,7 +96,7 @@ func (n *notificationEngine) DeleteNotification(notificationID int) error {
 
 func (n *notificationEngine) DeleteNotificationInfo(notificationID int) error {
 	sqlStatement := `DELETE FROM notifications WHERE notification_id = $1;`
-	n.logger.Infof("deleting notification with query: %s and listing: %d", sqlStatement, notificationID)
+	n.logger.Info().Msgf("deleting notification with query: %s and listing: %d", sqlStatement, notificationID)
 
 	_, err := n.sql.Exec(sqlStatement, notificationID)
 	return err
@@ -103,7 +104,7 @@ func (n *notificationEngine) DeleteNotificationInfo(notificationID int) error {
 
 func (n *notificationEngine) DeleteNotificationDietaryRestriction(notificationID int) error {
 	sqlStatement := `DELETE FROM notifications_dietary_restrictions WHERE notification_id = $1;`
-	n.logger.Infof("deleting notifications_location with query: %s and listing: %d", sqlStatement, notificationID)
+	n.logger.Info().Msgf("deleting notifications_location with query: %s and listing: %d", sqlStatement, notificationID)
 
 	_, err := n.sql.Exec(sqlStatement, notificationID)
 	return err

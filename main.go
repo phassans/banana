@@ -13,7 +13,6 @@ import (
 	"github.com/phassans/banana/model/notification"
 	"github.com/phassans/banana/model/user"
 	"github.com/phassans/banana/route"
-	"github.com/rs/xlog"
 )
 
 func main() {
@@ -23,9 +22,9 @@ func main() {
 	// set up DB
 	roach, err := db.New(db.Config{Host: "localhost", Port: "5432", User: "pshashidhara", Password: "banana123", Database: "banana"})
 	if err != nil {
-		xlog.Fatalf("could not connect to db. errpr %s", err)
+		logger.Fatal().Msgf("could not connect to db. errpr %s", err)
 	}
-	xlog.Infof("successfully connected to db")
+	logger.Info().Msg("successfully connected to db")
 
 	// createEngines
 	userEngine := user.NewUserEngine(roach.Db, logger)
@@ -47,12 +46,12 @@ func main() {
 	go func() { serverErrChannel <- server.ListenAndServe() }()
 
 	// log server start time
-	logger.Infof("API server started at %s. time:%s", server.Addr, serverStartTime)
+	logger.Info().Msgf("API server started at %s. time:%s", server.Addr, serverStartTime)
 
 	// wait for any server error
 	select {
 	case err := <-serverErrChannel:
-		logger.Fatalf("service stopped due to error %v with uptime %v", err, time.Since(serverStartTime))
+		logger.Fatal().Msgf("service stopped due to error %v with uptime %v", err, time.Since(serverStartTime))
 		roach.Close() // nolint: errcheck
 	}
 }

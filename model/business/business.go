@@ -10,12 +10,12 @@ import (
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/user"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
+	"github.com/rs/zerolog"
 )
 
 type businessEngine struct {
 	sql        *sql.DB
-	logger     xlog.Logger
+	logger     zerolog.Logger
 	userEngine user.UserEngine
 }
 
@@ -61,7 +61,7 @@ type BusinessEngine interface {
 }
 
 // NewBusinessEngine returns an instance of businessEngine
-func NewBusinessEngine(psql *sql.DB, logger xlog.Logger, userEngine user.UserEngine) BusinessEngine {
+func NewBusinessEngine(psql *sql.DB, logger zerolog.Logger, userEngine user.UserEngine) BusinessEngine {
 	return &businessEngine{psql, logger, userEngine}
 }
 

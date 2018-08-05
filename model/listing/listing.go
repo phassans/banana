@@ -8,13 +8,13 @@ import (
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
+	"github.com/rs/zerolog"
 )
 
 type (
 	listingEngine struct {
 		sql            *sql.DB
-		logger         xlog.Logger
+		logger         zerolog.Logger
 		businessEngine business.BusinessEngine
 	}
 
@@ -63,7 +63,7 @@ type (
 )
 
 // NewListingEngine returns a instance of listingEngine
-func NewListingEngine(psql *sql.DB, logger xlog.Logger, businessEngine business.BusinessEngine) ListingEngine {
+func NewListingEngine(psql *sql.DB, logger zerolog.Logger, businessEngine business.BusinessEngine) ListingEngine {
 	return &listingEngine{psql, logger, businessEngine}
 }
 

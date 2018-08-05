@@ -79,7 +79,7 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 		return 0, err
 	}
 
-	l.logger.Infof("successfully added a listing %s for business: %s with listingId: %d", listing.Title, business.Name, listingID)
+	l.logger.Info().Msgf("successfully added a listing %s for business: %s with listingId: %d", listing.Title, business.Name, listingID)
 
 	return listingID, nil
 }
@@ -159,7 +159,7 @@ func (l *listingEngine) InsertListingDate(lDate shared.ListingDate) (int, error)
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	l.logger.Infof("InsertListingDate successful for listing:%d", lDate.ListingID)
+	l.logger.Info().Msgf("InsertListingDate successful for listing:%d", lDate.ListingID)
 	return listingDateID, nil
 }
 
@@ -173,7 +173,7 @@ func (l *listingEngine) AddListingImage(listingID int, imageLink string) error {
 	}
 	defer rows.Close()
 
-	l.logger.Infof("add AddListingImage successful for listing:%d", listingID)
+	l.logger.Info().Msgf("add AddListingImage successful for listing:%d", listingID)
 	return nil
 }
 
@@ -187,7 +187,7 @@ func (l *listingEngine) AddRecurring(listingID int, day string) error {
 	}
 	defer rows.Close()
 
-	l.logger.Infof("add recurring successful for listing:%d", listingID)
+	l.logger.Info().Msgf("add recurring successful for listing:%d", listingID)
 	return nil
 }
 
@@ -201,6 +201,6 @@ func (l *listingEngine) AddDietaryRestriction(listingID int, restriction string)
 	}
 	defer rows.Close()
 
-	l.logger.Infof("add listing_dietary_restrictions successful for listing:%d", listingID)
+	l.logger.Info().Msgf("add listing_dietary_restrictions successful for listing:%d", listingID)
 	return nil
 }

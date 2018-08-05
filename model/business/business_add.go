@@ -84,7 +84,7 @@ func (b *businessEngine) AddBusiness(
 		xlog.Infof("associate user to business success with businessID: %d", lastInsertBusinessID)
 	}
 
-	b.logger.Infof("business added successfully with id: %d", lastInsertBusinessID)
+	b.logger.Info().Msgf("business added successfully with id: %d", lastInsertBusinessID)
 	return lastInsertBusinessID, addressID, nil
 }
 
@@ -128,7 +128,7 @@ func (b *businessEngine) addBusinessAddress(
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	b.logger.Infof("successfully added address with ID: %d for business: %d", addressID, businessID)
+	b.logger.Info().Msgf("successfully added address with ID: %d for business: %d", addressID, businessID)
 	return addressID, nil
 }
 
@@ -170,7 +170,7 @@ func (b *businessEngine) addHours(day string, openTime string, closeTime string,
 	}
 	defer rows.Close()
 
-	b.logger.Infof("add hours succesfull for businessID:%d", businessID)
+	b.logger.Info().Msgf("add hours succesfull for businessID:%d", businessID)
 	return nil
 }
 
@@ -203,7 +203,7 @@ func (b *businessEngine) addCuisine(businessID int, cuisine string) error {
 	}
 	defer rows.Close()
 
-	b.logger.Infof("add cuisine successful for businessID:%d", businessID)
+	b.logger.Info().Msgf("add cuisine successful for businessID:%d", businessID)
 	return nil
 }
 
@@ -217,6 +217,6 @@ func (b *businessEngine) associateUserToBusiness(businessID int, userID int) err
 	}
 	defer rows.Close()
 
-	b.logger.Infof("associateUserToBusiness successful for businessID:%d", businessID)
+	b.logger.Info().Msgf("associateUserToBusiness successful for businessID:%d", businessID)
 	return nil
 }
