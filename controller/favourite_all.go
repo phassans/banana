@@ -36,6 +36,7 @@ func (r favoritesViewEndpoint) Execute(ctx context.Context, rtr *router, request
 
 	result, err := rtr.engines.GetAllFavorites(
 		request.PhoneID,
+		request.SortBy,
 	)
 	return favoritesViewResult{Result: result, Error: NewAPIError(err)}, err
 }

@@ -22,7 +22,7 @@ type (
 	FavoriteEngine interface {
 		AddFavorite(phoneID string, listingID int) error
 		DeleteFavorite(phoneID string, listingID int) error
-		GetAllFavorites(phoneID string) ([]shared.SearchListingResult, error)
+		GetAllFavorites(phoneID string, sortBy string) ([]shared.SearchListingResult, error)
 	}
 )
 
@@ -61,7 +61,7 @@ func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int) error {
 	return err
 }
 
-func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]shared.SearchListingResult, error) {
+func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string) ([]shared.SearchListingResult, error) {
 	IDs, err := f.GetAllFavoritesIDs(phoneID)
 	if err != nil {
 		return nil, err
@@ -81,6 +81,13 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string) ([]shared.SearchListing
 		listing.ListingImage = imageLink
 		listings = append(listings, listing)
 	}
+
+	sortEngine := listing.NewSortListingEngine(listings, sortBy, shared.CurrentLocation{}, f.sql)
+	listings, err = sortEngine.SortListings()
+	if err != nil {
+		return nil, err
+	}
+	xlog.Infof("done sorting the listings in favorite. listings count: %d", len(listings))
 
 	return f.listingEngine.MassageAndPopulateSearchListings(listings)
 }

@@ -196,38 +196,6 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	return rests, nil
 }
 
-/*func (l *listingEngine) GetListingInfo(listingID int) (shared.ListingInfo, error) {
-	var listingInfo shared.ListingInfo
-
-	//GetListingByID
-	listing, err := l.GetListingByID(listingID, 0)
-	if err != nil {
-		return shared.ListingInfo{}, err
-	}
-
-	if listing.ListingID == 0 {
-		return shared.ListingInfo{}, helper.ListingDoesNotExist{ListingID: listingID}
-	}
-
-	// add dietary req's
-	reqs, err := l.GetDietaryRestriction(listing.ListingID)
-	if err != nil {
-		return shared.ListingInfo{}, helper.DatabaseError{DBError: err.Error()}
-	}
-	listing.DietaryRestriction = reqs
-
-	searchListingResult, err := l.MassageAndPopulateSearchListings([]shared.Listing{listing})
-	listingInfo.Listing = searchListingResult[0]
-
-	//GetBusinessInfo
-	businessInfo, err := l.businessEngine.GetBusinessInfo(listing.BusinessID)
-	if err != nil {
-		return shared.ListingInfo{}, err
-	}
-	listingInfo.Business = businessInfo
-	return listingInfo, nil
-}*/
-
 func (l *listingEngine) GetListingInfo(listingID int, listingDateID int) (shared.Listing, error) {
 	//var listingInfo shared.Listing
 

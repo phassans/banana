@@ -36,12 +36,16 @@ func NewSortListingEngine(listings []shared.Listing, sortingType string,
 func (l *sortListingEngine) SortListings() ([]shared.Listing, error) {
 
 	// have to sort by distance, in order to calculate distanceFromLocation
-	l.sortListingsByDistance()
+	if l.currentLocation.Latitude != 0 && l.currentLocation.Longitude != 0 {
+		l.sortListingsByDistance()
+	}
 
 	if l.sortingType == shared.SortByPrice {
 		l.sortListingsByPrice()
 	} else if l.sortingType == shared.SortByTimeLeft {
 		l.sortListingsByTimeLeft()
+	} else if l.sortingType == shared.SortByDatAdded {
+
 	}
 
 	return l.listings, nil

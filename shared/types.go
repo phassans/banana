@@ -13,30 +13,30 @@ type (
 
 	// Listing all fields
 	Listing struct {
-		ListingID            int           `json:"listingId,omitempty"`
-		Title                string        `json:"title,omitempty"`
-		BusinessID           int           `json:"businessId,omitempty"`
-		BusinessName         string        `json:"businessName,omitempty"`
+		ListingID            int           `json:"listingId"`
+		Title                string        `json:"title"`
+		BusinessID           int           `json:"businessId"`
+		BusinessName         string        `json:"businessName"`
 		OldPrice             float64       `json:"oldPrice,omitempty"`
 		NewPrice             float64       `json:"newPrice,omitempty"`
 		Discount             float64       `json:"discount,omitempty"`
 		DiscountDescription  string        `json:"discountDescription,omitempty"`
 		DietaryRestrictions  []string      `json:"dietaryRestrictions,omitempty"`
 		Description          string        `json:"description,omitempty"`
-		StartDate            string        `json:"startDate,omitempty"`
-		StartTime            string        `json:"startTime,omitempty"`
-		EndTime              string        `json:"endTime,omitempty"`
+		StartDate            string        `json:"startDate"`
+		StartTime            string        `json:"startTime"`
+		EndTime              string        `json:"endTime"`
 		MultipleDays         bool          `json:"multipleDays"`
 		EndDate              string        `json:"endDate,omitempty"`
 		Recurring            bool          `json:"recurring"`
 		RecurringDays        []string      `json:"recurringDays,omitempty"`
 		RecurringEndDate     string        `json:"recurringEndDate,omitempty"`
-		Type                 string        `json:"listingType,omitempty"`
+		Type                 string        `json:"listingType"`
 		ListingImage         string        `json:"listingImage,omitempty"`
 		DistanceFromLocation float64       `json:"distanceFromLocation,omitempty"`
-		ListingDate          string        `json:"listingDate,omitempty"`
+		ListingDate          string        `json:"listingDate"`
 		ListingStatus        string        `json:"listingStatus,omitempty"`
-		TimeLeft             int           `json:"timeLeft,omitempty"`
+		TimeLeft             int           `json:"timeLeft"`
 		ImageLink            string        `json:"imageLink,omitempty"`
 		Business             *BusinessInfo `json:"businessInfo,omitempty"`
 		IsFavorite           bool          `json:"isFavorite"`
