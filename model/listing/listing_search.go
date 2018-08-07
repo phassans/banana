@@ -263,7 +263,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			return nil, err
 		}
 
-		_, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
+		_, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, true)
 		if err != nil {
 			return nil, err
 		}
@@ -350,7 +350,7 @@ func inTimeSpan(start, end, check time.Time) bool {
 	return check.After(start) && check.Before(end)
 }
 
-func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string) (string, string, error) {
+func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string, isSearch bool) (string, string, error) {
 	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
 		return "", "", nil
 	}
@@ -365,6 +365,10 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 	var buffer bytes.Buffer
 	if time.Now().Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
 		buffer.WriteString(listingDateFormatted.Weekday().String()[0:3] + ": ")
+	} else {
+		if !isSearch {
+			buffer.WriteString("Today: ")
+		}
 	}
 
 	// determine startTime in format
