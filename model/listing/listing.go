@@ -46,7 +46,7 @@ type (
 		GetListingByID(listingID int, businessID int, listingDateID int) (shared.Listing, error)
 
 		// GetListingInfo returns listing info
-		GetListingInfo(listingID int, listingDateID int) (shared.Listing, error)
+		GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error)
 
 		// GetListingImage returns image of the listing
 		GetListingImage(listingID int) (string, error)
@@ -196,7 +196,7 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	return rests, nil
 }
 
-func (l *listingEngine) GetListingInfo(listingID int, listingDateID int) (shared.Listing, error) {
+func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error) {
 	//var listingInfo shared.Listing
 
 	//GetListingByID
@@ -239,6 +239,10 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int) (shared
 
 	timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
 	listing.TimeLeft = timeLeft
+
+	if phoneID != "" {
+		listing.IsFavorite = l.isFavorite(phoneID, listingID)
+	}
 
 	return listing, nil
 }

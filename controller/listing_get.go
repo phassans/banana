@@ -38,7 +38,12 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 		}
 	}
 
-	listingInfo, err := rtr.engines.GetListingInfo(listingID, listingDateID)
+	var phoneID string
+	if values.Get("phoneId") != "" && values.Get("phoneId") != "undefined" {
+		phoneID = values.Get("phoneId")
+	}
+
+	listingInfo, err := rtr.engines.GetListingInfo(listingID, listingDateID, phoneID)
 	if err != nil {
 		return nil, err
 	}
