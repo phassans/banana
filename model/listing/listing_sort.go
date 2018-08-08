@@ -3,6 +3,7 @@ package listing
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"strings"
 
@@ -45,7 +46,7 @@ func (l *sortListingEngine) SortListings() ([]shared.Listing, error) {
 	} else if l.sortingType == shared.SortByTimeLeft {
 		l.sortListingsByTimeLeft()
 	} else if l.sortingType == shared.SortByDateAdded {
-
+		l.sortListingsByDateAdded()
 	}
 
 	return l.listings, nil
@@ -138,6 +139,26 @@ func (l *sortListingEngine) sortListingsByDistance() error {
 	return nil
 }
 
+func (l *sortListingEngine) sortListingsByDateAdded() error {
+	var ll []shared.SortView
+	for _, listing := range l.listings {
+		favoriteAddTimeFormatted, err := time.Parse(shared.DateTimeFormat, listing.Favorite.FavoriteAddDate)
+		if err != nil {
+			return err
+		}
+		s := shared.SortView{Listing: listing, FavoriteDateAdded: favoriteAddTimeFormatted}
+		ll = append(ll, s)
+	}
+
+	// put in listing struct
+	var listingsResult []shared.Listing
+	for _, view := range l.orderListings(ll, shared.SortByPrice) {
+		listingsResult = append(listingsResult, view.Listing)
+	}
+
+	return nil
+}
+
 func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType string) []shared.SortView {
 	switch orderType {
 	case shared.SortByTimeLeft:
@@ -153,6 +174,11 @@ func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType 
 	case shared.SortByDistance:
 		sort.Slice(listings, func(i, j int) bool {
 			return listings[i].Mile < listings[j].Mile
+		})
+		return listings
+	case shared.SortByDateAdded:
+		sort.Slice(listings, func(i, j int) bool {
+			return listings[i].FavoriteDateAdded.Before(listings[j].FavoriteDateAdded)
 		})
 		return listings
 	}

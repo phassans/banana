@@ -30,7 +30,7 @@ const (
 	// SortByTimeLeft ...
 	SortByTimeLeft = "timeLeft"
 
-	// SortByDateAdded
+	// SortByDateAdded ...
 	SortByDateAdded = "dateAdded"
 
 	// ListingTypeMeal ...
@@ -50,6 +50,9 @@ const (
 
 	// ListingAll ...
 	ListingAll = "all"
+
+	// Undefined string
+	Undefined = "undefined"
 )
 
 var (

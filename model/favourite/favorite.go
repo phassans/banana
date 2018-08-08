@@ -3,6 +3,8 @@ package favourite
 import (
 	"database/sql"
 
+	"time"
+
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/model/listing"
@@ -42,9 +44,9 @@ func (f *favoriteEngine) AddFavorite(phoneID string, listingID int) error {
 	}
 
 	var favoriteID int
-	err = f.sql.QueryRow("INSERT INTO favorites(phone_id,listing_id) "+
-		"VALUES($1,$2) returning favorite_id;",
-		phoneID, listingID).Scan(&favoriteID)
+	err = f.sql.QueryRow("INSERT INTO favorites(phone_id,listing_id,favorite_add_date) "+
+		"VALUES($1,$2,$3) returning favorite_id;",
+		phoneID, listingID, time.Now()).Scan(&favoriteID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
@@ -62,19 +64,20 @@ func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int) error {
 }
 
 func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string) ([]shared.SearchListingResult, error) {
-	IDs, err := f.GetAllFavoritesIDs(phoneID)
+	favorites, err := f.GetAllFavoritesIDs(phoneID)
 	if err != nil {
 		return nil, err
 	}
 
 	var listings []shared.Listing
-	for _, id := range IDs {
-		listing, err := f.listingEngine.GetListingByID(id, 0, 0)
+	for _, favorite := range favorites {
+		listing, err := f.listingEngine.GetListingByID(favorite.ListingID, 0, 0)
 		if err != nil {
 			return nil, err
 		}
+		listing.Favorite = &favorite
 
-		imageLink, err := f.listingEngine.GetListingImage(id)
+		imageLink, err := f.listingEngine.GetListingImage(favorite.ListingID)
 		if err != nil {
 			return nil, err
 		}
@@ -92,27 +95,27 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string) ([]share
 	return f.listingEngine.MassageAndPopulateSearchListings(listings)
 }
 
-func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]int, error) {
-	rows, err := f.sql.Query("SELECT listing_id FROM favorites where phone_id = $1;", phoneID)
+func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]shared.Favorite, error) {
+	rows, err := f.sql.Query("SELECT favorite_id,listing_id,favorite_add_date FROM favorites where phone_id = $1;", phoneID)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	defer rows.Close()
 
-	var listingIDs []int
+	var favorites []shared.Favorite
 	for rows.Next() {
-		var listingID int
-		err = rows.Scan(&listingID)
+		var favorite shared.Favorite
+		err = rows.Scan(&favorite.FavoriteID, &favorite.ListingID, &favorite.FavoriteAddDate)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}
-		listingIDs = append(listingIDs, listingID)
+		favorites = append(favorites, favorite)
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	return listingIDs, nil
+	return favorites, nil
 }

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -17,7 +18,7 @@ var listingInfo getEndPoint = listingEndpoint{}
 
 func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
 
-	if values.Get("listingId") == "" || values.Get("listingId") == "undefined" {
+	if values.Get("listingId") == "" || values.Get("listingId") == shared.Undefined {
 		return nil, helper.ValidationError{Message: fmt.Sprint("user get failed, missing userId")}
 	}
 
@@ -27,7 +28,7 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 	}
 
 	var listingDateID int
-	if values.Get("listingDateId") != "" && values.Get("listingDateId") != "undefined" {
+	if values.Get("listingDateId") != "" && values.Get("listingDateId") != shared.Undefined {
 		listingDateID, err = strconv.Atoi(values.Get("listingDateId"))
 		if err != nil {
 			return nil, err
@@ -35,7 +36,7 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 	}
 
 	var phoneID string
-	if values.Get("phoneId") != "" && values.Get("phoneId") != "undefined" {
+	if values.Get("phoneId") != "" && values.Get("phoneId") != shared.Undefined {
 		phoneID = values.Get("phoneId")
 	}
 

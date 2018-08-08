@@ -3,6 +3,8 @@ package shared
 import (
 	"os"
 
+	"time"
+
 	"github.com/rs/zerolog"
 )
 
@@ -49,6 +51,7 @@ type (
 		DateTimeRange        string        `json:"dateTimeRange,omitempty"`
 		ListingWeekDay       string        `json:"listingWeekDay,omitempty"`
 		ListingDateID        int           `json:"listingDateId,omitempty"`
+		Favorite             *Favorite     `json:"favorite,omitempty"`
 	}
 
 	// SearchListingResult result of search
@@ -162,10 +165,11 @@ type (
 
 	// SortView possible types
 	SortView struct {
-		Listing  Listing
-		Mile     float64
-		Price    float64
-		TimeLeft float64
+		Listing           Listing
+		Mile              float64
+		Price             float64
+		TimeLeft          float64
+		FavoriteDateAdded time.Time
 	}
 
 	// CurrentLocation ...
@@ -173,10 +177,18 @@ type (
 		Latitude  float64
 		Longitude float64
 	}
+
+	// Favorite ...
+	Favorite struct {
+		FavoriteID      int    `json:"favoriteId,omitempty"`
+		ListingID       int    `json:"listingId"`
+		FavoriteAddDate string `json:"favoriteAddDate,omitempty"`
+	}
 )
 
 var logger zerolog.Logger
 
+// InitLogger is to initialize a logger
 func InitLogger() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	logger = zerolog.New(os.Stdout).With().
@@ -185,6 +197,7 @@ func InitLogger() {
 		Logger()
 }
 
+// GetLogger is to get Logger
 func GetLogger() zerolog.Logger {
 	return logger
 }

@@ -46,7 +46,7 @@ func (r favoritesViewEndpoint) Validate(request interface{}) error {
 	}
 
 	if strings.TrimSpace(req.SortBy) != "" &&
-		strings.TrimSpace(req.SortBy) != "date added" &&
+		strings.TrimSpace(req.SortBy) != "dateAdded" &&
 		strings.ToLower(req.SortBy) != "distance" &&
 		strings.ToLower(req.SortBy) != "timeleft" &&
 		strings.ToLower(req.SortBy) != "price" {
