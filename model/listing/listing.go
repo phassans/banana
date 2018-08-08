@@ -230,7 +230,7 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	}
 	listing.Business = &businessInfo
 
-	weekday, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime)
+	weekday, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, false)
 	if err != nil {
 		return shared.Listing{}, err
 	}

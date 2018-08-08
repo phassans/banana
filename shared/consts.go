@@ -16,7 +16,7 @@ const (
 	TimeLayout24Hour = "15:04:05"
 
 	// TimeLayout12Hour ...
-	TimeLayout12Hour = "03:04pm"
+	TimeLayout12Hour = "3:04pm"
 
 	// CountryID default USA
 	CountryID = 1
