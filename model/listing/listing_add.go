@@ -7,7 +7,6 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 )
 
 func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
@@ -55,7 +54,7 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 			return 0, err
 		}
 	} else {
-		xlog.Info("no image link")
+		l.logger.Info().Msg("no image link")
 	}
 
 	if listing.Recurring {

@@ -10,7 +10,6 @@ import (
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 )
 
 const (
@@ -58,7 +57,7 @@ func (l *listingEngine) SearchListings(
 	if err != nil {
 		return nil, err
 	}
-	xlog.Infof("total number of listing found: %d", len(listings))
+	l.logger.Info().Msgf("total number of listing found: %d", len(listings))
 
 	// addDietaryRestrictionsToListings
 	listings, err = l.AddDietaryRestrictionsAndImageToListings(listings)
@@ -75,11 +74,11 @@ func (l *listingEngine) SearchListings(
 			return nil, err
 		}
 		currentLocation = shared.CurrentLocation{Latitude: resp.Lat, Longitude: resp.Lon}
-		xlog.Infof("resp from google lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
+		l.logger.Info().Msgf("resp from google lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
 	} else {
 		currentLocation = shared.CurrentLocation{Latitude: latitude, Longitude: longitude}
 	}
-	xlog.Infof("search location: %v", currentLocation)
+	l.logger.Info().Msgf("search location: %v", currentLocation)
 
 	// sort Listings based on sortBy
 	sortListingEngine := NewSortListingEngine(listings, sortBy, currentLocation, l.sql)
@@ -87,18 +86,18 @@ func (l *listingEngine) SearchListings(
 	if err != nil {
 		return nil, err
 	}
-	xlog.Infof("done sorting the listings. listings count: %d", len(listings))
+	l.logger.Info().Msgf("done sorting the listings. listings count: %d", len(listings))
 
 	// filterResults
 	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter)
 	if err != nil {
 		return nil, err
 	}
-	xlog.Infof("applied filters. number of listings: %d", len(listings))
+	l.logger.Info().Msgf("applied filters. number of listings: %d", len(listings))
 
 	if phoneID != "" {
 		listings = l.tagListingsAsFavorites(listings, phoneID)
-		xlog.Infof("tagging listings as favourites")
+		l.logger.Info().Msgf("tagging listings as favourites")
 	}
 
 	// populate searchResult
@@ -111,17 +110,17 @@ func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter flo
 	var err error
 	if priceFilter > 0.0 {
 		listings, err = l.FilterByPrice(listings, priceFilter)
-		xlog.Infof("applied priceFilter. count listings: %d", len(listings))
+		l.logger.Info().Msgf("applied priceFilter. count listings: %d", len(listings))
 	}
 
 	if len(dietaryFilters) > 0 {
 		listings, err = l.FilterByDietaryRestrictions(listings, dietaryFilters)
-		xlog.Infof("applied dietaryFilters. count listings: %d", len(listings))
+		l.logger.Info().Msgf("applied dietaryFilters. count listings: %d", len(listings))
 	}
 
 	if distanceFilter != "" {
 		listings, err = l.FilterByDistance(listings, distanceFilter)
-		xlog.Infof("applied distanceFilter. count listings: %d", len(listings))
+		l.logger.Info().Msgf("applied distanceFilter. count listings: %d", len(listings))
 	}
 
 	return listings, err
@@ -205,7 +204,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 		searchQuery = fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause)
 	}
 
-	xlog.Infof("search Query: %s", searchQuery)
+	l.logger.Info().Msgf("search Query: %s", searchQuery)
 
 	rows, err := l.sql.Query(searchQuery)
 	if err != nil {
@@ -267,7 +266,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 		if err != nil {
 			return nil, err
 		}
-		//xlog.Infof("dateTimeRange: %s", dateTimeRange)
+		//l.logger.Info().Msgf("dateTimeRange: %s", dateTimeRange)
 
 		sr := shared.SearchListingResult{
 			ListingID:            listing.ListingID,

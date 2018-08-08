@@ -8,7 +8,6 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 )
 
 type (
@@ -39,7 +38,6 @@ var listingsSearch postEndpoint = listingsSearchEndpoint{}
 
 func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingsSearchRequest)
-	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
 	if strings.TrimSpace(request.Location) == "" && (request.Latitude == 0 || request.Longitude == 0) {
 		if request.PhoneID == "955840FA-72B5-4C9E-8422-EFE49C2D5A0B" || request.PhoneID == "9008C4E0-1F25-41AF-94E1-36A4585D73A2" {

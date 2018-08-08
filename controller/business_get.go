@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/phassans/banana/helper"
-	"github.com/rs/xlog"
 )
 
 type (
@@ -17,7 +16,6 @@ type (
 var businessInfo getEndPoint = businessEndpoint{}
 
 func (r businessEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
-	xlog.Infof("GET %s query %+v", r.GetPath(), values)
 
 	if values.Get("businessId") == "" {
 		return nil, helper.ValidationError{Message: fmt.Sprint("business get failed, missing businessId")}

@@ -31,7 +31,7 @@ const (
 	SortByTimeLeft = "timeLeft"
 
 	// SortByDateAdded
-	SortByDatAdded = "dateAdded"
+	SortByDateAdded = "dateAdded"
 
 	// ListingTypeMeal ...
 	ListingTypeMeal = "meal"

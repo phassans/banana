@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/phassans/banana/helper"
-	"github.com/rs/xlog"
 )
 
 type (
@@ -25,7 +24,6 @@ var notificationDelete postEndpoint = deleteNotificationEndpoint{}
 
 func (r deleteNotificationEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(deleteNotificationRequest)
-	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
 	if err := r.Validate(requestI); err != nil {
 		return nil, err

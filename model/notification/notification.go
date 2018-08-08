@@ -7,7 +7,6 @@ import (
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 	"github.com/rs/zerolog"
 )
 
@@ -41,7 +40,7 @@ func (n *notificationEngine) AddNotification(notification shared.Notification) e
 		notification.Latitude = resp.Lat
 		notification.Longitude = resp.Lon
 	}
-	xlog.Infof("notification location - lat:%f, lon:%f", notification.Latitude, notification.Longitude)
+	n.logger.Info().Msgf("notification location - lat:%f, lon:%f", notification.Latitude, notification.Longitude)
 
 	var notificationID int
 

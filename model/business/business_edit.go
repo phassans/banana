@@ -6,7 +6,6 @@ import (
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 )
 
 func (b *businessEngine) BusinessEdit(
@@ -22,6 +21,7 @@ func (b *businessEngine) BusinessEdit(
 	businessID int,
 	addressID int,
 ) (int, error) {
+
 	// check business name unique
 	businessInfo, err := b.GetBusinessFromID(businessID)
 	if err != nil {
@@ -36,25 +36,25 @@ func (b *businessEngine) BusinessEdit(
 	if err := b.editBusinessInfo(businessName, phone, website, businessID); err != nil {
 		return 0, err
 	}
-	xlog.Infof("editBusinessInfo success with businessID: %d", businessID)
+	b.logger.Info().Msgf("editBusinessInfo success with businessID: %d", businessID)
 
 	// edit business address
 	if err := b.editBusinessAddress(street, city, postalCode, state, businessID, addressID); err != nil {
 		return 0, err
 	}
-	xlog.Infof("editBusinessAddress success with businessID: %d", businessID)
+	b.logger.Info().Msgf("editBusinessAddress success with businessID: %d", businessID)
 
 	// edit business cuisine
 	if err := b.editBusinessCuisine(cuisine, businessID); err != nil {
 		return 0, err
 	}
-	xlog.Infof("editBusinessCuisine success with businessID: %d", businessID)
+	b.logger.Info().Msgf("editBusinessCuisine success with businessID: %d", businessID)
 
 	// edit business hours
 	if err := b.editBusinessHours(hoursInfo, businessID); err != nil {
 		return 0, err
 	}
-	xlog.Infof("editBusinessHours success with businessID: %d", businessID)
+	b.logger.Info().Msgf("editBusinessHours success with businessID: %d", businessID)
 
 	return 0, nil
 }

@@ -2,15 +2,19 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
-	"github.com/rs/xlog"
+	"github.com/phassans/banana/shared"
 )
 
 func (rtr *router) newGetHandler(endpoint getEndPoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		defer rtr.cleanup(&err, w)
+
+		logger := shared.GetLogger()
+
 		vals := r.URL.Query()
 
 		var result interface{}
@@ -25,11 +29,16 @@ func (rtr *router) newGetHandler(endpoint getEndPoint) http.HandlerFunc {
 		if err == nil {
 			err = engineErr
 		}
+		logger = logger.With().
+			Str("endpoint", endpoint.GetPath()).
+			Str("query", fmt.Sprintf("%#v", r.URL.RawQuery)).
+			Int("errorStatus", GetErrorStatus(err)).Logger()
+
 		if err != nil {
-			xlog.Warnf("GET %s query %+v error %d: %s", endpoint.GetPath(), r.URL.RawQuery, GetErrorStatus(err), err.Error())
+			logger.Error().Msgf("GET failure")
 			return
 		}
-		xlog.Infof("GET %s query %+v success %d", endpoint.GetPath(), r.URL.RawQuery, GetErrorStatus(err))
+		logger.Info().Msgf("GET success")
 
 		err = json.NewEncoder(w).Encode(result)
 	}

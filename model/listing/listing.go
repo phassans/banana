@@ -46,7 +46,7 @@ type (
 		GetListingByID(listingID int, businessID int, listingDateID int) (shared.Listing, error)
 
 		// GetListingInfo returns listing info
-		GetListingInfo(listingID int, listingDateID int) (shared.Listing, error)
+		GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error)
 
 		// GetListingImage returns image of the listing
 		GetListingImage(listingID int) (string, error)
@@ -196,7 +196,7 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	return rests, nil
 }
 
-func (l *listingEngine) GetListingInfo(listingID int, listingDateID int) (shared.Listing, error) {
+func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error) {
 	//var listingInfo shared.Listing
 
 	//GetListingByID
@@ -239,6 +239,10 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int) (shared
 
 	timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
 	listing.TimeLeft = timeLeft
+
+	if phoneID != "" {
+		listing.IsFavorite = l.isFavorite(phoneID, listingID)
+	}
 
 	return listing, nil
 }
@@ -394,6 +398,7 @@ func (l *listingEngine) tagListingsAsFavorites(listings []shared.Listing, phoneI
 }
 
 func (l *listingEngine) isFavorite(phoneID string, listingID int) bool {
+	fmt.Printf("SELECT favorite_id FROM favorites where phone_id = %s AND listing_id = %d;", phoneID, listingID)
 	rows, err := l.sql.Query("SELECT favorite_id FROM favorites where phone_id = $1 AND listing_id = $2;", phoneID, listingID)
 	if err != nil {
 		return false

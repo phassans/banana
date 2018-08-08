@@ -7,7 +7,6 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 )
 
 type (
@@ -46,7 +45,6 @@ var listingAdd postEndpoint = addListingEndpoint{}
 
 func (r addListingEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingADDRequest)
-	xlog.Infof("POST %s query %+v", r.GetPath(), request)
 
 	if err := r.Validate(requestI); err != nil {
 		return nil, err

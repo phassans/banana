@@ -44,7 +44,7 @@ func (l *sortListingEngine) SortListings() ([]shared.Listing, error) {
 		l.sortListingsByPrice()
 	} else if l.sortingType == shared.SortByTimeLeft {
 		l.sortListingsByTimeLeft()
-	} else if l.sortingType == shared.SortByDatAdded {
+	} else if l.sortingType == shared.SortByDateAdded {
 
 	}
 
@@ -77,7 +77,7 @@ func (l *sortListingEngine) sortListingsByPrice() error {
 	var ll []shared.SortView
 	var happyHourDiscountListings []shared.Listing
 	for _, listing := range l.listings {
-		if listing.Type == shared.ListingTypeHappyHour && listing.NewPrice == 0 {
+		if listing.Type == shared.ListingTypeHappyHour {
 			happyHourDiscountListings = append(happyHourDiscountListings, listing)
 			continue
 		}

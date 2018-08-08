@@ -3,7 +3,6 @@ package listing
 import (
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 )
 
 func (l *listingEngine) ListingEdit(listing *shared.Listing) error {
@@ -20,31 +19,31 @@ func (l *listingEngine) ListingEdit(listing *shared.Listing) error {
 	if err := l.editListingInfo(listing); err != nil {
 		return err
 	}
-	xlog.Infof("editListingInfo success for listing: %d", listing.ListingID)
+	l.logger.Info().Msgf("editListingInfo success for listing: %d", listing.ListingID)
 
 	// edit listing image
 	if err := l.editListingImage(listing); err != nil {
 		return err
 	}
-	xlog.Infof("editListingImage success for listing: %d", listing.ListingID)
+	l.logger.Info().Msgf("editListingImage success for listing: %d", listing.ListingID)
 
 	// edit recurring days
 	if err := l.editRecurringDays(listing); err != nil {
 		return err
 	}
-	xlog.Infof("editRecurringDays success for listing: %d", listing.ListingID)
+	l.logger.Info().Msgf("editRecurringDays success for listing: %d", listing.ListingID)
 
 	// edit dietary restriction
 	if err := l.editDietaryRestriction(listing); err != nil {
 		return err
 	}
-	xlog.Infof("editDietaryRestriction success for listing: %d", listing.ListingID)
+	l.logger.Info().Msgf("editDietaryRestriction success for listing: %d", listing.ListingID)
 
 	// edit listing dates
 	if err := l.editListingDates(listing); err != nil {
 		return err
 	}
-	xlog.Infof("editListingDates success for listing: %d", listing.ListingID)
+	l.logger.Info().Msgf("editListingDates success for listing: %d", listing.ListingID)
 
 	return nil
 }

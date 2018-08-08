@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/phassans/banana/helper"
-	"github.com/rs/xlog"
 )
 
 type (
@@ -17,7 +16,6 @@ type (
 var listingInfo getEndPoint = listingEndpoint{}
 
 func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values) (interface{}, error) {
-	xlog.Infof("GET %s query %+v", r.GetPath(), values)
 
 	if values.Get("listingId") == "" || values.Get("listingId") == "undefined" {
 		return nil, helper.ValidationError{Message: fmt.Sprint("user get failed, missing userId")}
@@ -28,8 +26,6 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 		return nil, err
 	}
 
-	xlog.Info(values)
-
 	var listingDateID int
 	if values.Get("listingDateId") != "" && values.Get("listingDateId") != "undefined" {
 		listingDateID, err = strconv.Atoi(values.Get("listingDateId"))
@@ -38,7 +34,12 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 		}
 	}
 
-	listingInfo, err := rtr.engines.GetListingInfo(listingID, listingDateID)
+	var phoneID string
+	if values.Get("phoneId") != "" && values.Get("phoneId") != "undefined" {
+		phoneID = values.Get("phoneId")
+	}
+
+	listingInfo, err := rtr.engines.GetListingInfo(listingID, listingDateID, phoneID)
 	if err != nil {
 		return nil, err
 	}

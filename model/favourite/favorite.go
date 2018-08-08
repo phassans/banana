@@ -7,7 +7,6 @@ import (
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/model/listing"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 	"github.com/rs/zerolog"
 )
 
@@ -88,7 +87,7 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string) ([]share
 	if err != nil {
 		return nil, err
 	}
-	xlog.Infof("done sorting the listings in favorite. listings count: %d", len(listings))
+	f.logger.Info().Msgf("done sorting the listings in favorite. listings count: %d", len(listings))
 
 	return f.listingEngine.MassageAndPopulateSearchListings(listings)
 }

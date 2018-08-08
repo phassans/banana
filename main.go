@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		logger.Fatal().Msgf("could not connect to db. errpr %s", err)
 	}
+
 	logger.Info().Msg("successfully connected to db")
 
 	// createEngines

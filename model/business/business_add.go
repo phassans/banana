@@ -6,7 +6,6 @@ import (
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
-	"github.com/rs/xlog"
 )
 
 const (
@@ -55,33 +54,33 @@ func (b *businessEngine) AddBusiness(
 	if err != nil {
 		return 0, 0, err
 	}
-	xlog.Infof("addBusinessInfo success with businessID: %d", lastInsertBusinessID)
+	b.logger.Info().Msgf("addBusinessInfo success with businessID: %d", lastInsertBusinessID)
 
 	// add business address
 	addressID, err := b.addBusinessAddress(street, city, postalCode, state, lastInsertBusinessID)
 	if err != nil {
 		return 0, 0, err
 	}
-	xlog.Infof("addBusinessAddress success with businessID: %d", lastInsertBusinessID)
+	b.logger.Info().Msgf("addBusinessAddress success with businessID: %d", lastInsertBusinessID)
 
 	// add business hour
 	if err := b.addBusinessHours(hoursInfo, lastInsertBusinessID); err != nil {
 		return 0, 0, err
 	}
-	xlog.Infof("addBusinessHours success with businessID: %d", lastInsertBusinessID)
+	b.logger.Info().Msgf("addBusinessHours success with businessID: %d", lastInsertBusinessID)
 
 	// add cuisine
 	if err := b.addBusinessCuisine(cuisine, lastInsertBusinessID); err != nil {
 		return 0, 0, err
 	}
-	xlog.Infof("addBusinessCuisine success with businessID: %d", lastInsertBusinessID)
+	b.logger.Info().Msgf("addBusinessCuisine success with businessID: %d", lastInsertBusinessID)
 
 	// associate user to business
 	if userID != 0 {
 		if err := b.associateUserToBusiness(lastInsertBusinessID, userID); err != nil {
 			return 0, 0, err
 		}
-		xlog.Infof("associate user to business success with businessID: %d", lastInsertBusinessID)
+		b.logger.Info().Msgf("associate user to business success with businessID: %d", lastInsertBusinessID)
 	}
 
 	b.logger.Info().Msgf("business added successfully with id: %d", lastInsertBusinessID)

@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/rs/xlog"
+	"github.com/phassans/banana/shared"
 )
 
 const apiKey = "AIzaSyB3U99ctNSn-x2rvk6QhDhJuqnZR9ko7z4"
@@ -73,7 +73,9 @@ func GetLatLong(address string) (LatLong, error) {
 	q.Add("key", apiKey)
 	req.URL.RawQuery = q.Encode()
 
-	xlog.Infof("GetLatLong url: %s", req.URL.RawQuery)
+	logger := shared.GetLogger()
+
+	logger.Info().Msgf("GetLatLong url: %s", req.URL.RawQuery)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
