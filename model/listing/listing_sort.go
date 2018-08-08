@@ -76,9 +76,16 @@ func (l *sortListingEngine) sortListingsByTimeLeft() error {
 func (l *sortListingEngine) sortListingsByPrice() error {
 	var ll []shared.SortView
 	var happyHourDiscountListings []shared.Listing
+	var mealDiscountListings []shared.Listing
+
 	for _, listing := range l.listings {
 		if listing.Type == shared.ListingTypeHappyHour {
 			happyHourDiscountListings = append(happyHourDiscountListings, listing)
+			continue
+		}
+
+		if listing.Type == shared.ListingTypeMeal && listing.NewPrice == 0 {
+			mealDiscountListings = append(mealDiscountListings, listing)
 			continue
 		}
 
@@ -91,6 +98,9 @@ func (l *sortListingEngine) sortListingsByPrice() error {
 	for _, view := range l.orderListings(ll, shared.SortByPrice) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
+
+	// append two lists
+	listingsResult = append(listingsResult, mealDiscountListings...)
 
 	// append two lists
 	listingsResult = append(listingsResult, happyHourDiscountListings...)
