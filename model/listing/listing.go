@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	"strings"
+
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/shared"
@@ -168,7 +170,12 @@ func (l *listingEngine) GetListingImage(listingID int) (string, error) {
 		imageLink = "https://res.cloudinary.com/itshungryhour/image/upload/v1533011858/listing/NoPicAvailable.png"
 	}
 
-	return imageLink, nil
+	return optimizeImage(imageLink), nil
+}
+
+func optimizeImage(img string) string {
+	imgParts := strings.Split(img, "/upload")
+	return fmt.Sprintf("%s/upload/w_400,c_fill%s", imgParts[0], imgParts[1])
 }
 
 func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, error) {
