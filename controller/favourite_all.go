@@ -11,8 +11,10 @@ import (
 
 type (
 	favoritesViewRequest struct {
-		PhoneID string `json:"phoneId"`
-		SortBy  string `json:"sortBy,omitempty"`
+		PhoneID   string  `json:"phoneId"`
+		SortBy    string  `json:"sortBy,omitempty"`
+		Latitude  float64 `json:"latitude,omitempty"`
+		Longitude float64 `json:"longitude,omitempty"`
 	}
 
 	favoritesViewResult struct {
@@ -35,6 +37,8 @@ func (r favoritesViewEndpoint) Execute(ctx context.Context, rtr *router, request
 	result, err := rtr.engines.GetAllFavorites(
 		request.PhoneID,
 		request.SortBy,
+		request.Latitude,
+		request.Longitude,
 	)
 	return favoritesViewResult{Result: result, Error: NewAPIError(err)}, err
 }
