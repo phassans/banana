@@ -208,8 +208,6 @@ func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 			buffer.WriteString(cTime)
 			bMap[hour.Day] = buffer.String()
 		}
-		index++
-
 	}
 
 	for _, val := range days {
