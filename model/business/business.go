@@ -166,8 +166,20 @@ func (b *businessEngine) GetBusinessInfo(businessID int) (shared.BusinessInfo, e
 
 }
 
+var days = []string{
+	"monday",
+	"tuesday",
+	"wednesday",
+	"thursday",
+	"friday",
+	"saturday",
+	"sunday",
+}
+
 func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 	var bHoursFormatted []string
+	bMap := make(map[string]string)
+
 	for _, hour := range bHours {
 		var buffer bytes.Buffer
 		// determine startTime in format
@@ -182,14 +194,28 @@ func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 			return nil, err
 		}
 
-		buffer.WriteString(strings.Title(hour.Day))
-		buffer.WriteString(": ")
-		buffer.WriteString(oTime)
-		buffer.WriteString("-")
-		buffer.WriteString(cTime)
+		if val, ok := bMap[hour.Day]; ok {
+			buffer.WriteString(", ")
+			buffer.WriteString(oTime)
+			buffer.WriteString("-")
+			buffer.WriteString(cTime)
+			bMap[hour.Day] = val + buffer.String()
+		} else {
+			buffer.WriteString(strings.Title(hour.Day[0:3]))
+			buffer.WriteString(": ")
+			buffer.WriteString(oTime)
+			buffer.WriteString("-")
+			buffer.WriteString(cTime)
+			bMap[hour.Day] = buffer.String()
+		}
+		index++
 
-		bHoursFormatted = append(bHoursFormatted, buffer.String())
 	}
+
+	for _, val := range days {
+		bHoursFormatted = append(bHoursFormatted, bMap[val])
+	}
+
 	return bHoursFormatted, nil
 }
 
