@@ -211,7 +211,9 @@ func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 	}
 
 	for _, val := range days {
-		bHoursFormatted = append(bHoursFormatted, bMap[val])
+		if _, ok := bMap[val]; ok {
+			bHoursFormatted = append(bHoursFormatted, bMap[val])
+		}
 	}
 
 	return bHoursFormatted, nil
