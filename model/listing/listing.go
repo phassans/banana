@@ -139,8 +139,11 @@ func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listi
 }
 
 func optimizeImage(img string) string {
-	imgParts := strings.Split(img, "/upload")
-	return fmt.Sprintf("%s/upload/w_400,c_fill%s", imgParts[0], imgParts[1])
+	if img != "" {
+		imgParts := strings.Split(img, "/upload")
+		return fmt.Sprintf("%s/upload/w_400,c_fill%s", imgParts[0], imgParts[1])
+	}
+	return img
 }
 
 func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, error) {
