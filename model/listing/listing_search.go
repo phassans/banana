@@ -13,18 +13,20 @@ import (
 )
 
 const (
-	searchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
+	SearchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
 		"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
 		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
 		"listing.multiple_days as multiple_days," +
 		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
 		"listing.business_id as business_id, listing.listing_id as listing_id, " +
 		"business.name as bname, " +
-		"listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date"
+		"listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date, " +
+		"listing_image.path as path "
 
 	fromClause = "FROM listing " +
 		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id " +
-		"INNER JOIN business ON listing.business_id = business.business_id"
+		"INNER JOIN business ON listing.business_id = business.business_id " +
+		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
 )
 
 var (
@@ -60,7 +62,7 @@ func (l *listingEngine) SearchListings(
 	l.logger.Info().Msgf("total number of listing found: %d", len(listings))
 
 	// addDietaryRestrictionsToListings
-	listings, err = l.AddDietaryRestrictionsAndImageToListings(listings)
+	listings, err = l.AddDietaryRestrictionsToListings(listings)
 	if err != nil {
 		return nil, err
 	}
@@ -199,9 +201,9 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 			"to_tsvector(listing.title) || "+
 			"to_tsvector(listing.description) as document "+
 			"%s %s ) p_search "+
-			"WHERE p_search.document @@ to_tsquery('%s');", searchSelect, fromClause, whereClause, searchKeywords)
+			"WHERE p_search.document @@ to_tsquery('%s');", SearchSelect, fromClause, whereClause, searchKeywords)
 	} else {
-		searchQuery = fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause)
+		searchQuery = fmt.Sprintf("%s %s %s;", SearchSelect, fromClause, whereClause)
 	}
 
 	l.logger.Info().Msgf("search Query: %s", searchQuery)
@@ -238,6 +240,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 			&listing.BusinessName,
 			&listing.ListingDateID,
 			&listing.ListingDate,
+			&listing.ListingImage,
 		)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}

@@ -50,9 +50,6 @@ type (
 		// GetListingInfo returns listing info
 		GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error)
 
-		// GetListingImage returns image of the listing
-		GetListingImage(listingID int) (string, error)
-
 		// MassageAndPopulateSearchListings to massage and populate search result
 		MassageAndPopulateSearchListings([]shared.Listing) ([]shared.SearchListingResult, error)
 
@@ -123,7 +120,7 @@ func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
 	return days, nil
 }
 
-func (l *listingEngine) AddDietaryRestrictionsAndImageToListings(listings []shared.Listing) ([]shared.Listing, error) {
+func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listing) ([]shared.Listing, error) {
 	// get dietary restriction
 	var listingsResult []shared.Listing
 	for _, listing := range listings {
@@ -133,44 +130,9 @@ func (l *listingEngine) AddDietaryRestrictionsAndImageToListings(listings []shar
 			return nil, err
 		}
 		listing.DietaryRestrictions = rests
-
-		// add image Link
-		imageLink, err := l.GetListingImage(listing.ListingID)
-		if err != nil {
-			return nil, err
-		}
-		listing.ListingImage = imageLink
-
 		listingsResult = append(listingsResult, listing)
 	}
 	return listingsResult, nil
-}
-
-func (l *listingEngine) GetListingImage(listingID int) (string, error) {
-	rows, err := l.sql.Query("SELECT path FROM listing_image where listing_id = $1;", listingID)
-	if err != nil {
-		return "", err
-	}
-
-	defer rows.Close()
-
-	var imageLink string
-	if rows.Next() {
-		err = rows.Scan(&imageLink)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	if err = rows.Err(); err != nil {
-		return "", err
-	}
-
-	if imageLink == "" {
-		imageLink = "https://res.cloudinary.com/itshungryhour/image/upload/v1533011858/listing/NoPicAvailable.png"
-	}
-
-	return optimizeImage(imageLink), nil
 }
 
 func optimizeImage(img string) string {
@@ -216,13 +178,6 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 		return shared.Listing{}, helper.ListingDoesNotExist{ListingID: listingID}
 	}
 
-	// add listing image
-	imageLink, err := l.GetListingImage(listingID)
-	if err != nil {
-		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-	}
-	listing.ImageLink = imageLink
-
 	// add dietary req's
 	reqs, err := l.GetDietaryRestriction(listing.ListingID)
 	if err != nil {
@@ -264,7 +219,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 	if listingDateID != 0 {
 		whereClause.WriteString(fmt.Sprintf(" AND listing_date.listing_date_id = %d", listingDateID))
 	}
-	query := fmt.Sprintf("%s %s %s;", searchSelect, fromClause, whereClause.String())
+	query := fmt.Sprintf("%s %s %s;", SearchSelect, fromClause, whereClause.String())
 
 	fmt.Println("GetListingByID ", query)
 
@@ -300,6 +255,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 			&listing.BusinessName,
 			&listing.ListingDateID,
 			&listing.ListingDate,
+			&listing.ListingImage,
 		)
 		if err != nil {
 			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}

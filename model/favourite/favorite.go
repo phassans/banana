@@ -1,7 +1,9 @@
 package favourite
 
 import (
+	"bytes"
 	"database/sql"
+	"fmt"
 
 	"time"
 
@@ -64,25 +66,9 @@ func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int) error {
 }
 
 func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64) ([]shared.SearchListingResult, error) {
-	favorites, err := f.GetAllFavoritesIDs(phoneID)
+	listings, err := f.GetListingsPhoneID(phoneID)
 	if err != nil {
 		return nil, err
-	}
-
-	var listings []shared.Listing
-	for _, favorite := range favorites {
-		listing, err := f.listingEngine.GetListingByID(favorite.ListingID, 0, 0)
-		if err != nil {
-			return nil, err
-		}
-		listing.Favorite = &favorite
-
-		imageLink, err := f.listingEngine.GetListingImage(favorite.ListingID)
-		if err != nil {
-			return nil, err
-		}
-		listing.ListingImage = imageLink
-		listings = append(listings, listing)
 	}
 
 	sortEngine := listing.NewSortListingEngine(listings, sortBy, shared.CurrentLocation{Latitude: latitude, Longitude: longitude}, f.sql)
@@ -118,4 +104,71 @@ func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]shared.Favorite, 
 	}
 
 	return favorites, nil
+}
+
+const (
+	fromClause = "FROM favorites " +
+		"INNER JOIN listing ON listing.listing_id = favorites.listing_id " +
+		"INNER JOIN listing_date ON listing.listing_id = favorites.listing_id " +
+		"INNER JOIN listing_image ON listing_image.listing_id = favorites.listing_id " +
+		"INNER JOIN business ON listing.business_id = business.business_id"
+)
+
+func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, error) {
+
+	var whereClause bytes.Buffer
+	whereClause.WriteString(fmt.Sprintf(" WHERE favorites.phone_id = '%s'", phoneID))
+
+	query := fmt.Sprintf("%s %s %s", listing.SearchSelect, fromClause, whereClause.String())
+	rows, err := f.sql.Query(query)
+
+	fmt.Println("GetListingsPhoneID ", query)
+
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var listings []shared.Listing
+	for rows.Next() {
+		var sqlEndDate sql.NullString
+		var sqlRecurringEndDate sql.NullString
+		var listing shared.Listing
+		err = rows.Scan(
+			&listing.Title,
+			&listing.OldPrice,
+			&listing.NewPrice,
+			&listing.Discount,
+			&listing.DiscountDescription,
+			&listing.Description,
+			&listing.StartDate,
+			&sqlEndDate,
+			&listing.StartTime,
+			&listing.EndTime,
+			&listing.MultipleDays,
+			&listing.Recurring,
+			&sqlRecurringEndDate,
+			&listing.Type,
+			&listing.BusinessID,
+			&listing.ListingID,
+			&listing.BusinessName,
+			&listing.ListingDateID,
+			&listing.ListingDate,
+			&listing.ListingImage,
+		)
+		listing.StartDate = sqlEndDate.String
+		listing.RecurringEndDate = sqlRecurringEndDate.String
+
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		listings = append(listings, listing)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return listings, nil
 }
