@@ -258,7 +258,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 			&listing.BusinessName,
 			&listing.ListingDateID,
 			&listing.ListingDate,
-			&listing.ListingImage,
+			&listing.ImageLink,
 		)
 		if err != nil {
 			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
