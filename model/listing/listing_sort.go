@@ -178,7 +178,7 @@ func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType 
 		return listings
 	case shared.SortByDateAdded:
 		sort.Slice(listings, func(i, j int) bool {
-			return listings[i].FavoriteDateAdded.Before(listings[j].FavoriteDateAdded)
+			return listings[j].FavoriteDateAdded.Before(listings[i].FavoriteDateAdded)
 		})
 		return listings
 	}
