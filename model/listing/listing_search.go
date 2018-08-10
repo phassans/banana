@@ -89,7 +89,6 @@ func (l *listingEngine) SearchListings(
 	}
 	l.logger.Info().Msgf("applied filters. number of listings: %d", len(listings))
 
-	var favListings []shared.Listing
 	if phoneID != "" {
 
 		listingIDFromFavorites, err := l.getAllFavoritesFromPhoneID(phoneID)
@@ -97,23 +96,19 @@ func (l *listingEngine) SearchListings(
 			return nil, err
 		}
 
-		for _, listing := range listings {
-			for listingIDFromFavorite := range listingIDFromFavorites {
+		for i := 0; i < len(listings); i++ {
+			listing := &listings[i]
+			for _, listingIDFromFavorite := range listingIDFromFavorites {
 				if listing.ListingID == listingIDFromFavorite {
 					listing.IsFavorite = true
 					break
 				}
 			}
-			favListings = append(favListings, listing)
 		}
 
 		l.logger.Info().Msgf("tagging listings as favourites")
 	}
 
-	// populate searchResult
-	if len(favListings) > 0 {
-		return l.MassageAndPopulateSearchListings(favListings)
-	}
 	return l.MassageAndPopulateSearchListings(listings)
 }
 

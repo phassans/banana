@@ -125,17 +125,15 @@ func (l *listingEngine) GetRecurringListing(listingID int) ([]string, error) {
 
 func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listing) ([]shared.Listing, error) {
 	// get dietary restriction
-	var listingsResult []shared.Listing
-	for _, listing := range listings {
+	for i := 0; i < len(listings); i++ {
 		// add dietary restriction
-		rests, err := l.GetListingsDietaryRestriction(listing.ListingID)
+		rests, err := l.GetListingsDietaryRestriction(listings[i].ListingID)
 		if err != nil {
 			return nil, err
 		}
-		listing.DietaryRestrictions = rests
-		listingsResult = append(listingsResult, listing)
+		listings[i].DietaryRestrictions = rests
 	}
-	return listingsResult, nil
+	return listings, nil
 }
 
 func optimizeImage(img string) string {
