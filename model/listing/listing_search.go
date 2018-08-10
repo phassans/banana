@@ -101,9 +101,10 @@ func (l *listingEngine) SearchListings(
 			for listingIDFromFavorite := range listingIDFromFavorites {
 				if listing.ListingID == listingIDFromFavorite {
 					listing.IsFavorite = true
-					favListings = append(favListings, listing)
+					break
 				}
 			}
+			favListings = append(favListings, listing)
 		}
 
 		l.logger.Info().Msgf("tagging listings as favourites")
