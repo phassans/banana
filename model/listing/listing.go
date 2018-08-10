@@ -348,20 +348,7 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 	return l.filterListingBasedOnStatus(listings, status), nil
 }
 
-func (l *listingEngine) tagListingsAsFavorites(listings []shared.Listing, phoneID string) []shared.Listing {
-	// get dietary restriction
-	var result []shared.Listing
-	for _, listing := range listings {
-		if l.isFavorite(phoneID, listing.ListingID) {
-			listing.IsFavorite = true
-		}
-		result = append(result, listing)
-	}
-	return result
-}
-
 func (l *listingEngine) isFavorite(phoneID string, listingID int) bool {
-	fmt.Printf("SELECT favorite_id FROM favorites where phone_id = %s AND listing_id = %d;", phoneID, listingID)
 	rows, err := l.sql.Query("SELECT favorite_id FROM favorites where phone_id = $1 AND listing_id = $2;", phoneID, listingID)
 	if err != nil {
 		return false
@@ -386,4 +373,29 @@ func (l *listingEngine) isFavorite(phoneID string, listingID int) bool {
 	}
 
 	return false
+}
+
+func (l *listingEngine) getAllFavoritesFromPhoneID(phoneID string) ([]int, error) {
+	rows, err := l.sql.Query("SELECT listing_id FROM favorites where phone_id = $1;", phoneID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var listingIDs []int
+	for rows.Next() {
+		var id int
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		listingIDs = append(listingIDs, id)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return listingIDs, nil
 }
