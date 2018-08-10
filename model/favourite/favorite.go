@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-
 	"time"
 
 	"github.com/phassans/banana/helper"
@@ -65,7 +64,7 @@ func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int) error {
 	return err
 }
 
-func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64) ([]shared.SearchListingResult, error) {
+/*func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64) ([]shared.SearchListingResult, error) {
 	listings, err := f.GetListingsPhoneID(phoneID)
 	if err != nil {
 		return nil, err
@@ -79,6 +78,38 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 	f.logger.Info().Msgf("done sorting the listings in favorite. listings count: %d", len(listings))
 
 	return f.listingEngine.MassageAndPopulateSearchListings(listings)
+}*/
+
+func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64) ([]shared.SearchListingResult, error) {
+	favorites, err := f.GetAllFavoritesIDs(phoneID)
+	if err != nil {
+		return nil, err
+	}
+
+	var listings []shared.Listing
+	for _, favorite := range favorites {
+		listing, err := f.listingEngine.GetListingByID(favorite.ListingID, 0, 0)
+		if err != nil {
+			return nil, err
+		}
+		listing.Favorite = &favorite
+		imageLink, err := f.listingEngine.GetListingImage(favorite.ListingID)
+		if err != nil {
+			return nil, err
+		}
+		listing.ListingImage = imageLink
+		listings = append(listings, listing)
+	}
+
+	sortEngine := listing.NewSortListingEngine(listings, sortBy, shared.CurrentLocation{Latitude: latitude, Longitude: longitude}, f.sql)
+	listings, err = sortEngine.SortListings()
+	if err != nil {
+		return nil, err
+	}
+	f.logger.Info().Msgf("done sorting the listings in favorite. listings count: %d", len(listings))
+
+	return f.listingEngine.MassageAndPopulateSearchListings(listings)
+
 }
 
 func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]shared.Favorite, error) {

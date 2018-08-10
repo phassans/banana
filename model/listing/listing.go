@@ -58,6 +58,9 @@ type (
 
 		// ListingEdit is to edit the listing
 		ListingEdit(listing *shared.Listing) error
+
+		// GetListingImage returns image of the listing
+		GetListingImage(listingID int) (string, error)
 	}
 )
 
@@ -398,4 +401,26 @@ func (l *listingEngine) getAllFavoritesFromPhoneID(phoneID string) ([]int, error
 	}
 
 	return listingIDs, nil
+}
+
+func (l *listingEngine) GetListingImage(listingID int) (string, error) {
+	rows, err := l.sql.Query("SELECT path FROM listing_image where listing_id = $1;", listingID)
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+	var imageLink string
+	if rows.Next() {
+		err = rows.Scan(&imageLink)
+		if err != nil {
+			return "", err
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return "", err
+	}
+	if imageLink == "" {
+		imageLink = "https://res.cloudinary.com/itshungryhour/image/upload/v1533011858/listing/NoPicAvailable.png"
+	}
+	return optimizeImage(imageLink), nil
 }
