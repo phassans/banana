@@ -93,11 +93,6 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 			return nil, err
 		}
 		listing.Favorite = &favorite
-		imageLink, err := f.listingEngine.GetListingImage(favorite.ListingID)
-		if err != nil {
-			return nil, err
-		}
-		listing.ListingImage = imageLink
 		listings = append(listings, listing)
 	}
 
