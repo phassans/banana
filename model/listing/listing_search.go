@@ -29,14 +29,6 @@ const (
 		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
 )
 
-var (
-	Schema = map[string][]string{
-		"listing": {"listing_id", "business_id", "title", "old_price", "new_price", "discount", "discount_description", "description",
-			"start_date", "start_time", "end_time", "multiple_days", "end_date", "recurring", "recurring_end_date", "listing_type", "listing_create_date"},
-		"listing_date": {"listing_date_id", "listing_id", "listing_date", "start_time", "end_time"},
-	}
-)
-
 func (l *listingEngine) SearchListings(
 	listingTypes []string,
 	future bool,
@@ -213,7 +205,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 	var searchQuery string
 	if keywords != "" {
 		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, discount_description, description, start_date, end_date, "+
-			"start_time, end_time, multiple_days, recurring, recurring_date, listing_type, business_id, listing_id, bname, listing_date_id, listing_date "+
+			"start_time, end_time, multiple_days, recurring, recurring_date, listing_type, business_id, listing_id, bname, listing_date_id, listing_date, path "+
 			"FROM (%s, "+
 			"to_tsvector(business.name) || "+
 			"to_tsvector(listing.title) || "+
