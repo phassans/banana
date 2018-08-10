@@ -107,6 +107,17 @@ func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]shared.Favorite, 
 }
 
 const (
+	searchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
+		"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
+		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
+		"listing.multiple_days as multiple_days," +
+		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
+		"listing.business_id as business_id, listing.listing_id as listing_id, " +
+		"business.name as bname, " +
+		"listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date, " +
+		"listing_image.path as path, " +
+		"favorites.favorite_id as favorite_id, favorites.favorite_add_date as favorite_add_date "
+
 	fromClause = "FROM favorites " +
 		"INNER JOIN listing ON listing.listing_id = favorites.listing_id " +
 		"INNER JOIN listing_date ON listing.listing_id = favorites.listing_id " +
@@ -119,7 +130,7 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 	var whereClause bytes.Buffer
 	whereClause.WriteString(fmt.Sprintf(" WHERE favorites.phone_id = '%s'", phoneID))
 
-	query := fmt.Sprintf("%s %s %s", listing.SearchSelect, fromClause, whereClause.String())
+	query := fmt.Sprintf("%s %s %s", searchSelect, fromClause, whereClause.String())
 	rows, err := f.sql.Query(query)
 
 	fmt.Println("GetListingsPhoneID ", query)
@@ -134,7 +145,9 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 	for rows.Next() {
 		var sqlEndDate sql.NullString
 		var sqlRecurringEndDate sql.NullString
+		var sqlFavoriteAddDate sql.NullString
 		var listing shared.Listing
+		var fid int
 		err = rows.Scan(
 			&listing.Title,
 			&listing.OldPrice,
@@ -156,7 +169,11 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 			&listing.ListingDateID,
 			&listing.ListingDate,
 			&listing.ListingImage,
+			&fid,
+			&sqlFavoriteAddDate,
 		)
+
+		listing.Favorite = &shared.Favorite{fid, listing.ListingID, sqlFavoriteAddDate.String}
 		listing.StartDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
 
