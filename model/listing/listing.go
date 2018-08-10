@@ -264,6 +264,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
 	}
+	listing.ImageLink = optimizeImage(listing.ImageLink)
 	listing.StartDate = sqlEndDate.String
 	listing.RecurringEndDate = sqlRecurringEndDate.String
 

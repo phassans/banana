@@ -256,6 +256,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}
+		listing.ListingImage = optimizeImage(listing.ListingImage)
 		listing.EndDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
 		listings = append(listings, listing)
