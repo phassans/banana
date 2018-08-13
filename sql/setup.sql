@@ -172,6 +172,15 @@ CREATE TABLE IF NOT EXISTS notifications_dietary_restrictions
   FOREIGN KEY (notification_id) REFERENCES notifications (notification_id)
 );
 
+CREATE TABLE IF NOT EXISTS register_phone
+(
+  registration_id SERIAL UNIQUE,
+  registration_token TEXT UNIQUE NOT NULL,
+  phone_id           TEXT UNIQUE NOT NULL,
+  phone_model        TEXT,
+  PRIMARY KEY (registration_id)
+);
+
 
 INSERT INTO business_country (name)
 VALUES ('USA');

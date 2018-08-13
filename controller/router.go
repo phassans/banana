@@ -70,6 +70,8 @@ var (
 		favouriteAdd,
 		favouriteDelete,
 		favouriteAll,
+
+		registerPhone,
 	}
 )
 
