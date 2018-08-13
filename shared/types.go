@@ -2,7 +2,6 @@ package shared
 
 import (
 	"os"
-
 	"time"
 
 	"github.com/rs/zerolog"

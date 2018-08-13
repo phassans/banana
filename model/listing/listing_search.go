@@ -76,7 +76,7 @@ func (l *listingEngine) SearchListings(
 
 	// sort Listings based on sortBy
 	sortListingEngine := NewSortListingEngine(listings, sortBy, currentLocation, l.sql)
-	listings, err = sortListingEngine.SortListings()
+	listings, err = sortListingEngine.SortListings(future)
 	if err != nil {
 		return nil, err
 	}
