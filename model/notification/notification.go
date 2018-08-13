@@ -22,12 +22,28 @@ type (
 		AddNotification(notification shared.Notification) error
 		DeleteNotification(notificationID int) error
 		GetAllNotifications(phoneID string) ([]shared.Notification, error)
+		RegisterPhone(registrationToken string, phoneID string, phoneModel string) error
 	}
 )
 
 // NewNotificationEngine returns an instance of notificationEngine
 func NewNotificationEngine(psql *sql.DB, logger zerolog.Logger, businessEngine business.BusinessEngine) NotificationEngine {
 	return &notificationEngine{psql, logger, businessEngine}
+}
+
+func (n *notificationEngine) RegisterPhone(registrationToken string, phoneID string, phoneModel string) error {
+
+	registerPhoneSQL := "INSERT INTO register_phone(registration_token,phone_id,phone_model) " +
+		"VALUES($1,$2,$3);"
+
+	rows, err := n.sql.Query(registerPhoneSQL, registrationToken, phoneID, phoneModel)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+	defer rows.Close()
+
+	n.logger.Info().Msgf("registerPhone successful for phoneID:%s", phoneID)
+	return nil
 }
 
 func (n *notificationEngine) AddNotification(notification shared.Notification) error {
