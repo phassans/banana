@@ -87,17 +87,28 @@ type (
 		EndTime     string
 	}
 
+	notificationADDRequest struct {
+		PhoneID        string   `json:"phoneId"`
+		Latitude       float64  `json:"latitude,omitempty"`
+		Longitude      float64  `json:"longitude,omitempty"`
+		Location       string   `json:"location,omitempty"`
+		PriceFilter    float64  `json:"priceFilter,omitempty"`
+		DietaryFilters []string `json:"dietaryFilters,omitempty"`
+		DistanceFilter string   `json:"distanceFilter,omitempty"`
+		Keywords       string   `json:"keywords,omitempty"`
+	}
+
 	// Notification fields
 	Notification struct {
-		NotificationID     int
-		PhoneID            string
-		BusinessID         int
-		Price              string
-		Keywords           string
-		DietaryRestriction []string
-		Latitude           float64
-		Longitude          float64
-		Location           string
+		NotificationID int
+		PhoneID        string
+		Latitude       float64  `json:"latitude,omitempty"`
+		Longitude      float64  `json:"longitude,omitempty"`
+		Location       string   `json:"location,omitempty"`
+		PriceFilter    string   `json:"priceFilter,omitempty"`
+		DietaryFilters []string `json:"dietaryFilters,omitempty"`
+		DistanceFilter string   `json:"distanceFilter,omitempty"`
+		Keywords       string   `json:"keywords,omitempty"`
 	}
 
 	// Hours fields

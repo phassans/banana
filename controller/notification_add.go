@@ -6,19 +6,18 @@ import (
 	"strings"
 
 	"github.com/phassans/banana/helper"
-	"github.com/phassans/banana/shared"
 )
 
 type (
 	notificationADDRequest struct {
-		PhoneID            string   `json:"phoneId"`
-		BusinessID         int      `json:"businessId"`
-		Price              string   `json:"price,omitempty"`
-		Keywords           string   `json:"keywords,omitempty"`
-		DietaryRestriction []string `json:"dietaryRestriction,omitempty"`
-		Latitude           float64  `json:"latitude,omitempty"`
-		Longitude          float64  `json:"longitude,omitempty"`
-		Location           string   `json:"location,omitempty"`
+		PhoneID        string   `json:"phoneId"`
+		Latitude       float64  `json:"latitude,omitempty"`
+		Longitude      float64  `json:"longitude,omitempty"`
+		Location       string   `json:"location,omitempty"`
+		PriceFilter    string   `json:"priceFilter,omitempty"`
+		DietaryFilters []string `json:"dietaryFilters,omitempty"`
+		DistanceFilter string   `json:"distanceFilter,omitempty"`
+		Keywords       string   `json:"keywords,omitempty"`
 	}
 
 	notificationADDResult struct {
@@ -39,18 +38,16 @@ func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, reque
 		return nil, err
 	}
 
-	l := shared.Notification{
-		PhoneID:            request.PhoneID,
-		BusinessID:         request.BusinessID,
-		Price:              request.Price,
-		Keywords:           request.Keywords,
-		DietaryRestriction: request.DietaryRestriction,
-		Latitude:           request.Latitude,
-		Longitude:          request.Longitude,
-		Location:           request.Location,
-	}
-
-	err := rtr.engines.AddNotification(l)
+	err := rtr.engines.AddNotification(
+		request.PhoneID,
+		request.Latitude,
+		request.Longitude,
+		request.Location,
+		request.PriceFilter,
+		request.DietaryFilters,
+		request.DistanceFilter,
+		request.Keywords,
+	)
 	result := notificationADDResult{notificationADDRequest: request, Error: NewAPIError(err)}
 	return result, err
 }
@@ -62,19 +59,15 @@ func (r addNotificationEndpoint) Validate(request interface{}) error {
 		return helper.ValidationError{Message: fmt.Sprint("notification add failed, please provide 'phoneId'")}
 	}
 
-	if req.BusinessID == 0 {
-		return helper.ValidationError{Message: fmt.Sprint("notification add failed, please provide 'businessId'")}
-	}
-
 	if strings.TrimSpace(req.Location) == "" && (req.Latitude == 0 || req.Longitude == 0) {
-		return helper.ValidationError{Message: fmt.Sprint("listings search failed, please provide 'location' or 'latitude' and 'longitude'")}
+		return helper.ValidationError{Message: fmt.Sprint("notification add failed, please provide 'location' or 'latitude' and 'longitude'")}
 	}
 
-	for _, dietary := range req.DietaryRestriction {
+	for _, dietary := range req.DietaryFilters {
 		if strings.ToLower(dietary) != "vegetarian" &&
 			strings.ToLower(dietary) != "vegan" &&
 			strings.ToLower(dietary) != "gluten free" {
-			return helper.ValidationError{Message: fmt.Sprint("listings search failed, invalid dietaryRestriction")}
+			return helper.ValidationError{Message: fmt.Sprint("notification add failed, invalid dietaryRestriction")}
 		}
 	}
 

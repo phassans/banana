@@ -155,12 +155,12 @@ CREATE TABLE IF NOT EXISTS notifications
 (
   notification_id SERIAL UNIQUE,
   phone_id        TEXT NOT NULL,
-  business_id     INT  NOT NULL,
-  price           TEXT,
-  keywords        TEXT,
-  location        TEXT,
   latitude        NUMERIC,
   longitude       NUMERIC,
+  location        TEXT,
+  price_filter    TEXT,
+  distance_filter TEXT,
+  keywords        TEXT,
   PRIMARY KEY (notification_id, phone_id)
 );
 
