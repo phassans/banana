@@ -152,6 +152,7 @@ func (n *notificationEngine) GetAllNotifications(phoneID string) ([]shared.Notif
 
 	defer rows.Close()
 
+	i := 1
 	var notifications []shared.Notification
 	for rows.Next() {
 		var notification shared.Notification
@@ -168,7 +169,9 @@ func (n *notificationEngine) GetAllNotifications(phoneID string) ([]shared.Notif
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}
+		notification.NotificationName = fmt.Sprintf("Notification %d", i)
 		notifications = append(notifications, notification)
+		i++
 	}
 
 	if err = rows.Err(); err != nil {

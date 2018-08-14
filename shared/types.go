@@ -100,15 +100,16 @@ type (
 
 	// Notification fields
 	Notification struct {
-		NotificationID int
-		PhoneID        string
-		Latitude       float64  `json:"latitude,omitempty"`
-		Longitude      float64  `json:"longitude,omitempty"`
-		Location       string   `json:"location,omitempty"`
-		PriceFilter    string   `json:"priceFilter,omitempty"`
-		DietaryFilters []string `json:"dietaryFilters,omitempty"`
-		DistanceFilter string   `json:"distanceFilter,omitempty"`
-		Keywords       string   `json:"keywords,omitempty"`
+		NotificationID   int
+		NotificationName string
+		PhoneID          string
+		Latitude         float64  `json:"latitude,omitempty"`
+		Longitude        float64  `json:"longitude,omitempty"`
+		Location         string   `json:"location,omitempty"`
+		PriceFilter      string   `json:"priceFilter,omitempty"`
+		DietaryFilters   []string `json:"dietaryFilters,omitempty"`
+		DistanceFilter   string   `json:"distanceFilter,omitempty"`
+		Keywords         string   `json:"keywords,omitempty"`
 	}
 
 	// Hours fields
