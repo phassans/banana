@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -351,7 +352,13 @@ func calculateTimeLeft(listingDate string, listingEndTime string) (int, error) {
 		return 0, err
 	}
 
-	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Hours()
+	timeParts := strings.Split(listingEndTime, ":")
+	i, _ := strconv.ParseInt(timeParts[0], 10, 64)
+	if i < 6 {
+		listingEndTimeFormatted = listingEndTimeFormatted.Add(time.Hour * 24)
+	}
+
+	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Minutes()
 	return int(timeLeftInHours), nil
 }
 
