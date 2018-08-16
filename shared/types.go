@@ -44,6 +44,7 @@ type (
 		ListingDate          string        `json:"listingDate"`
 		ListingStatus        string        `json:"listingStatus,omitempty"`
 		TimeLeft             int           `json:"timeLeft"`
+		TimeLeftInString     string        `json:"timeLeftInString"`
 		ImageLink            string        `json:"imageLink,omitempty"`
 		Business             *BusinessInfo `json:"businessInfo,omitempty"`
 		IsFavorite           bool          `json:"isFavorite"`
@@ -65,7 +66,7 @@ type (
 		Discount             float64  `json:"discount"`
 		DiscountDescription  string   `json:"discountDescription"`
 		DietaryRestrictions  []string `json:"dietaryRestrictions"`
-		TimeLeft             int      `json:"timeLeft"`
+		TimeLeft             string   `json:"timeLeft"`
 		ListingImage         string   `json:"listingImage"`
 		DistanceFromLocation float64  `json:"distanceFromLocation"`
 		IsFavorite           bool     `json:"isFavorite"`
