@@ -273,7 +273,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			return nil, err
 		}
 
-		_, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, true)
+		_, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, true, timeLeft)
 		if err != nil {
 			return nil, err
 		}
@@ -290,7 +290,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			Discount:             listing.Discount,
 			DiscountDescription:  listing.DiscountDescription,
 			DietaryRestrictions:  listing.DietaryRestrictions,
-			TimeLeft:             timeLeft,
+			TimeLeft:             0,
 			ListingImage:         listing.ListingImage,
 			DistanceFromLocation: listing.DistanceFromLocation,
 			IsFavorite:           listing.IsFavorite,
@@ -302,40 +302,36 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 	return listingsResult, nil
 }
 
-func calculateTimeLeftForSearch(listingDate string, listingStartTime string, listingEndTime string) (string, error) {
+func calculateTimeLeftForSearch(listingDate string, listingStartTime string, listingEndTime string) (int, error) {
 	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
-		return "", nil
+		return 0, nil
 	}
 
 	// get current date and time
 	currentDateTime := time.Now().Format(shared.DateTimeFormat)
 	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	lStartTime := getListingDateTime(listingDate, listingStartTime)
 	listingStartTimeFormatted, err := time.Parse(shared.DateTimeFormat, lStartTime)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	lEndTime := getListingDateTime(listingDate, listingEndTime)
 	listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, lEndTime)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	if !inTimeSpan(listingStartTimeFormatted, listingEndTimeFormatted, currentDateTimeFormatted) {
-		return "", nil
+		return 0, nil
 	}
 
 	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Minutes()
-	if timeLeftInHours < 60 {
-		return fmt.Sprintf("%d mins", int(timeLeftInHours)), nil
-	}
-	hrs := timeLeftInHours / 60
-	return fmt.Sprintf("<%d hrs", int(hrs)), nil
+	return int(timeLeftInHours), nil
 }
 
 func calculateTimeLeft(listingDate string, listingEndTime string) (int, error) {
@@ -370,43 +366,50 @@ func inTimeSpan(start, end, check time.Time) bool {
 	return check.After(start) && check.Before(end)
 }
 
-func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string, isSearch bool) (string, string, error) {
-	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
-		return "", "", nil
-	}
+func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string, isSearch bool, timeLeft int) (string, string, error) {
+	if timeLeft == 0 {
+		if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
+			return "", "", nil
+		}
 
-	// get listingDate in format
-	listingDateFormatted, err := time.Parse(shared.DateFormatSQL, strings.Split(listingDate, "T")[0])
-	if err != nil {
-		return "", "", nil
-	}
+		// get listingDate in format
+		listingDateFormatted, err := time.Parse(shared.DateFormatSQL, strings.Split(listingDate, "T")[0])
+		if err != nil {
+			return "", "", nil
+		}
 
-	// see if current day and listing day are same
-	var buffer bytes.Buffer
-	if time.Now().Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
-		if isSearch {
-			buffer.WriteString(listingDateFormatted.Weekday().String()[0:3] + ": ")
+		// see if current day and listing day are same
+		var buffer bytes.Buffer
+		if time.Now().Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
+			if isSearch {
+				buffer.WriteString(listingDateFormatted.Weekday().String()[0:3] + ": ")
+			} else {
+				buffer.WriteString(listingDateFormatted.Weekday().String() + ": ")
+			}
 		} else {
-			buffer.WriteString(listingDateFormatted.Weekday().String() + ": ")
+			if !isSearch {
+				buffer.WriteString("Today: ")
+			}
 		}
+
+		// determine startTime in format
+		sTime, err := shared.GetTimeIn12HourFormat(listingStartTime)
+		if err != nil {
+			return "", "", nil
+		}
+
+		// determine endTime in format
+		eTime, err := shared.GetTimeIn12HourFormat(listingEndTime)
+		if err != nil {
+			return "", "", nil
+		}
+
+		buffer.WriteString(sTime + "-" + eTime)
+		return listingDateFormatted.Weekday().String(), buffer.String(), nil
 	} else {
-		if !isSearch {
-			buffer.WriteString("Today: ")
+		if timeLeft < 60 {
+			return "", fmt.Sprintf("%d mins", timeLeft), nil
 		}
+		return "", fmt.Sprintf("<%d hours", int(timeLeft/60)), nil
 	}
-
-	// determine startTime in format
-	sTime, err := shared.GetTimeIn12HourFormat(listingStartTime)
-	if err != nil {
-		return "", "", nil
-	}
-
-	// determine endTime in format
-	eTime, err := shared.GetTimeIn12HourFormat(listingEndTime)
-	if err != nil {
-		return "", "", nil
-	}
-
-	buffer.WriteString(sTime + "-" + eTime)
-	return listingDateFormatted.Weekday().String(), buffer.String(), nil
 }
