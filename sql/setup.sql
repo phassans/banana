@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS favorites
 CREATE TABLE IF NOT EXISTS notifications
 (
   notification_id SERIAL UNIQUE,
+  notification_name TEXT,
   phone_id        TEXT NOT NULL,
   latitude        NUMERIC,
   longitude       NUMERIC,

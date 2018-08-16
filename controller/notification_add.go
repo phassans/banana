@@ -10,14 +10,15 @@ import (
 
 type (
 	notificationADDRequest struct {
-		PhoneID        string   `json:"phoneId"`
-		Latitude       float64  `json:"latitude,omitempty"`
-		Longitude      float64  `json:"longitude,omitempty"`
-		Location       string   `json:"location,omitempty"`
-		PriceFilter    string   `json:"priceFilter,omitempty"`
-		DietaryFilters []string `json:"dietaryFilters,omitempty"`
-		DistanceFilter string   `json:"distanceFilter,omitempty"`
-		Keywords       string   `json:"keywords,omitempty"`
+		NotificationName string   `json:"notificationName"`
+		PhoneID          string   `json:"phoneId"`
+		Latitude         float64  `json:"latitude,omitempty"`
+		Longitude        float64  `json:"longitude,omitempty"`
+		Location         string   `json:"location,omitempty"`
+		PriceFilter      string   `json:"priceFilter,omitempty"`
+		DietaryFilters   []string `json:"dietaryFilters,omitempty"`
+		DistanceFilter   string   `json:"distanceFilter,omitempty"`
+		Keywords         string   `json:"keywords,omitempty"`
 	}
 
 	notificationADDResult struct {
@@ -39,6 +40,7 @@ func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, reque
 	}
 
 	err := rtr.engines.AddNotification(
+		request.NotificationName,
 		request.PhoneID,
 		request.Latitude,
 		request.Longitude,

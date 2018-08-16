@@ -101,7 +101,7 @@ type (
 	// Notification fields
 	Notification struct {
 		NotificationID   int
-		NotificationName string
+		NotificationName string `json:"notificationName,omitempty"`
 		PhoneID          string
 		Latitude         float64  `json:"latitude,omitempty"`
 		Longitude        float64  `json:"longitude,omitempty"`
