@@ -22,6 +22,7 @@ type (
 	// NotificationEngine interface
 	NotificationEngine interface {
 		AddNotification(
+			notificationName string,
 			phoneID string,
 			latitude float64,
 			longitude float64,
@@ -58,6 +59,7 @@ func (n *notificationEngine) RegisterPhone(registrationToken string, phoneID str
 }
 
 func (n *notificationEngine) AddNotification(
+	notificationName string,
 	phoneID string,
 	latitude float64,
 	longitude float64,
@@ -80,9 +82,9 @@ func (n *notificationEngine) AddNotification(
 
 	var notificationID int
 	// Add Notification
-	err := n.sql.QueryRow("INSERT INTO notifications(phone_id,latitude,longitude,location,price_filter,distance_filter,keywords) "+
-		"VALUES($1,$2,$3,$4,$5,$6,$7) returning notification_id;",
-		phoneID, latitude, longitude, location, priceFilter, distanceFilter, keywords).Scan(&notificationID)
+	err := n.sql.QueryRow("INSERT INTO notifications(notification_name,phone_id,latitude,longitude,location,price_filter,distance_filter,keywords) "+
+		"VALUES($1,$2,$3,$4,$5,$6,$7,$8) returning notification_id;",
+		notificationName, phoneID, latitude, longitude, location, priceFilter, distanceFilter, keywords).Scan(&notificationID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
@@ -144,7 +146,7 @@ func (n *notificationEngine) DeleteNotificationDietaryRestriction(notificationID
 
 func (n *notificationEngine) GetAllNotifications(phoneID string) ([]shared.Notification, error) {
 
-	q := fmt.Sprintf("SELECT notification_id, phone_id, latitude, longitude, location, price_filter, distance_filter, keywords FROM notifications where phone_id = '%s';", phoneID)
+	q := fmt.Sprintf("SELECT notification_id, notification_name, phone_id, latitude, longitude, location, price_filter, distance_filter, keywords FROM notifications where phone_id = '%s';", phoneID)
 	rows, err := n.sql.Query(q)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
@@ -158,6 +160,7 @@ func (n *notificationEngine) GetAllNotifications(phoneID string) ([]shared.Notif
 		var notification shared.Notification
 		err = rows.Scan(
 			&notification.NotificationID,
+			&notification.NotificationName,
 			&notification.PhoneID,
 			&notification.Latitude,
 			&notification.Longitude,
@@ -169,9 +172,11 @@ func (n *notificationEngine) GetAllNotifications(phoneID string) ([]shared.Notif
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}
-		notification.NotificationName = fmt.Sprintf("Notification %d", i)
+		if notification.NotificationName == "" {
+			notification.NotificationName = fmt.Sprintf("Notification %d", i)
+			i++
+		}
 		notifications = append(notifications, notification)
-		i++
 	}
 
 	if err = rows.Err(); err != nil {
