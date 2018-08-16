@@ -183,5 +183,49 @@ func (n *notificationEngine) GetAllNotifications(phoneID string) ([]shared.Notif
 		return nil, helper.DatabaseError{DBError: err.Error()}
 	}
 
+	// addDietaryRestrictionsToListings
+	notifications, err = n.AddDietaryRestrictionsToNotifications(notifications)
+	if err != nil {
+		return nil, err
+	}
+
 	return notifications, nil
+}
+
+func (n *notificationEngine) AddDietaryRestrictionsToNotifications(notifications []shared.Notification) ([]shared.Notification, error) {
+	// get dietary restriction
+	for i := 0; i < len(notifications); i++ {
+		// add dietary restriction
+		rests, err := n.GetNotificationsDietaryRestriction(notifications[i].NotificationID)
+		if err != nil {
+			return nil, err
+		}
+		notifications[i].DietaryFilters = rests
+	}
+	return notifications, nil
+}
+
+func (n *notificationEngine) GetNotificationsDietaryRestriction(notificationID int) ([]string, error) {
+	rows, err := n.sql.Query("SELECT restriction FROM notifications_dietary_restrictions WHERE notification_id = $1", notificationID)
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var rests []string
+	for rows.Next() {
+		var rest string
+		err = rows.Scan(&rest)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		rests = append(rests, rest)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return rests, nil
 }
