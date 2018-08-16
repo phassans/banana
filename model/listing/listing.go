@@ -196,7 +196,7 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	}
 	listing.Business = &businessInfo
 
-	weekday, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, false)
+	weekday, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, false, 0)
 	if err != nil {
 		return shared.Listing{}, err
 	}
@@ -204,7 +204,7 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	listing.DateTimeRange = dateTimeRange
 
 	timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
-	listing.TimeLeftInString = timeLeft
+	listing.TimeLeft = timeLeft
 
 	if phoneID != "" {
 		listing.IsFavorite = l.isFavorite(phoneID, listingID)
