@@ -302,36 +302,40 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 	return listingsResult, nil
 }
 
-func calculateTimeLeftForSearch(listingDate string, listingStartTime string, listingEndTime string) (int, error) {
+func calculateTimeLeftForSearch(listingDate string, listingStartTime string, listingEndTime string) (string, error) {
 	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
-		return 0, nil
+		return "", nil
 	}
 
 	// get current date and time
 	currentDateTime := time.Now().Format(shared.DateTimeFormat)
 	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	lStartTime := getListingDateTime(listingDate, listingStartTime)
 	listingStartTimeFormatted, err := time.Parse(shared.DateTimeFormat, lStartTime)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	lEndTime := getListingDateTime(listingDate, listingEndTime)
 	listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, lEndTime)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	if !inTimeSpan(listingStartTimeFormatted, listingEndTimeFormatted, currentDateTimeFormatted) {
-		return 0, nil
+		return "", nil
 	}
 
-	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Hours()
-	return int(timeLeftInHours), nil
+	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Minutes()
+	if timeLeftInHours < 60 {
+		return fmt.Sprintf("%d mins", int(timeLeftInHours)), nil
+	}
+	hrs := timeLeftInHours / 60
+	return fmt.Sprintf("<%d hrs", int(hrs)), nil
 }
 
 func calculateTimeLeft(listingDate string, listingEndTime string) (int, error) {

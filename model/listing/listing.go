@@ -204,7 +204,7 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	listing.DateTimeRange = dateTimeRange
 
 	timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
-	listing.TimeLeft = timeLeft
+	listing.TimeLeftInString = timeLeft
 
 	if phoneID != "" {
 		listing.IsFavorite = l.isFavorite(phoneID, listingID)
