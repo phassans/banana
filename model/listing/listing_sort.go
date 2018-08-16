@@ -65,7 +65,6 @@ func (l *sortListingEngine) sortListingsByTimeLeft() error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("title: %s and timeLeft: %d", listing.Title, timeLeft)
 
 		s := shared.SortView{Listing: listing, TimeLeft: float64(timeLeft)}
 		ll = append(ll, s)
