@@ -352,10 +352,15 @@ func calculateTimeLeft(listingDate string, listingEndTime string) (int, error) {
 		return 0, err
 	}
 
-	timeParts := strings.Split(listingEndTime, ":")
-	i, _ := strconv.ParseInt(timeParts[0], 10, 64)
-	if i < 6 {
-		listingEndTimeFormatted = listingEndTimeFormatted.Add(time.Hour * 24)
+	if strings.Contains(lEndTime, "T") {
+		timeParts := strings.Split(lEndTime, "T")
+		if len(timeParts) >= 1 && strings.Contains(timeParts[1], ":") {
+			i, _ := strconv.ParseInt(strings.Split(timeParts[1], ":")[0], 10, 64)
+			if i < 6 {
+				multiplier := 24 - i
+				listingEndTimeFormatted = listingEndTimeFormatted.Add(time.Hour * time.Duration(multiplier))
+			}
+		}
 	}
 
 	timeLeftInHours := listingEndTimeFormatted.Sub(currentDateTimeFormatted).Minutes()
