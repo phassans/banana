@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"math"
+
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
@@ -415,6 +417,7 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 		if timeLeft < 60 {
 			return "", fmt.Sprintf("%d mins", timeLeft), nil
 		}
-		return "", fmt.Sprintf("<%d hours", int(timeLeft/60)), nil
+		res := float64(timeLeft / 60)
+		return "", fmt.Sprintf("<%d hours", math.Ceil(res)), nil
 	}
 }
