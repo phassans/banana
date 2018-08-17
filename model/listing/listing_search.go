@@ -417,7 +417,7 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 		if timeLeft < 60 {
 			return "", fmt.Sprintf("%d mins", timeLeft), nil
 		}
-		res := float64(timeLeft / 60)
+		res := float64(timeLeft) / float64(60)
 		return "", fmt.Sprintf("<%d hours", int(math.Ceil(res))), nil
 	}
 }
