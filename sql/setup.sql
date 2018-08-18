@@ -146,6 +146,7 @@ CREATE TABLE IF NOT EXISTS favorites
   favorite_id SERIAL,
   phone_id    TEXT NOT NULL,
   listing_id  INT  NOT NULL,
+  listing_date_id INT,
   favorite_add_date TIMESTAMP NOT NULL,
   PRIMARY KEY (favorite_id, phone_id),
   FOREIGN KEY (listing_id) REFERENCES listing (listing_id)

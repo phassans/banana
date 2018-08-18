@@ -23,8 +23,8 @@ type (
 
 	// FavoriteEngine interface which holds all methods
 	FavoriteEngine interface {
-		AddFavorite(phoneID string, listingID int) error
-		DeleteFavorite(phoneID string, listingID int) error
+		AddFavorite(phoneID string, listingID int, listingDateID int) error
+		DeleteFavorite(phoneID string, listingID int, listingDateID int) error
 		GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64) ([]shared.SearchListingResult, error)
 	}
 )
@@ -34,8 +34,8 @@ func NewFavoriteEngine(psql *sql.DB, logger zerolog.Logger, businessEngine busin
 	return &favoriteEngine{psql, logger, businessEngine, listingEngine}
 }
 
-func (f *favoriteEngine) AddFavorite(phoneID string, listingID int) error {
-	listing, err := f.listingEngine.GetListingByID(listingID, 0, 0)
+func (f *favoriteEngine) AddFavorite(phoneID string, listingID int, listingDateID int) error {
+	listing, err := f.listingEngine.GetListingByID(listingID, 0, listingDateID)
 	if err != nil {
 		return err
 	}
@@ -45,9 +45,9 @@ func (f *favoriteEngine) AddFavorite(phoneID string, listingID int) error {
 	}
 
 	var favoriteID int
-	err = f.sql.QueryRow("INSERT INTO favorites(phone_id,listing_id,favorite_add_date) "+
-		"VALUES($1,$2,$3) returning favorite_id;",
-		phoneID, listingID, time.Now()).Scan(&favoriteID)
+	err = f.sql.QueryRow("INSERT INTO favorites(phone_id,listing_id,listing_date_id,favorite_add_date) "+
+		"VALUES($1,$2,$3,$4) returning favorite_id;",
+		phoneID, listingID, listingDateID, time.Now()).Scan(&favoriteID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
@@ -56,8 +56,8 @@ func (f *favoriteEngine) AddFavorite(phoneID string, listingID int) error {
 	return nil
 }
 
-func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int) error {
-	sqlStatement := `DELETE FROM favorites WHERE phone_id = $1 AND listing_id = $2;`
+func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int, listingDateID int) error {
+	sqlStatement := `DELETE FROM favorites WHERE phone_id = $1 AND listing_id = $2 AND listing_date_id=$3;`
 	f.logger.Info().Msgf("deleting favorites with query: %s and listing: %d", sqlStatement, listingID)
 
 	_, err := f.sql.Exec(sqlStatement, phoneID, listingID)
@@ -88,7 +88,7 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 
 	var listings []shared.Listing
 	for _, favorite := range favorites {
-		listing, err := f.listingEngine.GetListingByID(favorite.ListingID, 0, 0)
+		listing, err := f.listingEngine.GetListingByID(favorite.ListingID, 0, favorite.ListingDateID)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +109,7 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 }
 
 func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]shared.Favorite, error) {
-	rows, err := f.sql.Query("SELECT favorite_id,listing_id,favorite_add_date FROM favorites where phone_id = $1;", phoneID)
+	rows, err := f.sql.Query("SELECT favorite_id,listing_id,listing_date_id,favorite_add_date FROM favorites where phone_id = $1;", phoneID)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
 	}
@@ -119,7 +119,7 @@ func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]shared.Favorite, 
 	var favorites []shared.Favorite
 	for rows.Next() {
 		var favorite shared.Favorite
-		err = rows.Scan(&favorite.FavoriteID, &favorite.ListingID, &favorite.FavoriteAddDate)
+		err = rows.Scan(&favorite.FavoriteID, &favorite.ListingID, &favorite.ListingDateID, &favorite.FavoriteAddDate)
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}
@@ -200,7 +200,7 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 			&sqlFavoriteAddDate,
 		)
 
-		listing.Favorite = &shared.Favorite{fid, listing.ListingID, sqlFavoriteAddDate.String}
+		listing.Favorite = &shared.Favorite{fid, listing.ListingID, listing.ListingDateID, sqlFavoriteAddDate.String}
 		listing.StartDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
 

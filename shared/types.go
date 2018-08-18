@@ -193,6 +193,7 @@ type (
 	Favorite struct {
 		FavoriteID      int    `json:"favoriteId,omitempty"`
 		ListingID       int    `json:"listingId"`
+		ListingDateID   int    `json:"listingDateId,omitempty"`
 		FavoriteAddDate string `json:"favoriteAddDate,omitempty"`
 	}
 )
