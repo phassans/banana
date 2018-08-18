@@ -213,7 +213,7 @@ func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 		if _, ok := bMap[val]; ok {
 			bHoursFormatted = append(bHoursFormatted, bMap[val])
 		} else {
-			bHoursFormatted = append(bHoursFormatted, fmt.Sprintf("%s: Closed", val[0:3]))
+			bHoursFormatted = append(bHoursFormatted, fmt.Sprintf("%s: Closed", strings.Title(val[0:3])))
 		}
 	}
 
