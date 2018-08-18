@@ -1,10 +1,9 @@
 package business
 
 import (
-	"database/sql"
-
 	"bytes"
-
+	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/phassans/banana/helper"
@@ -213,6 +212,8 @@ func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 	for _, val := range days {
 		if _, ok := bMap[val]; ok {
 			bHoursFormatted = append(bHoursFormatted, bMap[val])
+		} else {
+			bHoursFormatted = append(bHoursFormatted, fmt.Sprintf("%s: Closed", val[0:3]))
 		}
 	}
 
