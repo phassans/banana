@@ -374,17 +374,17 @@ func inTimeSpan(start, end, check time.Time) bool {
 }
 
 func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string, isSearch bool, timeLeft int) (string, string, error) {
+
+	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
+		return "", "", nil
+	}
+
+	// get listingDate in format
+	listingDateFormatted, err := time.Parse(shared.DateFormatSQL, strings.Split(listingDate, "T")[0])
+	if err != nil {
+		return "", "", nil
+	}
 	if timeLeft == 0 {
-		if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
-			return "", "", nil
-		}
-
-		// get listingDate in format
-		listingDateFormatted, err := time.Parse(shared.DateFormatSQL, strings.Split(listingDate, "T")[0])
-		if err != nil {
-			return "", "", nil
-		}
-
 		// see if current day and listing day are same
 		var buffer bytes.Buffer
 		if time.Now().Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
@@ -414,16 +414,17 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 		buffer.WriteString(sTime + "-" + eTime)
 		return listingDateFormatted.Weekday().String(), buffer.String(), nil
 	} else {
+		weekDayToday := listingDateFormatted.Weekday().String()
 		if timeLeft < 50 {
-			return "", fmt.Sprintf("%d mins left", timeLeft), nil
+			return weekDayToday, fmt.Sprintf("%d mins left", timeLeft), nil
 		}
 
 		resMod := math.Mod(float64(timeLeft), 60)
 		if resMod < 30 {
 			res := float64(timeLeft) / float64(60)
-			return "", fmt.Sprintf("%d hours left", int(math.Floor(res))), nil
+			return weekDayToday, fmt.Sprintf("%d hours left", int(math.Floor(res))), nil
 		}
 		res := float64(timeLeft) / float64(60)
-		return "", fmt.Sprintf("%d hours left", int(math.Ceil(res))), nil
+		return weekDayToday, fmt.Sprintf("%d hours left", int(math.Ceil(res))), nil
 	}
 }
