@@ -422,9 +422,18 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 		resMod := math.Mod(float64(timeLeft), 60)
 		if resMod < 30 {
 			res := float64(timeLeft) / float64(60)
+			hrs := int(math.Floor(res))
+			if hrs == 1 {
+				return weekDayToday, fmt.Sprintf("%d hour left", int(math.Floor(res))), nil
+			}
 			return weekDayToday, fmt.Sprintf("%d hours left", int(math.Floor(res))), nil
 		}
+
 		res := float64(timeLeft) / float64(60)
+		hrs := int(math.Ceil(res))
+		if hrs == 1 {
+			return weekDayToday, fmt.Sprintf("%d hour left", int(math.Ceil(res))), nil
+		}
 		return weekDayToday, fmt.Sprintf("%d hours left", int(math.Ceil(res))), nil
 	}
 }
