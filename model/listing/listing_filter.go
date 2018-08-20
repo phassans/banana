@@ -3,6 +3,7 @@ package listing
 import (
 	"strconv"
 
+	"github.com/phassans/banana/model/common"
 	"github.com/phassans/banana/shared"
 )
 
@@ -19,7 +20,7 @@ func (l *listingEngine) FilterByPrice(listings []shared.Listing, priceFilter flo
 
 func (l *listingEngine) FilterByDistance(listings []shared.Listing, distanceFilter string) ([]shared.Listing, error) {
 	if distanceFilter == "all" {
-		distanceFilter = "50"
+		distanceFilter = common.MaxFilterDistance
 	}
 
 	// if parse error, do not apply filter, just return
