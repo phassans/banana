@@ -10,8 +10,9 @@ import (
 
 type (
 	addFavoriteRequest struct {
-		PhoneID   string `json:"phoneId"`
-		ListingID int    `json:"listingId"`
+		PhoneID       string `json:"phoneId"`
+		ListingID     int    `json:"listingId"`
+		ListingDateID int    `json:"listingDateId"`
 	}
 
 	addFavoriteResponse struct {
@@ -31,7 +32,7 @@ func (r addFavoriteEndpoint) Execute(ctx context.Context, rtr *router, requestI 
 		return nil, err
 	}
 
-	err := rtr.engines.AddFavorite(request.PhoneID, request.ListingID)
+	err := rtr.engines.AddFavorite(request.PhoneID, request.ListingID, request.ListingDateID)
 	result := addFavoriteResponse{addFavoriteRequest: request, Error: NewAPIError(err)}
 	return result, err
 }

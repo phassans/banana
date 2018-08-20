@@ -10,8 +10,9 @@ import (
 
 type (
 	deleteFavoriteRequest struct {
-		PhoneID   string `json:"phoneId"`
-		ListingID int    `json:"listingId"`
+		PhoneID       string `json:"phoneId"`
+		ListingID     int    `json:"listingId"`
+		ListingDateID int    `json:"listingDateId"`
 	}
 
 	deleteFavoriteResponse struct {
@@ -31,7 +32,7 @@ func (r deleteFavoriteEndpoint) Execute(ctx context.Context, rtr *router, reques
 		return nil, err
 	}
 
-	err := rtr.engines.DeleteFavorite(request.PhoneID, request.ListingID)
+	err := rtr.engines.DeleteFavorite(request.PhoneID, request.ListingID, request.ListingDateID)
 	result := deleteFavoriteResponse{deleteFavoriteRequest: request, Error: NewAPIError(err)}
 	return result, err
 }
