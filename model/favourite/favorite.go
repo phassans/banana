@@ -8,6 +8,7 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
+	"github.com/phassans/banana/model/common"
 	"github.com/phassans/banana/model/listing"
 	"github.com/phassans/banana/shared"
 	"github.com/rs/zerolog"
@@ -81,7 +82,7 @@ func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int) error {
 }*/
 
 func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64) ([]shared.SearchListingResult, error) {
-	favorites, err := f.GetAllFavoritesIDs(phoneID)
+	/*favorites, err := f.GetAllFavoritesIDs(phoneID)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +96,11 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 		listing.ListingImage = listing.ImageLink
 		listing.Favorite = &favorite
 		listings = append(listings, listing)
+	}*/
+
+	listings, err := f.GetListingsPhoneID(phoneID)
+	if err != nil {
+		return nil, err
 	}
 
 	sortEngine := listing.NewSortListingEngine(listings, sortBy, shared.CurrentLocation{Latitude: latitude, Longitude: longitude}, f.sql)
@@ -134,22 +140,17 @@ func (f *favoriteEngine) GetAllFavoritesIDs(phoneID string) ([]shared.Favorite, 
 }
 
 const (
-	searchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
-		"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
-		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
-		"listing.multiple_days as multiple_days," +
-		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
-		"listing.business_id as business_id, listing.listing_id as listing_id, " +
-		"business.name as bname, " +
-		"listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date, " +
-		"listing_image.path as path, " +
-		"favorites.favorite_id as favorite_id, favorites.favorite_add_date as favorite_add_date "
+/*searchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
+"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
+"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
+"listing.multiple_days as multiple_days," +
+"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
+"listing.business_id as business_id, listing.listing_id as listing_id, " +
+"business.name as bname, " +
+"listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date, " +
+"listing_image.path as path, " +
+"favorites.favorite_id as favorite_id, favorites.favorite_add_date as favorite_add_date "*/
 
-	fromClause = "FROM favorites " +
-		"INNER JOIN listing ON listing.listing_id = favorites.listing_id " +
-		"INNER JOIN listing_date ON listing.listing_id = favorites.listing_id " +
-		"INNER JOIN listing_image ON listing_image.listing_id = favorites.listing_id " +
-		"INNER JOIN business ON listing.business_id = business.business_id"
 )
 
 func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, error) {
@@ -157,7 +158,10 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 	var whereClause bytes.Buffer
 	whereClause.WriteString(fmt.Sprintf(" WHERE favorites.phone_id = '%s'", phoneID))
 
-	query := fmt.Sprintf("%s %s %s", searchSelect, fromClause, whereClause.String())
+	selectFields := fmt.Sprintf("%s, %s, %s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingDateFields, common.ListingImageFields, common.FavoriteFields)
+	fmt.Println("selectFields: ", selectFields)
+
+	query := fmt.Sprintf("%s %s %s", selectFields, common.FromClauseFavorites, whereClause.String())
 	rows, err := f.sql.Query(query)
 
 	fmt.Println("GetListingsPhoneID ", query)

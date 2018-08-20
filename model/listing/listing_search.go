@@ -12,24 +12,20 @@ import (
 
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/model/common"
 	"github.com/phassans/banana/shared"
 )
 
 const (
-	SearchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
-		"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
-		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
-		"listing.multiple_days as multiple_days," +
-		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
-		"listing.business_id as business_id, listing.listing_id as listing_id, " +
-		"business.name as bname, " +
-		"listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date, " +
-		"listing_image.path as path "
-
-	fromClause = "FROM listing " +
-		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id " +
-		"INNER JOIN business ON listing.business_id = business.business_id " +
-		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
+/*SearchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
+"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
+"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
+"listing.multiple_days as multiple_days," +
+"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
+"listing.business_id as business_id, listing.listing_id as listing_id, " +
+"business.name as bname, " +
+"listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date, " +
+"listing_image.path as path "*/
 )
 
 func (l *listingEngine) SearchListings(
@@ -86,7 +82,7 @@ func (l *listingEngine) SearchListings(
 	l.logger.Info().Msgf("done sorting the listings. listings count: %d", len(listings))
 
 	// filterResults
-	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter)
+	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter, future)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +112,7 @@ func (l *listingEngine) SearchListings(
 }
 
 func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter float64,
-	dietaryFilters []string, distanceFilter string) ([]shared.Listing, error) {
+	dietaryFilters []string, distanceFilter string, future bool) ([]shared.Listing, error) {
 
 	var err error
 	if priceFilter > 0.0 {
@@ -130,6 +126,10 @@ func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter flo
 	}
 
 	if distanceFilter != "" {
+		listings, err = l.FilterByDistance(listings, distanceFilter)
+		l.logger.Info().Msgf("applied distanceFilter. count listings: %d", len(listings))
+	} else if future {
+		distanceFilter = "all"
 		listings, err = l.FilterByDistance(listings, distanceFilter)
 		l.logger.Info().Msgf("applied distanceFilter. count listings: %d", len(listings))
 	}
@@ -167,9 +167,9 @@ func getWhereClause(listingTypes []string, future bool) (string, error) {
 
 		curr := listingDate
 		dateClause.WriteString("(")
-		for i := 0; i < 7; i++ {
+		for i := 0; i < common.MaxFutureDays; i++ {
 			nextDate := curr.Add(time.Hour * 24)
-			if i == 6 {
+			if i == common.MaxFutureDays-1 {
 				dateClause.WriteString(fmt.Sprintf("'%s')", strings.Split(nextDate.String(), " ")[0]))
 			} else {
 				dateClause.WriteString(fmt.Sprintf("'%s',", strings.Split(nextDate.String(), " ")[0]))
@@ -201,6 +201,8 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 	splitKeywordsBySpace := strings.Split(keywords, " ")
 	searchKeywords := strings.Join(splitKeywordsBySpace, ",")
 
+	selectFields := fmt.Sprintf("%s, %s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingDateFields, common.ListingImageFields)
+
 	var searchQuery string
 	if keywords != "" {
 		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, discount_description, description, start_date, end_date, "+
@@ -210,12 +212,12 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 			"to_tsvector(listing.title) || "+
 			"to_tsvector(listing.description) as document "+
 			"%s %s ) p_search "+
-			"WHERE p_search.document @@ to_tsquery('%s');", SearchSelect, fromClause, whereClause, searchKeywords)
+			"WHERE p_search.document @@ to_tsquery('%s');", selectFields, common.FromClauseListing, whereClause, searchKeywords)
 	} else {
-		searchQuery = fmt.Sprintf("%s %s %s;", SearchSelect, fromClause, whereClause)
+		searchQuery = fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListing, whereClause)
 	}
 
-	l.logger.Info().Msgf("search Query: %s", searchQuery)
+	//l.logger.Info().Msgf("search Query: %s", searchQuery)
 
 	rows, err := l.sql.Query(searchQuery)
 	if err != nil {

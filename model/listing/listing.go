@@ -9,6 +9,7 @@ import (
 
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
+	"github.com/phassans/banana/model/common"
 	"github.com/phassans/banana/shared"
 	"github.com/rs/zerolog"
 )
@@ -215,6 +216,8 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 
 func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDateID int) (shared.Listing, error) {
 
+	selectFields := fmt.Sprintf("%s, %s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingDateFields, common.ListingImageFields)
+
 	var whereClause bytes.Buffer
 	whereClause.WriteString(fmt.Sprintf(" WHERE listing.listing_id = %d", listingID))
 	if businessID != 0 {
@@ -223,7 +226,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 	if listingDateID != 0 {
 		whereClause.WriteString(fmt.Sprintf(" AND listing_date.listing_date_id = %d", listingDateID))
 	}
-	query := fmt.Sprintf("%s %s %s;", SearchSelect, fromClause, whereClause.String())
+	query := fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListing, whereClause.String())
 
 	//fmt.Println("GetListingByID ", query)
 

@@ -41,7 +41,7 @@ func (rtr *router) newPostHandler(endpoint postEndpoint) http.HandlerFunc {
 			Str("query", fmt.Sprintf("%#v", request.Elem().Interface())).
 			Int("errorStatus", GetErrorStatus(err)).Logger()
 		if err != nil {
-			logger.Error().Msgf("POST failure")
+			logger.Error().Msgf("POST failure with error:%s", err)
 			return
 		}
 		logger.Info().Msgf("POST success")
