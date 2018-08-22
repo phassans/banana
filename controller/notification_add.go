@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -33,6 +34,20 @@ var notificationAdd postEndpoint = addNotificationEndpoint{}
 
 func (r addNotificationEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(notificationADDRequest)
+
+	logger := shared.GetLogger()
+	logger = logger.With().
+		Str("endpoint", r.GetPath()).
+		Str("notificationName", request.NotificationName).
+		Str("phoneId", request.PhoneID).
+		Float64("latitude", request.Latitude).
+		Float64("longitude", request.Longitude).
+		Str("location", request.Location).
+		Str("priceFilter", request.PriceFilter).
+		Strs("dietaryFilters", request.DietaryFilters).
+		Str("distanceFilter", request.DistanceFilter).
+		Str("keywords", request.Keywords).Logger()
+	logger.Info().Msgf("notification add request")
 
 	// validate input
 	if err := r.Validate(request); err != nil {

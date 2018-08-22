@@ -40,6 +40,14 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 		phoneID = values.Get("phoneId")
 	}
 
+	logger := shared.GetLogger()
+	logger = logger.With().
+		Str("endpoint", r.GetPath()).
+		Int("listingId", listingID).
+		Int("listingDateId", listingDateID).
+		Str("phoneID", phoneID).Logger()
+	logger.Info().Msgf("listing get request")
+
 	listingInfo, err := rtr.engines.GetListingInfo(listingID, listingDateID, phoneID)
 	if err != nil {
 		return nil, err

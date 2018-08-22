@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -24,6 +25,12 @@ var notificationDelete postEndpoint = deleteNotificationEndpoint{}
 
 func (r deleteNotificationEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(deleteNotificationRequest)
+
+	logger := shared.GetLogger()
+	logger = logger.With().
+		Str("endpoint", r.GetPath()).
+		Int("notificationId", request.NotificationID).Logger()
+	logger.Info().Msgf("notification delete request")
 
 	if err := r.Validate(requestI); err != nil {
 		return nil, err

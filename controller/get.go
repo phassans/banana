@@ -35,7 +35,7 @@ func (rtr *router) newGetHandler(endpoint getEndPoint) http.HandlerFunc {
 			Int("errorStatus", GetErrorStatus(err)).Logger()
 
 		if err != nil {
-			logger.Error().Msgf("GET failure")
+			logger.Error().Msgf(err.Error())
 			return
 		}
 		logger.Info().Msgf("GET success")

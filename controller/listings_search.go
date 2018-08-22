@@ -39,6 +39,21 @@ var listingsSearch postEndpoint = listingsSearchEndpoint{}
 func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(listingsSearchRequest)
 
+	logger := shared.GetLogger()
+	logger = logger.With().
+		Str("endpoint", r.GetPath()).
+		Bool("future", request.Future).
+		Strs("listingTypes", request.ListingTypes).
+		Float64("latitude", request.Latitude).
+		Float64("longitude", request.Longitude).
+		Str("location", request.Location).
+		Float64("priceFilter", request.PriceFilter).
+		Strs("dietaryFilters", request.DietaryFilters).
+		Str("distanceFilter", request.DistanceFilter).
+		Str("keywords", request.Keywords).
+		Str("sortBy", request.SortBy).Logger()
+	logger.Info().Msgf("search request")
+
 	// validate input
 	if err := r.Validate(request); err != nil {
 		return nil, err

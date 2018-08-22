@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -27,6 +28,15 @@ var registerPhone postEndpoint = registerPhoneEndpoint{}
 
 func (r registerPhoneEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(registerPhoneRequest)
+
+	logger := shared.GetLogger()
+	logger = logger.With().
+		Str("endpoint", r.GetPath()).
+		Str("registrationToken", request.RegistrationToken).
+		Str("phoneId", request.PhoneID).
+		Str("phoneModel", request.PhoneModel).Logger()
+	logger.Info().Msgf("register phone request")
+
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
 	}

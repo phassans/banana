@@ -39,9 +39,9 @@ func (rtr *router) newPostHandler(endpoint postEndpoint) http.HandlerFunc {
 		logger = logger.With().
 			Str("endpoint", endpoint.GetPath()).
 			Str("query", fmt.Sprintf("%#v", request.Elem().Interface())).
-			Int("errorStatus", GetErrorStatus(err)).Logger()
+			Int("status", GetErrorStatus(err)).Logger()
 		if err != nil {
-			logger.Error().Msgf("POST failure with error:%s", err)
+			logger.Error().Msgf(err.Error())
 			return
 		}
 		logger.Info().Msgf("POST success")

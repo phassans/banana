@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/shared"
 )
 
 type (
@@ -27,6 +28,14 @@ var favouriteAdd postEndpoint = addFavoriteEndpoint{}
 
 func (r addFavoriteEndpoint) Execute(ctx context.Context, rtr *router, requestI interface{}) (interface{}, error) {
 	request := requestI.(addFavoriteRequest)
+
+	logger := shared.GetLogger()
+	logger = logger.With().
+		Str("endpoint", r.GetPath()).
+		Str("phoneId", request.PhoneID).
+		Int("listingId", request.ListingID).
+		Int("listingDateId", request.ListingDateID).Logger()
+	logger.Info().Msgf("favorite add request")
 
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
