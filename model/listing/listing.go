@@ -269,7 +269,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 		}
 	}
 	listing.ImageLink = optimizeImage(listing.ImageLink)
-	listing.StartDate = sqlEndDate.String
+	listing.EndDate = sqlEndDate.String
 	listing.RecurringEndDate = sqlRecurringEndDate.String
 
 	if err = rows.Err(); err != nil {
