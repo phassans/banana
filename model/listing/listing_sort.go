@@ -10,6 +10,7 @@ import (
 	"database/sql"
 
 	"github.com/phassans/banana/helper"
+	"github.com/phassans/banana/model/common"
 	"github.com/phassans/banana/shared"
 	"github.com/umahmood/haversine"
 )
@@ -38,7 +39,7 @@ func (l *sortListingEngine) SortListings(isFuture bool) ([]shared.Listing, error
 
 	// have to sort by distance, in order to calculate distanceFromLocation
 	if l.currentLocation.Latitude != 0 && l.currentLocation.Longitude != 0 {
-		l.sortListingsByDistance()
+		l.sortListingsByDistance(isFuture)
 	}
 
 	// for future listings always sort by timeLeft
@@ -106,7 +107,7 @@ func (l *sortListingEngine) sortListingsByPrice() error {
 	return nil
 }
 
-func (l *sortListingEngine) sortListingsByDistance() error {
+func (l *sortListingEngine) sortListingsByDistance(isFuture bool) error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 		// get LatLon
@@ -119,10 +120,11 @@ func (l *sortListingEngine) sortListingsByDistance() error {
 		fromMobile := haversine.Coord{Lat: l.currentLocation.Latitude, Lon: l.currentLocation.Longitude}
 		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
-		listing.DistanceFromLocation = mi
-
-		s := shared.SortView{Listing: listing, Mile: mi}
-		ll = append(ll, s)
+		if mi <= getMaxDistance(isFuture) {
+			listing.DistanceFromLocation = mi
+			s := shared.SortView{Listing: listing, Mile: mi}
+			ll = append(ll, s)
+		}
 	}
 
 	// put in listing struct
@@ -133,6 +135,13 @@ func (l *sortListingEngine) sortListingsByDistance() error {
 	l.listings = listingsResult
 
 	return nil
+}
+
+func getMaxDistance(isFuture bool) float64 {
+	if isFuture {
+		return common.MaxDistanceForFutureDeals
+	}
+	return common.MaxDistanceForTodaysDeals
 }
 
 func (l *sortListingEngine) sortListingsByDateAdded() error {

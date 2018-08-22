@@ -30,4 +30,8 @@ const (
 	MaxFilterDistance = "25"
 
 	MaxFutureDays = 3
+
+	MaxDistanceForTodaysDeals = 50.0
+
+	MaxDistanceForFutureDeals = 25.0
 )

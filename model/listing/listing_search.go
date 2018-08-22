@@ -82,7 +82,7 @@ func (l *listingEngine) SearchListings(
 	l.logger.Info().Msgf("done sorting the listings. listings count: %d", len(listings))
 
 	// filterResults
-	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter, future)
+	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (l *listingEngine) SearchListings(
 }
 
 func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter float64,
-	dietaryFilters []string, distanceFilter string, future bool) ([]shared.Listing, error) {
+	dietaryFilters []string, distanceFilter string) ([]shared.Listing, error) {
 
 	var err error
 	if priceFilter > 0.0 {
@@ -126,10 +126,6 @@ func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter flo
 	}
 
 	if distanceFilter != "" {
-		listings, err = l.FilterByDistance(listings, distanceFilter)
-		l.logger.Info().Msgf("applied distanceFilter. count listings: %d", len(listings))
-	} else if future {
-		distanceFilter = "all"
 		listings, err = l.FilterByDistance(listings, distanceFilter)
 		l.logger.Info().Msgf("applied distanceFilter. count listings: %d", len(listings))
 	}
