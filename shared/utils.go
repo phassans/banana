@@ -33,3 +33,21 @@ func GetTimeIn12HourFormat(lTime string) (string, error) {
 
 	return st.Format(TimeLayout12Hour), nil
 }
+
+func ConvertDBDate(dbDate string) (string, error) {
+	listingDate, err := time.Parse(DateFormatSQL, strings.Split(dbDate, "T")[0])
+	if err != nil {
+		return "", err
+	}
+
+	return listingDate.Format(DateFormat), nil
+}
+
+func ConvertDBTime(dbTime string) (string, error) {
+	listingTime, err := time.Parse(TimeLayout24Hour, strings.TrimRight(strings.Split(dbTime, "T")[1], "Z"))
+	if err != nil {
+		return "", err
+	}
+
+	return listingTime.Format(TimeLayout24Hour), nil
+}

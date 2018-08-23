@@ -190,6 +190,14 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	}
 	listing.DietaryRestrictions = reqs
 
+	// get recurring info
+	if listing.Recurring {
+		if err != nil {
+			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+		}
+		listing.RecurringDays, err = l.GetRecurringListing(listingID)
+	}
+
 	//GetBusinessInfo
 	businessInfo, err := l.businessEngine.GetBusinessInfo(listing.BusinessID)
 	if err != nil {
@@ -211,11 +219,58 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 		listing.IsFavorite = l.isFavorite(phoneID, listingID)
 	}
 
+	return messageListingsDateAndTime(listing)
+}
+
+func messageListingsDateAndTime(listing shared.Listing) (shared.Listing, error) {
+	logger := shared.GetLogger()
+	// convert StartTime
+	startTime, err := shared.ConvertDBTime(listing.StartTime)
+	if err != nil {
+		logger.Error().Msgf("time error from DB to real for startTime: %s", startTime)
+		return shared.Listing{}, fmt.Errorf("time error from DB to real for startTime: %s", startTime)
+	}
+	listing.StartTime = startTime
+
+	// convert EndTime
+	endTime, err := shared.ConvertDBTime(listing.EndTime)
+	if err != nil {
+		logger.Error().Msgf("time error from DB to real for EndTime: %s", endTime)
+		return shared.Listing{}, fmt.Errorf("time error from DB to real for EndTime: %s", endTime)
+	}
+	listing.EndTime = endTime
+
+	// convert startDate
+	startDate, err := shared.ConvertDBDate(listing.StartDate)
+	if err != nil {
+		logger.Error().Msgf("date error from DB to real for startDate: %s", listing.StartDate)
+		return shared.Listing{}, fmt.Errorf("date error from DB to real for startDate: %s", listing.StartDate)
+	}
+	listing.StartDate = startDate
+
+	// convert EndDate
+	if listing.EndDate != "" {
+		endDate, err := shared.ConvertDBDate(listing.EndDate)
+		if err != nil {
+			logger.Error().Msgf("date error from DB to real for EndDate: %s", listing.EndDate)
+			return shared.Listing{}, fmt.Errorf("date error from DB to real for EndDate: %s", listing.EndDate)
+		}
+		listing.EndDate = endDate
+	}
+
+	// convert RecurringEndDate
+	if listing.RecurringEndDate != "" {
+		recDate, err := shared.ConvertDBDate(listing.RecurringEndDate)
+		if err != nil {
+			logger.Error().Msgf("date error from DB to real for RecurringEndDate: %s", listing.RecurringEndDate)
+			return shared.Listing{}, fmt.Errorf("date error from DB to real for RecurringEndDate: %s", listing.RecurringEndDate)
+		}
+		listing.RecurringEndDate = recDate
+	}
 	return listing, nil
 }
 
 func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDateID int) (shared.Listing, error) {
-
 	selectFields := fmt.Sprintf("%s, %s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingDateFields, common.ListingImageFields)
 
 	var whereClause bytes.Buffer
