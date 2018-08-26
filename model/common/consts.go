@@ -19,6 +19,7 @@ const (
 	FromClauseListing = "FROM listing " +
 		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id " +
 		"INNER JOIN business ON listing.business_id = business.business_id " +
+		"INNER JOIN business_cuisine ON listing.business_id = business_cuisine.business_id " +
 		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
 
 	FromClauseFavorites = "FROM favorites " +

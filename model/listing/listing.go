@@ -140,7 +140,7 @@ func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listi
 func optimizeImage(img string) string {
 	if img != "" {
 		imgParts := strings.Split(img, "/upload")
-		return fmt.Sprintf("%s/upload/q_auto%s", imgParts[0], imgParts[1])
+		return fmt.Sprintf("%s/upload/q_auto,f_auto,fl_lossy%s", imgParts[0], imgParts[1])
 	}
 	return img
 }
