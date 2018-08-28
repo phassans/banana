@@ -108,7 +108,30 @@ func (l *listingEngine) SearchListings(
 		l.logger.Info().Msgf("tagging listings as favourites")
 	}
 
-	return l.MassageAndPopulateSearchListings(listings)
+	searchListing, err := l.MassageAndPopulateSearchListings(listings)
+	if err != nil {
+		return searchListing, err
+	}
+
+	if sortBy == shared.SortByTimeLeft {
+		searchListing = groupListingsBasedOnCurrentTime(searchListing)
+		return searchListing, nil
+	}
+
+	return searchListing, nil
+}
+
+func groupListingsBasedOnCurrentTime(listings []shared.SearchListingResult) []shared.SearchListingResult {
+	var searchListingsLeft []shared.SearchListingResult
+	var searchListingRange []shared.SearchListingResult
+	for _, listing := range listings {
+		if strings.Contains(listing.DateTimeRange, "left") {
+			searchListingsLeft = append(searchListingsLeft, listing)
+		} else {
+			searchListingRange = append(searchListingRange, listing)
+		}
+	}
+	return append(searchListingsLeft, searchListingRange...)
 }
 
 func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter float64,
