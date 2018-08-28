@@ -13,6 +13,7 @@ import (
 type (
 	listingsSearchRequest struct {
 		Future         bool     `json:"future"`
+		Search         bool     `json:"search,omitempty"`
 		ListingTypes   []string `json:"listingTypes,omitempty"`
 		Latitude       float64  `json:"latitude,omitempty"`
 		Longitude      float64  `json:"longitude,omitempty"`
@@ -27,8 +28,9 @@ type (
 	}
 
 	listingsSearchResult struct {
-		Result []shared.SearchListingResult
-		Error  *APIError `json:"error,omitempty"`
+		Result  []shared.SearchListingResult
+		Message string    `json:"message,omitempty"`
+		Error   *APIError `json:"error,omitempty"`
 	}
 
 	listingsSearchEndpoint struct{}
@@ -43,6 +45,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 	logger = logger.With().
 		Str("endpoint", r.GetPath()).
 		Bool("future", request.Future).
+		Bool("search", request.Search).
 		Strs("listingTypes", request.ListingTypes).
 		Float64("latitude", request.Latitude).
 		Float64("longitude", request.Longitude).
@@ -61,7 +64,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 
 	result, err := rtr.engines.SearchListings(
 		request.ListingTypes,
-		request.Future,
+		request.Search,
 		request.Latitude,
 		request.Longitude,
 		request.Location,
@@ -72,7 +75,21 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.SortBy,
 		request.PhoneID,
 	)
-	return listingsSearchResult{Result: result, Error: NewAPIError(err)}, err
+	return listingsSearchResult{Result: result, Error: NewAPIError(err), Message: populateSearchMessage(len(result), request.Search)}, err
+}
+
+func populateSearchMessage(numberOfResults int, isSearch bool) string {
+	if numberOfResults > 0 {
+		return ""
+	}
+
+	if numberOfResults == 0 && isSearch {
+		return "no result found"
+	} else if numberOfResults == 0 && !isSearch {
+		return "no deals"
+	}
+
+	return ""
 }
 
 func (r listingsSearchEndpoint) Validate(request interface{}) error {
