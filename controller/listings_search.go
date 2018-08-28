@@ -64,7 +64,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 
 	result, err := rtr.engines.SearchListings(
 		request.ListingTypes,
-		request.Search,
+		request.Future,
 		request.Latitude,
 		request.Longitude,
 		request.Location,
