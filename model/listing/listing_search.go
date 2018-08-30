@@ -197,7 +197,7 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 			curr = nextDate
 		}
 		whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
-	} else if searchDay == "today" {
+	} else if searchDay == "today" || searchDay == "" {
 		currentDate := time.Now().Format(shared.DateFormatSQL) //"2006-01-02"
 		currentTime := time.Now().Format(shared.TimeLayout24Hour)
 
