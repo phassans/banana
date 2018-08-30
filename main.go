@@ -11,6 +11,7 @@ import (
 	"github.com/phassans/banana/model/favourite"
 	"github.com/phassans/banana/model/listing"
 	"github.com/phassans/banana/model/notification"
+	"github.com/phassans/banana/model/prefernce"
 	"github.com/phassans/banana/model/user"
 	"github.com/phassans/banana/route"
 	"github.com/phassans/banana/shared"
@@ -34,6 +35,7 @@ func main() {
 	listingEngine := listing.NewListingEngine(roach.Db, logger, businessEngine)
 	favouriteEngine := favourite.NewFavoriteEngine(roach.Db, logger, businessEngine, listingEngine)
 	notificationEngine := notification.NewNotificationEngine(roach.Db, logger, businessEngine)
+	prefernceEngine := prefernce.NewPrefernceEngine(roach.Db, logger)
 
 	engines := model.NewGenericEngine(
 		businessEngine,
@@ -41,6 +43,7 @@ func main() {
 		listingEngine,
 		favouriteEngine,
 		notificationEngine,
+		prefernceEngine,
 	)
 
 	// start the server

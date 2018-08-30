@@ -72,6 +72,10 @@ var (
 		favouriteAll,
 
 		registerPhone,
+
+		preferenceAdd,
+		preferenceDelete,
+		preferenceAll,
 	}
 )
 
