@@ -53,6 +53,18 @@ const (
 
 	// Undefined string
 	Undefined = "undefined"
+
+	// SearchToday ...
+	SearchToday = "today"
+
+	// SearchTomorrow ...
+	SearchTomorrow = "tomorrow"
+
+	// SearchThisWeek ...
+	SearchThisWeek = "this week"
+
+	// SearchNextWeek ...
+	SearchNextWeek = "next week"
 )
 
 var (

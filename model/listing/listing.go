@@ -38,6 +38,7 @@ type (
 			dietaryFilter []string,
 			distanceFilter string,
 			keywords string,
+			searchDay string,
 			sortBy string,
 			phoneID string,
 		) ([]shared.SearchListingResult, error)

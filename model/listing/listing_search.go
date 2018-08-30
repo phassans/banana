@@ -38,6 +38,7 @@ func (l *listingEngine) SearchListings(
 	dietaryFilters []string,
 	distanceFilter string,
 	keywords string,
+	searchDay string,
 	sortBy string,
 	phoneID string,
 ) ([]shared.SearchListingResult, error) {
@@ -46,7 +47,7 @@ func (l *listingEngine) SearchListings(
 	var err error
 
 	//GetListings
-	listings, err = l.GetListings(listingTypes, keywords, future)
+	listings, err = l.GetListings(listingTypes, keywords, future, searchDay)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +174,7 @@ func getListingTypeWhereClause(listingTypes []string) string {
 	return listingTypesClause.String()
 }
 
-func getWhereClause(listingTypes []string, future bool) (string, error) {
+func getWhereClause(listingTypes []string, future bool, searchDay string) (string, error) {
 	var whereClause bytes.Buffer
 	if future {
 		var dateClause bytes.Buffer
@@ -196,11 +197,66 @@ func getWhereClause(listingTypes []string, future bool) (string, error) {
 			curr = nextDate
 		}
 		whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
-	} else {
+	} else if searchDay == "today" {
 		currentDate := time.Now().Format(shared.DateFormatSQL) //"2006-01-02"
 		currentTime := time.Now().Format(shared.TimeLayout24Hour)
 
 		whereClause.WriteString(fmt.Sprintf("WHERE listing_date.listing_date = '%s' AND listing_date.end_time >= '%s'", currentDate, currentTime))
+	} else if searchDay != "" {
+		var dateClause bytes.Buffer
+
+		currentDate := time.Now().Format(shared.DateFormat)
+		listingDate, err := time.Parse(shared.DateFormat, currentDate)
+		if err != nil {
+			return "", helper.DatabaseError{DBError: err.Error()}
+		}
+
+		endDay := 0
+		switch searchDay {
+		case shared.SearchTomorrow:
+			endDay = 1
+		case shared.SearchThisWeek:
+			fmt.Println("listingDate.Weekday().String()", listingDate.Weekday().String())
+			endDay = 7 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
+		case shared.SearchNextWeek:
+			endDay = 14 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
+		}
+
+		if searchDay != shared.SearchNextWeek {
+			curr := listingDate
+			dateClause.WriteString("(")
+			for i := 0; i < endDay; i++ {
+				nextDate := curr.Add(time.Hour * 24)
+				if i == endDay-1 {
+					dateClause.WriteString(fmt.Sprintf("'%s')", strings.Split(nextDate.String(), " ")[0]))
+				} else {
+					dateClause.WriteString(fmt.Sprintf("'%s',", strings.Split(nextDate.String(), " ")[0]))
+				}
+				curr = nextDate
+
+			}
+			whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
+		} else if searchDay == "next week" {
+			consider := false
+			curr := listingDate
+			dateClause.WriteString("(")
+			for i := 0; i < endDay; i++ {
+				nextDate := curr.Add(time.Hour * 24)
+				if nextDate.Weekday().String() == "Monday" {
+					consider = true
+				}
+				if consider {
+					if i == endDay-1 {
+						dateClause.WriteString(fmt.Sprintf("'%s')", strings.Split(nextDate.String(), " ")[0]))
+					} else {
+						dateClause.WriteString(fmt.Sprintf("'%s',", strings.Split(nextDate.String(), " ")[0]))
+					}
+				}
+				curr = nextDate
+
+			}
+			whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
+		}
 	}
 
 	if len(listingTypes) > 0 {
@@ -210,9 +266,9 @@ func getWhereClause(listingTypes []string, future bool) (string, error) {
 	return whereClause.String(), nil
 }
 
-func (l *listingEngine) GetListings(listingType []string, keywords string, future bool) ([]shared.Listing, error) {
+func (l *listingEngine) GetListings(listingType []string, keywords string, future bool, searchDay string) ([]shared.Listing, error) {
 	// determine where clause
-	whereClause, err := getWhereClause(listingType, future)
+	whereClause, err := getWhereClause(listingType, future, searchDay)
 	if err != nil {
 		return nil, err
 	}

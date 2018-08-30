@@ -23,6 +23,7 @@ type (
 		DistanceFilter string   `json:"distanceFilter,omitempty"`
 		Keywords       string   `json:"keywords,omitempty"`
 		SortBy         string   `json:"sortBy,omitempty"`
+		SearchDay      string   `json:"searchDay,omitempty"`
 
 		PhoneID string `json:"phoneId"`
 	}
@@ -54,6 +55,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		Strs("dietaryFilters", request.DietaryFilters).
 		Str("distanceFilter", request.DistanceFilter).
 		Str("keywords", request.Keywords).
+		Str("searchDay", request.SearchDay).
 		Str("sortBy", request.SortBy).Logger()
 	logger.Info().Msgf("search request")
 
@@ -72,6 +74,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.DietaryFilters,
 		request.DistanceFilter,
 		request.Keywords,
+		request.SearchDay,
 		request.SortBy,
 		request.PhoneID,
 	)
