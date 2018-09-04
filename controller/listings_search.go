@@ -64,6 +64,11 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		return nil, err
 	}
 
+	// if search keyword is "all cuisines" then search for everything
+	if request.Keywords == "All Cuisines" {
+		request.Keywords = ""
+	}
+
 	result, err := rtr.engines.SearchListings(
 		request.ListingTypes,
 		request.Future,
