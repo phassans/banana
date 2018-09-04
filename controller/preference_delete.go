@@ -11,8 +11,8 @@ import (
 
 type (
 	preferenceDeleteRequest struct {
-		PhoneID string   `json:"phoneId"`
-		Cuisine []string `json:"cuisine,omitempty"`
+		PhoneID string `json:"phoneId"`
+		Cuisine string `json:"cuisine,omitempty"`
 	}
 
 	preferenceDeleteResponse struct {
@@ -32,8 +32,8 @@ func (r preferenceUserDeleteEndpoint) Execute(ctx context.Context, rtr *router, 
 	logger = logger.With().
 		Str("endpoint", r.GetPath()).
 		Str("phoneId", request.PhoneID).
-		Strs("cuisine", request.Cuisine).Logger()
-	logger.Info().Msgf("register phone request")
+		Str("cuisine", request.Cuisine).Logger()
+	logger.Info().Msgf("preference delete request")
 
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (r preferenceUserDeleteEndpoint) Execute(ctx context.Context, rtr *router, 
 
 func (r preferenceUserDeleteEndpoint) Validate(request interface{}) error {
 	input := request.(preferenceDeleteRequest)
-	if strings.TrimSpace(input.PhoneID) == "" || len(input.Cuisine) == 0 {
+	if strings.TrimSpace(input.PhoneID) == "" || strings.TrimSpace(input.Cuisine) == "" {
 		return helper.ValidationError{Message: fmt.Sprint("preference Delete failed, missing fields")}
 	}
 

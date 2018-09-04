@@ -11,8 +11,7 @@ import (
 
 type (
 	preferenceAllRequest struct {
-		PhoneID string   `json:"phoneId"`
-		Cuisine []string `json:"cuisine,omitempty"`
+		PhoneID string `json:"phoneId"`
 	}
 
 	preferenceAllResponse struct {
@@ -31,15 +30,20 @@ func (r preferenceUserAllEndpoint) Execute(ctx context.Context, rtr *router, req
 	logger := shared.GetLogger()
 	logger = logger.With().
 		Str("endpoint", r.GetPath()).
-		Str("phoneId", request.PhoneID).
-		Strs("cuisine", request.Cuisine).Logger()
-	logger.Info().Msgf("register phone request")
+		Str("phoneId", request.PhoneID).Logger()
+	logger.Info().Msgf("preference all request")
 
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
 	}
 
-	cuisines, err := rtr.engines.PreferenceAll(request.PhoneID)
+	preferences, err := rtr.engines.PreferenceAll(request.PhoneID)
+
+	var cuisines []string
+	for _, preference := range preferences {
+		cuisines = append(cuisines, preference.Cuisine)
+	}
+
 	result := preferenceAllResponse{Result: cuisines, Error: NewAPIError(err)}
 	return result, err
 }

@@ -35,7 +35,7 @@ func main() {
 	listingEngine := listing.NewListingEngine(roach.Db, logger, businessEngine)
 	favouriteEngine := favourite.NewFavoriteEngine(roach.Db, logger, businessEngine, listingEngine)
 	notificationEngine := notification.NewNotificationEngine(roach.Db, logger, businessEngine)
-	prefernceEngine := prefernce.NewPrefernceEngine(roach.Db, logger)
+	prefernceEngine := prefernce.NewPreferenceEngine(roach.Db, logger)
 
 	engines := model.NewGenericEngine(
 		businessEngine,

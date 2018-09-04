@@ -11,8 +11,8 @@ import (
 
 type (
 	preferenceAddRequest struct {
-		PhoneID string   `json:"phoneId"`
-		Cuisine []string `json:"cuisine,omitempty"`
+		PhoneID string `json:"phoneId"`
+		Cuisine string `json:"cuisine,omitempty"`
 	}
 
 	preferenceAddResponse struct {
@@ -32,8 +32,8 @@ func (r preferenceUserAddEndpoint) Execute(ctx context.Context, rtr *router, req
 	logger = logger.With().
 		Str("endpoint", r.GetPath()).
 		Str("phoneId", request.PhoneID).
-		Strs("cuisine", request.Cuisine).Logger()
-	logger.Info().Msgf("register phone request")
+		Str("cuisine", request.Cuisine).Logger()
+	logger.Info().Msgf("preference add request")
 
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (r preferenceUserAddEndpoint) Execute(ctx context.Context, rtr *router, req
 
 func (r preferenceUserAddEndpoint) Validate(request interface{}) error {
 	input := request.(preferenceAddRequest)
-	if strings.TrimSpace(input.PhoneID) == "" || len(input.Cuisine) == 0 {
+	if strings.TrimSpace(input.PhoneID) == "" || strings.TrimSpace(input.Cuisine) == "" {
 		return helper.ValidationError{Message: fmt.Sprint("preference add failed, missing fields")}
 	}
 

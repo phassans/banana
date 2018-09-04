@@ -183,6 +183,14 @@ CREATE TABLE IF NOT EXISTS register_phone
   PRIMARY KEY (registration_id)
 );
 
+CREATE TABLE IF NOT EXISTS preferences
+(
+  prefernce_id   SERIAL UNIQUE,
+  phone_id       TEXT UNIQUE NOT NULL,
+  cuisine        TEXT,
+  PRIMARY KEY (phone_id,cuisine)
+);
+
 
 INSERT INTO business_country (name)
 VALUES ('USA');

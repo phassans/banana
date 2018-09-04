@@ -196,6 +196,12 @@ type (
 		ListingDateID   int    `json:"listingDateId,omitempty"`
 		FavoriteAddDate string `json:"favoriteAddDate,omitempty"`
 	}
+
+	Preference struct {
+		PreferenceID int    `json:"preferenceId"`
+		PhoneID      string `json:"phoneId"`
+		Cuisine      string `json:"cuisine"`
+	}
 )
 
 var logger zerolog.Logger

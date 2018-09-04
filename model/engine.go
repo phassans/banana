@@ -15,13 +15,13 @@ type genericEngine struct {
 	user.UserEngine
 	favourite.FavoriteEngine
 	notification.NotificationEngine
-	prefernce.PrefernceEngine
+	prefernce.PreferenceEngine
 }
 
 // NewGenericEngine returns genericEngine
 func NewGenericEngine(businessEngine business.BusinessEngine, userEngine user.UserEngine, listingEngine listing.ListingEngine,
-	favouriteEngine favourite.FavoriteEngine, notificationEngine notification.NotificationEngine, prefernceEngine prefernce.PrefernceEngine) Engine {
-	return &genericEngine{businessEngine, listingEngine, userEngine, favouriteEngine, notificationEngine, prefernceEngine}
+	favouriteEngine favourite.FavoriteEngine, notificationEngine notification.NotificationEngine, preferenceEngine prefernce.PreferenceEngine) Engine {
+	return &genericEngine{businessEngine, listingEngine, userEngine, favouriteEngine, notificationEngine, preferenceEngine}
 }
 
 // Engine common engine interface
@@ -31,5 +31,5 @@ type Engine interface {
 	user.UserEngine
 	favourite.FavoriteEngine
 	notification.NotificationEngine
-	prefernce.PrefernceEngine
+	prefernce.PreferenceEngine
 }
