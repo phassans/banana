@@ -65,7 +65,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 	}
 
 	// if search keyword is "all cuisines" then search for everything
-	if request.Keywords == "All Cuisines" {
+	if strings.ToLower(request.Keywords) == "all cuisines" {
 		request.Keywords = ""
 	}
 
