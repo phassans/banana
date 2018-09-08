@@ -28,6 +28,11 @@ const (
 		"INNER JOIN listing_image ON listing_image.listing_id = favorites.listing_id " +
 		"INNER JOIN business ON listing.business_id = business.business_id"
 
+	FromClauseListingAdmin = "FROM listing " +
+		"INNER JOIN business ON listing.business_id = business.business_id " +
+		"INNER JOIN business_cuisine ON listing.business_id = business_cuisine.business_id " +
+		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
+
 	MaxFilterDistance = "25"
 
 	MaxFutureDays = 3

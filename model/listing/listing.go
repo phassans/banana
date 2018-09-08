@@ -336,18 +336,15 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 }
 
 func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) ([]shared.Listing, error) {
-	getListingsQuery := "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
-		"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
-		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
-		"listing.multiple_days as multiple_days," +
-		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
-		"business.business_id as business_id, listing.listing_id as listing_id, business.name as bname " +
-		"FROM listing " +
-		"INNER JOIN business ON listing.business_id = business.business_id " +
-		"WHERE " +
-		"listing.business_id = $1"
+	selectFields := fmt.Sprintf("%s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingImageFields)
 
-	rows, err := l.sql.Query(getListingsQuery, businessID)
+	var whereClause bytes.Buffer
+	whereClause.WriteString(fmt.Sprintf(" WHERE listing.business_id = %d", businessID))
+	query := fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListingAdmin, whereClause.String())
+
+	fmt.Println("GetListingsByBusinessID ", query)
+
+	rows, err := l.sql.Query(query)
 	if err != nil {
 		return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
@@ -376,10 +373,12 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 			&listing.BusinessID,
 			&listing.ListingID,
 			&listing.BusinessName,
+			&listing.ImageLink,
 		)
 		if err != nil {
 			return []shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
+		listing.ImageLink = optimizeImage(listing.ImageLink)
 		listing.EndDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
 

@@ -76,6 +76,8 @@ var (
 		preferenceAdd,
 		preferenceDelete,
 		preferenceAll,
+
+		contactUs,
 	}
 )
 
