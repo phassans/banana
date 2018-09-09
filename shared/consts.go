@@ -69,7 +69,7 @@ const (
 
 var (
 	// DayMap of week days
-	DayMap = map[string]int{"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
+	DayMap = map[string]int{"sunday": 0, "monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6}
 
 	// ListingTypes possible
 	ListingTypes = []string{"", "meal", "happyhour"}

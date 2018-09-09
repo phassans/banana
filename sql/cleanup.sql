@@ -21,5 +21,5 @@ DROP TABLE IF EXISTS notifications;
 DROP TYPE IF EXISTS dietary_restrictions;
 DROP TYPE IF EXISTS days_of_month;
 
-DROP TYPE IF EXISTS register_phone;
-DROP TYPE IF EXISTS preferences;
+DROP TABLE IF EXISTS register_phone;
+DROP TABLE IF EXISTS preferences;

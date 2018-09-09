@@ -37,7 +37,7 @@ const (
 
 	MaxFutureDays = 3
 
-	MaxDistanceForTodaysDeals = 50.0
+	MaxDistanceForTodaysDeals = 25.0
 
 	MaxDistanceForFutureDeals = 25.0
 )

@@ -85,9 +85,7 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 
 func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 	// current listing date
-	listings := []shared.ListingDate{
-		{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime},
-	}
+	var listings []shared.ListingDate
 
 	listingDate, err := time.Parse(shared.DateFormat, strings.Split(listing.StartDate, "T")[0])
 	if err != nil {
@@ -95,6 +93,9 @@ func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 	}
 
 	if listing.MultipleDays {
+		listDate := shared.ListingDate{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime}
+		listings = append(listings, listDate)
+
 		listingEndDate, err := time.Parse(shared.DateFormat, strings.Split(listing.EndDate, "T")[0])
 		if err != nil {
 			return err
@@ -116,6 +117,16 @@ func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 	}
 
 	if listing.Recurring {
+
+		// check if listingDate is a recurring date
+		for _, recurringDay := range listing.RecurringDays {
+			if shared.DayMap[recurringDay] == int(listingDate.Weekday()) {
+				listDate := shared.ListingDate{ListingID: listing.ListingID, ListingDate: listing.StartDate, StartTime: listing.StartTime, EndTime: listing.EndTime}
+				listings = append(listings, listDate)
+				break
+			}
+		}
+
 		listingRecurringDate, err := time.Parse(shared.DateFormat, strings.Split(listing.RecurringEndDate, "T")[0])
 		if err != nil {
 			return err
