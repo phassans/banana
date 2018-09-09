@@ -104,7 +104,7 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 	}
 
 	sortEngine := listing.NewSortListingEngine(listings, sortBy, shared.CurrentLocation{Latitude: latitude, Longitude: longitude}, f.sql)
-	listings, err = sortEngine.SortListings(false, "")
+	listings, err = sortEngine.SortListings(false, "", false)
 	if err != nil {
 		return nil, err
 	}

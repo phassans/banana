@@ -41,6 +41,8 @@ type (
 			searchDay string,
 			sortBy string,
 			phoneID string,
+			search bool,
+
 		) ([]shared.SearchListingResult, error)
 
 		// GetListingsByBusinessID returns listing based on businessID

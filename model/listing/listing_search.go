@@ -41,6 +41,7 @@ func (l *listingEngine) SearchListings(
 	searchDay string,
 	sortBy string,
 	phoneID string,
+	search bool,
 ) ([]shared.SearchListingResult, error) {
 
 	var listings []shared.Listing
@@ -76,7 +77,7 @@ func (l *listingEngine) SearchListings(
 
 	// sort Listings based on sortBy
 	sortListingEngine := NewSortListingEngine(listings, sortBy, currentLocation, l.sql)
-	listings, err = sortListingEngine.SortListings(future, searchDay)
+	listings, err = sortListingEngine.SortListings(future, searchDay, search)
 	if err != nil {
 		return nil, err
 	}

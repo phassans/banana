@@ -82,6 +82,7 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.SearchDay,
 		request.SortBy,
 		request.PhoneID,
+		request.Search,
 	)
 	return listingsSearchResult{Result: result, Error: NewAPIError(err), Message: populateSearchMessage(len(result), request.Search)}, err
 }
