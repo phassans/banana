@@ -465,6 +465,7 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 	if timeLeft == 0 {
 		// see if current day and listing day are same
 		var buffer bytes.Buffer
+		buffer.WriteString(fmt.Sprintf("%s %d, ", listingDateFormatted.Month().String()[0:3], listingDateFormatted.Day()))
 		if time.Now().Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
 			if isSearch {
 				buffer.WriteString(listingDateFormatted.Weekday().String()[0:3] + ": ")
