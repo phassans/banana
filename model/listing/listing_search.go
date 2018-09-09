@@ -227,7 +227,7 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 
 		if searchDay != shared.SearchNextWeek {
 			curr := listingDate
-			dateClause.WriteString("(")
+			dateClause.WriteString(fmt.Sprintf("('%s',", strings.Split(curr.String(), " ")[0]))
 			for i := 0; i < endDay; i++ {
 				nextDate := curr.Add(time.Hour * 24)
 				if i == endDay-1 {
