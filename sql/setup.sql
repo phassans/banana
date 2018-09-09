@@ -191,6 +191,15 @@ CREATE TABLE IF NOT EXISTS preferences
   PRIMARY KEY (phone_id,cuisine)
 );
 
+CREATE TABLE IF NOT EXISTS contact_us
+(
+  contact_us_id   SERIAL UNIQUE,
+  phone_id        TEXT  NOT NULL,
+  uname           TEXT,
+  email           TEXT,
+  comments        TEXT,
+  PRIMARY KEY (contact_us_id)
+);
 
 INSERT INTO business_country (name)
 VALUES ('USA');

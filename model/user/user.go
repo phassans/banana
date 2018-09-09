@@ -23,6 +23,8 @@ type UserEngine interface {
 	UserEdit(userID int, name string, email string, password string, phone string) error
 	UserGet(userID int) (shared.BusinessUser, error)
 	UserVerify(email string, password string) (shared.BusinessUser, error)
+
+	ContactUs(phoneID string, uname string, email string, comments string) error
 }
 
 // NewUserEngine returns an instance of userEngine
@@ -151,4 +153,18 @@ func getMD5Hash(text string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func (u *userEngine) ContactUs(phoneID string, uname string, email string, comments string) error {
+	var contactUsID int
+	err := u.sql.QueryRow("INSERT INTO contact_us(phone_id,uname,email,comments) "+
+		"VALUES($1,$2,$3,$4) returning contact_us_id;",
+		phoneID, uname, email, comments).Scan(&contactUsID)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	u.logger.Info().Msgf("successfully added a user comment with ID: %d", contactUsID)
+
+	return nil
 }

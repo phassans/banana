@@ -11,6 +11,7 @@ import (
 
 type (
 	contactUsRequest struct {
+		PhoneID  string `json:"phoneId"`
 		Name     string `json:"name,omitempty"`
 		Email    string `json:"email,omitempty"`
 		Comments string `json:"comments"`
@@ -32,6 +33,7 @@ func (r contactUsEndpoint) Execute(ctx context.Context, rtr *router, requestI in
 	logger := shared.GetLogger()
 	logger = logger.With().
 		Str("endpoint", r.GetPath()).
+		Str("phoneId", request.PhoneID).
 		Str("name", request.Name).
 		Str("email", request.Email).
 		Str("comments", request.Comments).Logger()
@@ -41,14 +43,14 @@ func (r contactUsEndpoint) Execute(ctx context.Context, rtr *router, requestI in
 		return nil, err
 	}
 
-	//err := rtr.engines.RegisterPhone(request.RegistrationToken, request.PhoneID, request.PhoneModel)
-	result := contactUsResponse{contactUsRequest: request, Error: NewAPIError(nil)}
+	err := rtr.engines.ContactUs(request.PhoneID, request.Name, request.Email, request.Comments)
+	result := contactUsResponse{contactUsRequest: request, Error: NewAPIError(err)}
 	return result, nil
 }
 
 func (r contactUsEndpoint) Validate(request interface{}) error {
 	input := request.(contactUsRequest)
-	if strings.TrimSpace(input.Comments) == "" {
+	if strings.TrimSpace(input.PhoneID) == "" || strings.TrimSpace(input.Comments) == "" {
 		return helper.ValidationError{Message: fmt.Sprint("contact us failed, missing fields")}
 	}
 
