@@ -212,15 +212,17 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 			return "", helper.DatabaseError{DBError: err.Error()}
 		}
 
+		startDay := 0
 		endDay := 0
 		switch searchDay {
 		case shared.SearchTomorrow:
 			endDay = 1
 		case shared.SearchThisWeek:
 			fmt.Println("listingDate.Weekday().String()", listingDate.Weekday().String())
-			endDay = 7 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
+			endDay = 6 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
 		case shared.SearchNextWeek:
-			endDay = 14 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
+			startDay = 6 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
+			endDay = 13 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
 		}
 
 		if searchDay != shared.SearchNextWeek {
@@ -238,15 +240,11 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 			}
 			whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
 		} else if searchDay == "next week" {
-			consider := false
 			curr := listingDate
 			dateClause.WriteString("(")
 			for i := 0; i < endDay; i++ {
 				nextDate := curr.Add(time.Hour * 24)
-				if nextDate.Weekday().String() == "Monday" {
-					consider = true
-				}
-				if consider {
+				if i >= startDay {
 					if i == endDay-1 {
 						dateClause.WriteString(fmt.Sprintf("'%s')", strings.Split(nextDate.String(), " ")[0]))
 					} else {
@@ -264,6 +262,7 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 		whereClause.WriteString(fmt.Sprintf(" AND listing_type in %s", getListingTypeWhereClause(listingTypes)))
 	}
 
+	fmt.Println(whereClause.String())
 	return whereClause.String(), nil
 }
 
