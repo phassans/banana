@@ -53,7 +53,8 @@ func (l *sortListingEngine) SortListings(isFuture bool, searchDay string, isSear
 	} else if l.sortingType == shared.SortByTimeLeft {
 		l.sortListingsByTimeLeft()
 	} else if l.sortingType == shared.SortByDateAdded {
-		l.sortListingsByDateAdded()
+		//l.sortListingsByDateAdded()
+		return l.listings, nil
 	}
 
 	return l.listings, nil
@@ -212,7 +213,7 @@ func (l *sortListingEngine) sortListingsByDateAdded() error {
 
 	// put in listing struct
 	var listingsResult []shared.Listing
-	for _, view := range l.orderListings(ll, shared.SortByPrice) {
+	for _, view := range l.orderListings(ll, shared.SortByDateAdded) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
 
@@ -238,7 +239,8 @@ func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType 
 		return listings
 	case shared.SortByDateAdded:
 		sort.Slice(listings, func(i, j int) bool {
-			return listings[i].FavoriteDateAdded.Before(listings[j].FavoriteDateAdded)
+			fmt.Printf("%t\n", listings[j].FavoriteDateAdded.Before(listings[i].FavoriteDateAdded))
+			return listings[j].FavoriteDateAdded.Before(listings[i].FavoriteDateAdded)
 		})
 		return listings
 	}
