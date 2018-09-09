@@ -227,8 +227,10 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 
 		if searchDay != shared.SearchNextWeek {
 			curr := listingDate
-			if searchDay != shared.SearchTomorrow {
+			if searchDay == shared.SearchThisWeek {
 				dateClause.WriteString(fmt.Sprintf("('%s',", strings.Split(curr.String(), " ")[0]))
+			} else if searchDay == shared.SearchTomorrow {
+				dateClause.WriteString("(")
 			}
 
 			for i := 0; i < endDay; i++ {
