@@ -39,12 +39,11 @@ func (l *sortListingEngine) SortListings(isFuture bool, searchDay string, isSear
 
 	// have to sort by distance, in order to calculate distanceFromLocation
 	if l.currentLocation.Latitude != 0 && l.currentLocation.Longitude != 0 {
-		l.sortListingsByDistance(isFuture)
+		l.sortListingsByDistance(isFuture, searchDay)
 	}
 
 	// for future listings always sort by timeLeft
-	if isSearch == false ||
-		(l.sortingType == "" && isFuture) {
+	if l.sortingType == "" && isFuture {
 		l.sortListingsByTimeLeft()
 		return l.listings, nil
 	}
@@ -109,7 +108,7 @@ func (l *sortListingEngine) sortListingsByPrice() error {
 	return nil
 }
 
-func (l *sortListingEngine) sortListingsByDistance(isFuture bool) error {
+func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay string) error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 		// get LatLon
@@ -135,6 +134,59 @@ func (l *sortListingEngine) sortListingsByDistance(isFuture bool) error {
 		listingsResult = append(listingsResult, view.Listing)
 	}
 	l.listings = listingsResult
+
+	// group them by day
+	if searchDay != "" {
+		var days []string
+		currentDate := time.Now().Format(shared.DateFormat)
+		curDate, err := time.Parse(shared.DateFormat, currentDate)
+		if err != nil {
+			return err
+		}
+
+		startDay := 0
+		endDay := 0
+		switch searchDay {
+		case shared.SearchThisWeek:
+			fmt.Println("listingDate.Weekday().String()", curDate.Weekday().String())
+			endDay = 6 - shared.DayMap[strings.ToLower(curDate.Weekday().String())]
+		case shared.SearchNextWeek:
+			startDay = 6 - shared.DayMap[strings.ToLower(curDate.Weekday().String())]
+			endDay = 13 - shared.DayMap[strings.ToLower(curDate.Weekday().String())]
+		default:
+			return nil
+		}
+
+		if searchDay == shared.SearchThisWeek {
+			for i := 0; i < endDay; i++ {
+				nextDate := curDate.Add(time.Hour * 24)
+				days = append(days, nextDate.Weekday().String())
+				curDate = nextDate
+			}
+		} else if searchDay == shared.SearchNextWeek {
+			for i := 0; i < endDay; i++ {
+				nextDate := curDate.Add(time.Hour * 24)
+				if i >= startDay {
+					days = append(days, nextDate.Weekday().String())
+				}
+				curDate = nextDate
+			}
+		}
+
+		var fResult []shared.Listing
+		for _, day := range days {
+			for _, listing := range l.listings {
+				listingDateFormatted, err := time.Parse(shared.DateFormatSQL, strings.Split(listing.ListingDate, "T")[0])
+				if err != nil {
+					return nil
+				}
+				if listingDateFormatted.Weekday().String() == day {
+					fResult = append(fResult, listing)
+				}
+			}
+		}
+		l.listings = fResult
+	}
 
 	return nil
 }
