@@ -129,6 +129,11 @@ func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay stri
 		}
 	}
 
+	// if favorites do not sort ByDistance
+	if l.sortingType != shared.SortByDistance {
+		return nil
+	}
+
 	// put in listing struct
 	var listingsResult []shared.Listing
 	for _, view := range l.orderListings(ll, shared.SortByDistance) {
