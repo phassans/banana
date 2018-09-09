@@ -25,7 +25,7 @@ type (
 
 	// SortListingEngine interface
 	SortListingEngine interface {
-		SortListings(bool) ([]shared.Listing, error)
+		SortListings(bool, string) ([]shared.Listing, error)
 	}
 )
 
@@ -35,7 +35,7 @@ func NewSortListingEngine(listings []shared.Listing, sortingType string,
 	return &sortListingEngine{listings, sortingType, currentLocation, sql}
 }
 
-func (l *sortListingEngine) SortListings(isFuture bool) ([]shared.Listing, error) {
+func (l *sortListingEngine) SortListings(isFuture bool, searchDay string) ([]shared.Listing, error) {
 
 	// have to sort by distance, in order to calculate distanceFromLocation
 	if l.currentLocation.Latitude != 0 && l.currentLocation.Longitude != 0 {
@@ -43,7 +43,7 @@ func (l *sortListingEngine) SortListings(isFuture bool) ([]shared.Listing, error
 	}
 
 	// for future listings always sort by timeLeft
-	if l.sortingType == "" && isFuture {
+	if (l.sortingType == "" && isFuture) || (l.sortingType == "" && (searchDay == shared.SearchNextWeek || searchDay == shared.SearchThisWeek)) {
 		l.sortListingsByTimeLeft()
 	}
 

@@ -139,7 +139,8 @@ func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 			nextDate := curDate.Add(time.Hour * 24)
 			year, month, day := nextDate.Date()
 			for _, recurringDay := range listing.RecurringDays {
-				if shared.DayMap[recurringDay] == int(nextDate.Weekday()) {
+				dayIndex := int(nextDate.Weekday())
+				if shared.DayMap[recurringDay] == dayIndex {
 					next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
 					lDate = shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
 					listings = append(listings, lDate)
