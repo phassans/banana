@@ -31,7 +31,23 @@ func GetTimeIn12HourFormat(lTime string) (string, error) {
 		return "", nil
 	}
 
-	return st.Format(TimeLayout12Hour), nil
+	var rtime string
+	var timePrefix string
+	temp := st.Format(TimeLayout12Hour)
+	if strings.Contains(temp, "pm") {
+		timePrefix = "pm"
+	} else {
+		timePrefix = "am"
+	}
+
+	if strings.Contains(temp, ":00") {
+		timeParts := strings.Split(temp, ":")
+		rtime = fmt.Sprintf("%s%s", timeParts[0], timePrefix)
+	} else {
+		rtime = temp
+	}
+
+	return rtime, nil
 }
 
 func ConvertDBDate(dbDate string) (string, error) {
