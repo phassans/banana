@@ -478,9 +478,7 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 				buffer.WriteString(listingDateFormatted.Weekday().String() + ": ")
 			}
 		} else {
-			if !isSearch {
-				buffer.WriteString("Today: ")
-			}
+			buffer.WriteString("Today: ")
 		}
 
 		// determine startTime in format
