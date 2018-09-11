@@ -271,6 +271,30 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 	return whereClause.String(), nil
 }
 
+func (l *listingEngine) getKeywordsFromCategory(keywords string) ([]string, error) {
+	rows, err := l.sql.Query("SELECT keyword FROM category_to_keyword where category ilike $1;", keywords)
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var foundKeywords []string
+	for rows.Next() {
+		var keyword string
+		err = rows.Scan(&keyword)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		foundKeywords = append(foundKeywords, keyword)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+	return foundKeywords, nil
+}
+
 func (l *listingEngine) GetListings(listingType []string, keywords string, future bool, searchDay string) ([]shared.Listing, error) {
 	// determine where clause
 	whereClause, err := getWhereClause(listingType, future, searchDay)
@@ -285,6 +309,21 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 
 	var searchQuery string
 	if keywords != "" {
+
+		foundKeys, err := l.getKeywordsFromCategory(keywords)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(foundKeys) > 0 {
+			var noSpaceKeys []string
+			for _, k := range foundKeys {
+				k = strings.Replace(k, " ", " | ", -1)
+				noSpaceKeys = append(noSpaceKeys, k)
+			}
+			searchKeywords = strings.Join(noSpaceKeys, " | ")
+		}
+
 		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, discount_description, description, start_date, end_date, "+
 			"start_time, end_time, multiple_days, recurring, recurring_date, listing_type, business_id, listing_id, bname, listing_date_id, listing_date, path "+
 			"FROM (%s, "+

@@ -201,5 +201,12 @@ CREATE TABLE IF NOT EXISTS contact_us
   PRIMARY KEY (contact_us_id)
 );
 
+CREATE TABLE IF NOT EXISTS category_to_keyword
+(
+  category        TEXT  NOT NULL,
+  keyword         TEXT,
+  PRIMARY KEY (category,keyword)
+);
+
 INSERT INTO business_country (name)
 VALUES ('USA');
