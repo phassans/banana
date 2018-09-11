@@ -25,7 +25,7 @@ type (
 
 	// SortListingEngine interface
 	SortListingEngine interface {
-		SortListings(bool, string, bool) ([]shared.Listing, error)
+		SortListings(bool, string, bool, bool) ([]shared.Listing, error)
 	}
 )
 
@@ -35,11 +35,11 @@ func NewSortListingEngine(listings []shared.Listing, sortingType string,
 	return &sortListingEngine{listings, sortingType, currentLocation, sql}
 }
 
-func (l *sortListingEngine) SortListings(isFuture bool, searchDay string, isSearch bool) ([]shared.Listing, error) {
+func (l *sortListingEngine) SortListings(isFuture bool, searchDay string, isSearch bool, isFavorite bool) ([]shared.Listing, error) {
 
 	// have to sort by distance, in order to calculate distanceFromLocation
 	if l.currentLocation.Latitude != 0 && l.currentLocation.Longitude != 0 {
-		l.sortListingsByDistance(isFuture, searchDay)
+		l.sortListingsByDistance(isFuture, searchDay, isFavorite)
 	}
 
 	// for future listings always sort by timeLeft
@@ -109,7 +109,7 @@ func (l *sortListingEngine) sortListingsByPrice() error {
 	return nil
 }
 
-func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay string) error {
+func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay string, isFavorite bool) error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 		// get LatLon
@@ -122,7 +122,7 @@ func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay stri
 		fromMobile := haversine.Coord{Lat: l.currentLocation.Latitude, Lon: l.currentLocation.Longitude}
 		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
-		if mi <= getMaxDistance(isFuture) {
+		if isFavorite || mi <= getMaxDistance(isFuture) {
 			listing.DistanceFromLocation = mi
 			s := shared.SortView{Listing: listing, Mile: mi}
 			ll = append(ll, s)
