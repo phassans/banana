@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
-
-	"math"
 
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
@@ -55,10 +54,10 @@ func (l *listingEngine) SearchListings(
 	l.logger.Info().Msgf("total number of listing found: %d", len(listings))
 
 	// addDietaryRestrictionsToListings
-	listings, err = l.AddDietaryRestrictionsToListings(listings)
+	/*listings, err = l.AddDietaryRestrictionsToListings(listings)
 	if err != nil {
 		return nil, err
-	}
+	}*/
 
 	var currentLocation shared.CurrentLocation
 	var resp clients.LatLong

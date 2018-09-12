@@ -3,6 +3,7 @@ package listing
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	"strings"
@@ -111,11 +112,35 @@ func (l *sortListingEngine) sortListingsByPrice() error {
 
 func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay string, isFavorite bool) error {
 	var ll []shared.SortView
+
+	var businessIDs []string
+	bUniqueMap := make(map[string]bool)
+	for _, listing := range l.listings {
+		strBID := strconv.Itoa(listing.BusinessID)
+
+		if _, ok := bUniqueMap[strBID]; !ok {
+			bUniqueMap[strBID] = true
+			businessIDs = append(businessIDs, strconv.Itoa(listing.BusinessID))
+		}
+	}
+
+	if len(businessIDs) == 0 {
+		return nil
+	}
+
+	businessGeos, err := l.GetAllListingsLatLon(businessIDs)
+	if err != nil {
+		return err
+	}
+
 	for _, listing := range l.listings {
 		// get LatLon
-		geo, err := l.GetListingsLatLon(listing.BusinessID)
-		if err != nil {
-			return err
+		var geo shared.AddressGeo
+		for _, businessGeo := range businessGeos {
+			if businessGeo.BusinessID == listing.BusinessID {
+				geo = businessGeo
+				break
+			}
 		}
 
 		// append latLon
@@ -255,6 +280,39 @@ func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType 
 		return listings
 	}
 	return nil
+}
+
+func (l *sortListingEngine) GetAllListingsLatLon(businessIDs []string) ([]shared.AddressGeo, error) {
+
+	businesses := strings.Join(businessIDs, ",")
+
+	businessesQuery := fmt.Sprintf("SELECT address_id, business_id, latitude, longitude  FROM business_address WHERE business_id IN (%s)", businesses)
+	fmt.Println(businessesQuery)
+
+	rows, err := l.sql.Query(businessesQuery)
+	defer rows.Close()
+
+	if err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	defer rows.Close()
+
+	var geos []shared.AddressGeo
+	for rows.Next() {
+		geo := shared.AddressGeo{}
+		err = rows.Scan(&geo.AddressID, &geo.BusinessID, &geo.Latitude, &geo.Longitude)
+		if err != nil {
+			return nil, helper.DatabaseError{DBError: err.Error()}
+		}
+		geos = append(geos, geo)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return geos, nil
 }
 
 func (l *sortListingEngine) GetListingsLatLon(businessID int) (shared.AddressGeo, error) {
