@@ -35,7 +35,8 @@ const (
 		"INNER JOIN listing ON listing.listing_id = favorites.listing_id " +
 		"INNER JOIN listing_date ON listing_date.listing_date_id = favorites.listing_date_id " +
 		"INNER JOIN listing_image ON listing_image.listing_id = favorites.listing_id " +
-		"INNER JOIN business ON listing.business_id = business.business_id"
+		"INNER JOIN business ON listing.business_id = business.business_id " +
+		"INNER JOIN business_address ON listing.business_id = business_address.business_id "
 
 	FromClauseListingAdmin = "FROM listing " +
 		"INNER JOIN business ON listing.business_id = business.business_id " +

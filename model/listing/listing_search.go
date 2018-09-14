@@ -336,7 +336,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 		searchQuery = fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListingWithAddress, whereClause)
 	}
 
-	l.logger.Info().Msgf("search Query: %s", searchQuery)
+	//l.logger.Info().Msgf("search Query: %s", searchQuery)
 
 	rows, err := l.sql.Query(searchQuery)
 	if err != nil {
