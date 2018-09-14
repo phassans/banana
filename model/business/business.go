@@ -90,22 +90,11 @@ func (b *businessEngine) GetAllBusiness() ([]shared.Business, error) {
 }
 
 func (b *businessEngine) GetBusinessIDFromName(businessName string) (int, error) {
-	rows, err := b.sql.Query("SELECT business_id FROM business where name = $1;", businessName)
-	if err != nil {
-		return 0, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
-
 	var id int
-	if rows.Next() {
-		err = rows.Scan(&id)
-		if err != nil {
-			return 0, helper.DatabaseError{DBError: err.Error()}
-		}
-	}
+	rows := b.sql.QueryRow("SELECT business_id FROM business where name = $1;", businessName)
 
-	if err = rows.Err(); err != nil {
+	err := rows.Scan(&id)
+	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 
@@ -113,22 +102,11 @@ func (b *businessEngine) GetBusinessIDFromName(businessName string) (int, error)
 }
 
 func (b *businessEngine) GetBusinessFromID(businessID int) (shared.Business, error) {
-	rows, err := b.sql.Query("SELECT business_id, name, phone, website FROM business where business_id = $1;", businessID)
-	if err != nil {
-		return shared.Business{}, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
-
 	var business shared.Business
-	if rows.Next() {
-		err = rows.Scan(&business.BusinessID, &business.Name, &business.Phone, &business.Website)
-		if err != nil {
-			return shared.Business{}, helper.DatabaseError{DBError: err.Error()}
-		}
-	}
+	rows := b.sql.QueryRow("SELECT business_id, name, phone, website FROM business where business_id = $1;", businessID)
 
-	if err = rows.Err(); err != nil {
+	err := rows.Scan(&business.BusinessID, &business.Name, &business.Phone, &business.Website)
+	if err != nil {
 		return shared.Business{}, helper.DatabaseError{DBError: err.Error()}
 	}
 
@@ -221,29 +199,18 @@ func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 }
 
 func (b *businessEngine) getBusinessAddressFromID(businessID int) (shared.BusinessAddress, error) {
-	rows, err := b.sql.Query("SELECT street, city, postal_code, state, business_id, address_id FROM business_address where business_id = $1;", businessID)
-	if err != nil {
-		return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
-
 	var businessAddress shared.BusinessAddress
-	if rows.Next() {
-		err = rows.Scan(
-			&businessAddress.Street,
-			&businessAddress.City,
-			&businessAddress.PostalCode,
-			&businessAddress.State,
-			&businessAddress.BusinessID,
-			&businessAddress.AddressID,
-		)
-		if err != nil {
-			return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
-		}
-	}
 
-	if err = rows.Err(); err != nil {
+	rows := b.sql.QueryRow("SELECT street, city, postal_code, state, business_id, address_id FROM business_address where business_id = $1;", businessID)
+	err := rows.Scan(
+		&businessAddress.Street,
+		&businessAddress.City,
+		&businessAddress.PostalCode,
+		&businessAddress.State,
+		&businessAddress.BusinessID,
+		&businessAddress.AddressID,
+	)
+	if err != nil {
 		return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
 	}
 

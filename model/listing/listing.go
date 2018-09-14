@@ -288,51 +288,40 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 
 	//fmt.Println("GetListingByID ", query)
 
-	rows, err := l.sql.Query(query)
-
-	if err != nil {
-		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-	}
-
-	defer rows.Close()
+	rows := l.sql.QueryRow(query)
 
 	var listing shared.Listing
 	var sqlEndDate sql.NullString
 	var sqlRecurringEndDate sql.NullString
-	if rows.Next() {
-		err = rows.Scan(
-			&listing.Title,
-			&listing.OldPrice,
-			&listing.NewPrice,
-			&listing.Discount,
-			&listing.DiscountDescription,
-			&listing.Description,
-			&listing.StartDate,
-			&sqlEndDate,
-			&listing.StartTime,
-			&listing.EndTime,
-			&listing.MultipleDays,
-			&listing.Recurring,
-			&sqlRecurringEndDate,
-			&listing.Type,
-			&listing.BusinessID,
-			&listing.ListingID,
-			&listing.BusinessName,
-			&listing.ListingDateID,
-			&listing.ListingDate,
-			&listing.ImageLink,
-		)
-		if err != nil {
-			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-		}
+	err := rows.Scan(
+		&listing.Title,
+		&listing.OldPrice,
+		&listing.NewPrice,
+		&listing.Discount,
+		&listing.DiscountDescription,
+		&listing.Description,
+		&listing.StartDate,
+		&sqlEndDate,
+		&listing.StartTime,
+		&listing.EndTime,
+		&listing.MultipleDays,
+		&listing.Recurring,
+		&sqlRecurringEndDate,
+		&listing.Type,
+		&listing.BusinessID,
+		&listing.ListingID,
+		&listing.BusinessName,
+		&listing.ListingDateID,
+		&listing.ListingDate,
+		&listing.ImageLink,
+	)
+	if err != nil {
+		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
+
 	listing.ImageLink = optimizeImage(listing.ImageLink)
 	listing.EndDate = sqlEndDate.String
 	listing.RecurringEndDate = sqlRecurringEndDate.String
-
-	if err = rows.Err(); err != nil {
-		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
-	}
 
 	return listing, nil
 }
@@ -414,22 +403,11 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 }
 
 func (l *listingEngine) isFavorite(phoneID string, listingID int) bool {
-	rows, err := l.sql.Query("SELECT favorite_id FROM favorites where phone_id = $1 AND listing_id = $2;", phoneID, listingID)
-	if err != nil {
-		return false
-	}
-
-	defer rows.Close()
+	rows := l.sql.QueryRow("SELECT favorite_id FROM favorites where phone_id = $1 AND listing_id = $2;", phoneID, listingID)
 
 	var favoriteID int
-	if rows.Next() {
-		err = rows.Scan(&favoriteID)
-		if err != nil {
-			return false
-		}
-	}
-
-	if err = rows.Err(); err != nil {
+	err := rows.Scan(&favoriteID)
+	if err != nil {
 		return false
 	}
 
