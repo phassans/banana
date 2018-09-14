@@ -304,7 +304,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 	splitKeywordsBySpace := strings.Split(keywords, " ")
 	searchKeywords := strings.Join(splitKeywordsBySpace, ",")
 
-	selectFields := fmt.Sprintf("%s, %s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingDateFields, common.ListingImageFields)
+	selectFields := fmt.Sprintf("%s, %s, %s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingBusinessAddressFields, common.ListingDateFields, common.ListingImageFields)
 
 	var searchQuery string
 	if keywords != "" {
@@ -324,19 +324,19 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 		}
 
 		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, discount_description, description, start_date, end_date, "+
-			"start_time, end_time, multiple_days, recurring, recurring_date, listing_type, business_id, listing_id, bname, listing_date_id, listing_date, path "+
+			"start_time, end_time, multiple_days, recurring, recurring_date, listing_type, business_id, listing_id, bname, latitude, longitude, listing_date_id, listing_date, path "+
 			"FROM (%s, "+
 			"to_tsvector('english', business.name) || "+
 			"to_tsvector('english', listing.title) || "+
 			"to_tsvector('english', business_cuisine.cuisine) || "+
 			"to_tsvector('english', listing.description) as document "+
 			"%s %s ) p_search "+
-			"WHERE p_search.document @@ to_tsquery('english', '%s');", selectFields, common.FromClauseListing, whereClause, searchKeywords)
+			"WHERE p_search.document @@ to_tsquery('english', '%s');", selectFields, common.FromClauseListingWithAddress, whereClause, searchKeywords)
 	} else {
-		searchQuery = fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListing, whereClause)
+		searchQuery = fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListingWithAddress, whereClause)
 	}
 
-	//l.logger.Info().Msgf("search Query: %s", searchQuery)
+	l.logger.Info().Msgf("search Query: %s", searchQuery)
 
 	rows, err := l.sql.Query(searchQuery)
 	if err != nil {
@@ -368,6 +368,8 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 			&listing.BusinessID,
 			&listing.ListingID,
 			&listing.BusinessName,
+			&listing.Latitude,
+			&listing.Longitude,
 			&listing.ListingDateID,
 			&listing.ListingDate,
 			&listing.ListingImage,

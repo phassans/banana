@@ -3,7 +3,6 @@ package listing
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"time"
 
 	"strings"
@@ -113,7 +112,7 @@ func (l *sortListingEngine) sortListingsByPrice() error {
 func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay string, isFavorite bool) error {
 	var ll []shared.SortView
 
-	var businessIDs []string
+	/*var businessIDs []string
 	bUniqueMap := make(map[string]bool)
 	for _, listing := range l.listings {
 		strBID := strconv.Itoa(listing.BusinessID)
@@ -131,21 +130,21 @@ func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay stri
 	businessGeos, err := l.GetAllListingsLatLon(businessIDs)
 	if err != nil {
 		return err
-	}
+	}*/
 
 	for _, listing := range l.listings {
 		// get LatLon
-		var geo shared.AddressGeo
+		/*var geo shared.AddressGeo
 		for _, businessGeo := range businessGeos {
 			if businessGeo.BusinessID == listing.BusinessID {
 				geo = businessGeo
 				break
 			}
-		}
+		}*/
 
 		// append latLon
 		fromMobile := haversine.Coord{Lat: l.currentLocation.Latitude, Lon: l.currentLocation.Longitude}
-		fromDB := haversine.Coord{Lat: geo.Latitude, Lon: geo.Longitude}
+		fromDB := haversine.Coord{Lat: listing.Latitude, Lon: listing.Longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
 		if isFavorite || mi <= getMaxDistance(isFuture) {
 			listing.DistanceFromLocation = mi

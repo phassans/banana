@@ -12,6 +12,8 @@ const (
 
 	ListingBusinessFields = "business.name as bname"
 
+	ListingBusinessAddressFields = "business_address.latitude as latitude, business_address.longitude as longitude "
+
 	ListingImageFields = "listing_image.path as path"
 
 	FavoriteFields = "favorites.favorite_id as favorite_id, favorites.favorite_add_date as favorite_add_date"
@@ -20,6 +22,13 @@ const (
 		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id " +
 		"INNER JOIN business ON listing.business_id = business.business_id " +
 		"INNER JOIN business_cuisine ON listing.business_id = business_cuisine.business_id " +
+		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
+
+	FromClauseListingWithAddress = "FROM listing " +
+		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id " +
+		"INNER JOIN business ON listing.business_id = business.business_id " +
+		"INNER JOIN business_cuisine ON listing.business_id = business_cuisine.business_id " +
+		"INNER JOIN business_address ON listing.business_id = business_address.business_id " +
 		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
 
 	FromClauseFavorites = "FROM favorites " +

@@ -51,6 +51,8 @@ type (
 		ListingWeekDay       string        `json:"listingWeekDay,omitempty"`
 		ListingDateID        int           `json:"listingDateId,omitempty"`
 		Favorite             *Favorite     `json:"favorite,omitempty"`
+		Latitude             float64       `json:"latitude,omitempty"`
+		Longitude            float64       `json:"longitude,omitempty"`
 	}
 
 	// SearchListingResult result of search
