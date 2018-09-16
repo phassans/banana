@@ -110,7 +110,7 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 	}
 	f.logger.Info().Msgf("done sorting the listings in favorite. listings count: %d", len(listings))
 
-	return f.listingEngine.MassageAndPopulateSearchListings(listings)
+	return f.listingEngine.MassageAndPopulateSearchListings(listings, true)
 
 }
 

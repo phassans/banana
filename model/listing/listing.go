@@ -55,7 +55,7 @@ type (
 		GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error)
 
 		// MassageAndPopulateSearchListings to massage and populate search result
-		MassageAndPopulateSearchListings([]shared.Listing) ([]shared.SearchListingResult, error)
+		MassageAndPopulateSearchListings([]shared.Listing, bool) ([]shared.SearchListingResult, error)
 
 		// DeleteListing to delete the listing
 		DeleteListing(listingID int) error
@@ -209,7 +209,7 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	listing.Business = &businessInfo
 
 	timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
-	weekday, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, false, timeLeft)
+	weekday, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, false, timeLeft, false)
 	if err != nil {
 		return shared.Listing{}, err
 	}

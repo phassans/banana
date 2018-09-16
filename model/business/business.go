@@ -94,7 +94,10 @@ func (b *businessEngine) GetBusinessIDFromName(businessName string) (int, error)
 	rows := b.sql.QueryRow("SELECT business_id FROM business where name = $1;", businessName)
 
 	err := rows.Scan(&id)
-	if err != nil {
+
+	if err == sql.ErrNoRows {
+		return 0, nil
+	} else if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 

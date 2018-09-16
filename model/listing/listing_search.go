@@ -109,7 +109,7 @@ func (l *listingEngine) SearchListings(
 		l.logger.Info().Msgf("tagging listings as favourites")
 	}
 
-	searchListing, err := l.MassageAndPopulateSearchListings(listings)
+	searchListing, err := l.MassageAndPopulateSearchListings(listings, false)
 	if err != nil {
 		return searchListing, err
 	}
@@ -247,6 +247,15 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 
 			}
 			whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
+
+			// added this to remove all done deals
+			if searchDay == shared.SearchThisWeek {
+				currentDate := time.Now().Format(shared.DateFormatSQL) //"2006-01-02"
+				currentTime := time.Now().Format(shared.TimeLayout24Hour)
+
+				whereClause.WriteString(fmt.Sprintf(" AND listing_date.listing_date = '%s' AND listing_date.end_time >= '%s'", currentDate, currentTime))
+			}
+
 		} else if searchDay == shared.SearchNextWeek {
 			curr := listingDate
 			dateClause.WriteString("(")
@@ -394,7 +403,7 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 	return listings, nil
 }
 
-func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing) ([]shared.SearchListingResult, error) {
+func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing, isFavorite bool) ([]shared.SearchListingResult, error) {
 	var listingsResult []shared.SearchListingResult
 	for _, listing := range listings {
 		timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
@@ -402,7 +411,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			return nil, err
 		}
 
-		_, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, true, timeLeft)
+		_, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, true, timeLeft, isFavorite)
 		if err != nil {
 			return nil, err
 		}
@@ -500,7 +509,7 @@ func inTimeSpan(start, end, check time.Time) bool {
 	return check.After(start) && check.Before(end)
 }
 
-func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string, isSearch bool, timeLeft int) (string, string, error) {
+func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string, isSearch bool, timeLeft int, isFavorite bool) (string, string, error) {
 
 	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
 		return "", "", nil
@@ -514,7 +523,10 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 	if timeLeft == 0 {
 		// see if current day and listing day are same
 		var buffer bytes.Buffer
-		buffer.WriteString(fmt.Sprintf("%s %d, ", listingDateFormatted.Month().String()[0:3], listingDateFormatted.Day()))
+		if !isFavorite {
+			buffer.WriteString(fmt.Sprintf("%s %d, ", listingDateFormatted.Month().String()[0:3], listingDateFormatted.Day()))
+		}
+
 		if time.Now().Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
 			if isSearch {
 				buffer.WriteString(listingDateFormatted.Weekday().String()[0:3] + ": ")
