@@ -19,7 +19,7 @@ type (
 	sortListingEngine struct {
 		listings        []shared.Listing
 		sortingType     string
-		currentLocation shared.CurrentLocation
+		currentLocation shared.GeoLocation
 		sql             *sql.DB
 	}
 
@@ -31,7 +31,7 @@ type (
 
 // NewSortListingEngine returns an instance of sortListingEngine
 func NewSortListingEngine(listings []shared.Listing, sortingType string,
-	currentLocation shared.CurrentLocation, sql *sql.DB) SortListingEngine {
+	currentLocation shared.GeoLocation, sql *sql.DB) SortListingEngine {
 	return &sortListingEngine{listings, sortingType, currentLocation, sql}
 }
 

@@ -208,5 +208,13 @@ CREATE TABLE IF NOT EXISTS category_to_keyword
   PRIMARY KEY (category,keyword)
 );
 
+CREATE TABLE IF NOT EXISTS address_to_geo
+(
+  address TEXT,
+  latitude        NUMERIC,
+  longitude       NUMERIC,
+  PRIMARY KEY (address)
+);
+
 INSERT INTO business_country (name)
 VALUES ('USA');

@@ -65,6 +65,10 @@ type (
 
 		// GetListingImage returns image of the listing
 		GetListingImage(listingID int) (string, error)
+
+		GetGeoFromAddress(string) (shared.GeoLocation, error)
+
+		AddGeoLocation(string, shared.GeoLocation) error
 	}
 )
 
@@ -463,4 +467,33 @@ func (l *listingEngine) GetListingImage(listingID int) (string, error) {
 		imageLink = "https://res.cloudinary.com/itshungryhour/image/upload/v1533011858/listing/NoPicAvailable.png"
 	}
 	return optimizeImage(imageLink), nil
+}
+
+func (l *listingEngine) GetGeoFromAddress(address string) (shared.GeoLocation, error) {
+	rows := l.sql.QueryRow("SELECT latitude,longitude FROM address_to_geo where address = $1;", address)
+
+	var geo shared.GeoLocation
+	err := rows.Scan(&geo.Latitude, &geo.Longitude)
+
+	if err == sql.ErrNoRows {
+		return shared.GeoLocation{}, nil
+	}
+	if err != nil {
+		return shared.GeoLocation{}, err
+	}
+
+	return geo, nil
+}
+
+func (l *listingEngine) AddGeoLocation(location string, geoLocation shared.GeoLocation) error {
+	addListingRecurringSQL := "INSERT INTO address_to_geo(address,latitude,longitude) " +
+		"VALUES($1,$2,$3);"
+
+	_, err := l.sql.Exec(addListingRecurringSQL, location, geoLocation.Latitude, geoLocation.Longitude)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	l.logger.Info().Msgf("added geoLocation successful for location:%s", location)
+	return nil
 }

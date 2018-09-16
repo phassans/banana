@@ -59,18 +59,36 @@ func (l *listingEngine) SearchListings(
 		return nil, err
 	}*/
 
-	var currentLocation shared.CurrentLocation
+	var currentLocation shared.GeoLocation
 	var resp clients.LatLong
 	if location != "" && latitude == 0 && longitude == 0 {
-		// getLatLonFromLocation
-		resp, err = clients.GetLatLong(location)
+		// check DB first
+		currentLocation, err = l.GetGeoFromAddress(location)
 		if err != nil {
+			l.logger.Error().Msgf("GetGeoFromAddress returned with error: %s", err)
 			return nil, err
 		}
-		currentLocation = shared.CurrentLocation{Latitude: resp.Lat, Longitude: resp.Lon}
-		l.logger.Info().Msgf("resp from google lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
+		l.logger.Info().Msgf("GeoLocation found in DB")
+
+		// else fetch from Google API
+		if currentLocation == (shared.GeoLocation{}) {
+			// getLatLonFromLocation
+			resp, err = clients.GetLatLong(location)
+			if err != nil {
+				return nil, err
+			}
+			currentLocation = shared.GeoLocation{Latitude: resp.Lat, Longitude: resp.Lon}
+			go func() {
+				err = l.AddGeoLocation(location, currentLocation)
+				l.logger.Error().Msgf("AddGeoLocation error: %s", err)
+
+			}()
+			l.logger.Info().Msgf("GeoLocation found in Google")
+		}
+
+		l.logger.Info().Msgf("geolocation lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
 	} else {
-		currentLocation = shared.CurrentLocation{Latitude: latitude, Longitude: longitude}
+		currentLocation = shared.GeoLocation{Latitude: latitude, Longitude: longitude}
 	}
 	l.logger.Info().Msgf("search location: %v", currentLocation)
 
