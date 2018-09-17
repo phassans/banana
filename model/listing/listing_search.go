@@ -235,7 +235,7 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 		case shared.SearchTomorrow:
 			endDay = 1
 		case shared.SearchThisWeek:
-			fmt.Println("listingDate.Weekday().String()", listingDate.Weekday().String())
+			//fmt.Println("listingDate.Weekday().String()", listingDate.Weekday().String())
 			endDay = 6 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
 		case shared.SearchNextWeek:
 			startDay = 6 - shared.DayMap[strings.ToLower(listingDate.Weekday().String())]
@@ -245,7 +245,10 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 		if searchDay == shared.SearchTomorrow || searchDay == shared.SearchThisWeek {
 			curr := listingDate
 			if searchDay == shared.SearchThisWeek {
-				dateClause.WriteString(fmt.Sprintf("('%s',", strings.Split(curr.String(), " ")[0]))
+				dateClause.WriteString(fmt.Sprintf("('%s'", strings.Split(curr.String(), " ")[0]))
+				if endDay != 0 {
+					dateClause.WriteString(",")
+				}
 			} else if searchDay == shared.SearchTomorrow {
 				dateClause.WriteString("(")
 			}
@@ -297,7 +300,7 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 		whereClause.WriteString(fmt.Sprintf(" AND listing_type in %s", getListingTypeWhereClause(listingTypes)))
 	}
 
-	fmt.Println(whereClause.String())
+	//fmt.Println(whereClause.String())
 	return whereClause.String(), nil
 }
 
