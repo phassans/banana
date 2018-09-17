@@ -494,6 +494,9 @@ func (l *listingEngine) GetGeoFromAddressFromDB(address string) (shared.GeoLocat
 		return shared.GeoLocation{}, err
 	}
 
+	// update in memory map
+	l.geoMap[address] = geo
+
 	return geo, nil
 }
 
