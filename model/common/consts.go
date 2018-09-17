@@ -43,11 +43,11 @@ const (
 		"INNER JOIN business_cuisine ON listing.business_id = business_cuisine.business_id " +
 		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
 
-	MaxFilterDistance = "25"
+	MaxFilterDistance = "15"
 
 	MaxFutureDays = 3
 
-	MaxDistanceForTodaysDeals = 25.0
+	MaxDistanceForTodaysDeals = 15.0
 
 	MaxDistanceForFutureDeals = 25.0
 )
