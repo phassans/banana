@@ -80,7 +80,9 @@ func (l *listingEngine) SearchListings(
 			currentLocation = shared.GeoLocation{Latitude: resp.Lat, Longitude: resp.Lon}
 			go func() {
 				err = l.AddGeoLocation(location, currentLocation)
-				l.logger.Error().Msgf("AddGeoLocation error: %s", err)
+				if err != nil {
+					l.logger.Error().Msgf("AddGeoLocation error: %s", err)
+				}
 
 			}()
 			l.logger.Info().Msgf("GeoLocation found in Google")
