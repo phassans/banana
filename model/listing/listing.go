@@ -19,6 +19,7 @@ type (
 		sql            *sql.DB
 		logger         zerolog.Logger
 		businessEngine business.BusinessEngine
+		geoMap         map[string]shared.GeoLocation
 	}
 
 	// ListingEngine interface which holds all listing methods
@@ -74,7 +75,9 @@ type (
 
 // NewListingEngine returns a instance of listingEngine
 func NewListingEngine(psql *sql.DB, logger zerolog.Logger, businessEngine business.BusinessEngine) ListingEngine {
-	return &listingEngine{psql, logger, businessEngine}
+	//create geolocationmap
+	geoMap := make(map[string]shared.GeoLocation)
+	return &listingEngine{psql, logger, businessEngine, geoMap}
 }
 
 func (l *listingEngine) GetDietaryRestriction(listingID int) ([]string, error) {
@@ -470,6 +473,15 @@ func (l *listingEngine) GetListingImage(listingID int) (string, error) {
 }
 
 func (l *listingEngine) GetGeoFromAddress(address string) (shared.GeoLocation, error) {
+	if _, ok := l.geoMap[address]; ok {
+		l.logger.Info().Msgf("found location memory map:%s", address)
+		return l.geoMap[address], nil
+	}
+
+	return l.GetGeoFromAddressFromDB(address)
+}
+
+func (l *listingEngine) GetGeoFromAddressFromDB(address string) (shared.GeoLocation, error) {
 	rows := l.sql.QueryRow("SELECT latitude,longitude FROM address_to_geo where address = $1;", address)
 
 	var geo shared.GeoLocation
@@ -493,6 +505,9 @@ func (l *listingEngine) AddGeoLocation(location string, geoLocation shared.GeoLo
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
+
+	// update in memory map
+	l.geoMap[location] = geoLocation
 
 	l.logger.Info().Msgf("added geoLocation successful for location:%s", location)
 	return nil
