@@ -264,14 +264,7 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 
 		if searchDay == shared.SearchTomorrow || searchDay == shared.SearchThisWeek {
 			curr := listingDate
-			if searchDay == shared.SearchThisWeek {
-				dateClause.WriteString(fmt.Sprintf("('%s'", strings.Split(curr.String(), " ")[0]))
-				if endDay != 0 {
-					dateClause.WriteString(",")
-				}
-			} else if searchDay == shared.SearchTomorrow {
-				dateClause.WriteString("(")
-			}
+			dateClause.WriteString("(")
 
 			if endDay == 0 {
 				dateClause.WriteString(")")
@@ -288,14 +281,6 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 
 			}
 			whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
-
-			// added this to remove all done deals
-			/*if searchDay == shared.SearchThisWeek {
-				currentDate := time.Now().Format(shared.DateFormatSQL) //"2006-01-02"
-				currentTime := time.Now().Format(shared.TimeLayout24Hour)
-
-				whereClause.WriteString(fmt.Sprintf(" AND listing_date.listing_date = '%s' AND listing_date.end_time >= '%s'", currentDate, currentTime))
-			}*/
 
 		} else if searchDay == shared.SearchNextWeek {
 			curr := listingDate
@@ -349,6 +334,25 @@ func (l *listingEngine) getKeywordsFromCategory(keywords string) ([]string, erro
 }
 
 func (l *listingEngine) GetListings(listingType []string, keywords string, future bool, searchDay string) ([]shared.Listing, error) {
+	if searchDay == shared.SearchThisWeek {
+		todaysListings, err := l.getListings(listingType, keywords, future, shared.SearchToday)
+		if err != nil {
+			return nil, err
+		}
+
+		thisWeekListings, err := l.getListings(listingType, keywords, future, shared.SearchThisWeek)
+		if err != nil {
+			return nil, err
+		}
+
+		todaysListings = append(todaysListings, thisWeekListings...)
+		return todaysListings, nil
+	}
+	return l.getListings(listingType, keywords, future, searchDay)
+
+}
+
+func (l *listingEngine) getListings(listingType []string, keywords string, future bool, searchDay string) ([]shared.Listing, error) {
 	// determine where clause
 	whereClause, err := getWhereClause(listingType, future, searchDay)
 	if err != nil {
