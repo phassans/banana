@@ -13,6 +13,7 @@ import (
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/common"
 	"github.com/phassans/banana/shared"
+	"github.com/umahmood/haversine"
 )
 
 const (
@@ -68,21 +69,17 @@ func (l *listingEngine) SearchListings(
 			l.logger.Error().Msgf("GetGeoFromAddress returned with error: %s", err)
 			return nil, err
 		}
-		l.logger.Info().Msgf("GeoLocation found in DB")
-
-		// else fetch from Google API
-		if currentLocation == (shared.GeoLocation{}) {
-			// getLatLonFromLocation
+		if currentLocation != (shared.GeoLocation{}) {
+			l.logger.Info().Msgf("GeoLocation found in DB")
+		} else {
+			// else fetch from Google API getLatLonFromLocation
 			resp, err = clients.GetLatLong(location)
 			if err != nil {
 				return nil, err
 			}
-
-			if resp == (clients.LatLong{}) {
-				return []shared.SearchListingResult{}, helper.LocationError{Message: "invalid location"}
-			}
-
 			currentLocation = shared.GeoLocation{Latitude: resp.Lat, Longitude: resp.Lon}
+
+			// cache the result in database
 			go func() {
 				err = l.AddGeoLocation(location, currentLocation)
 				if err != nil {
@@ -90,6 +87,12 @@ func (l *listingEngine) SearchListings(
 				}
 
 			}()
+
+			// if invalid location
+			if resp == (clients.LatLong{}) {
+				return []shared.SearchListingResult{}, helper.LocationError{Message: "invalid location"}
+			}
+
 			l.logger.Info().Msgf("GeoLocation found in Google")
 		}
 
@@ -97,6 +100,12 @@ func (l *listingEngine) SearchListings(
 	} else {
 		currentLocation = shared.GeoLocation{Latitude: latitude, Longitude: longitude}
 	}
+
+	if !isDistanceInRange(currentLocation) {
+		l.logger.Error().Msgf("location not in range: %v", currentLocation)
+		return []shared.SearchListingResult{}, helper.LocationError{Message: "location not in range"}
+	}
+
 	l.logger.Info().Msgf("search location: %v", currentLocation)
 
 	// sort Listings based on sortBy
@@ -602,4 +611,15 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 		}
 		return weekDayToday, fmt.Sprintf("%d hours left", int(math.Ceil(res))), nil
 	}
+}
+
+func isDistanceInRange(geoCode shared.GeoLocation) bool {
+	realLocation := haversine.Coord{Lat: geoCode.Latitude, Lon: geoCode.Longitude}
+	sunnyvaleLocation := haversine.Coord{Lat: float64(37.36883), Lon: float64(-122.0363496)}
+	mi, _ := haversine.Distance(realLocation, sunnyvaleLocation)
+	if mi < common.MaxRangeAroundSunnyvale {
+		return true
+	}
+
+	return false
 }

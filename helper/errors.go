@@ -81,5 +81,6 @@ type LocationError struct {
 }
 
 func (l LocationError) Error() string {
-	return fmt.Sprintf("location error")
+	b, _ := json.Marshal(l)
+	return fmt.Sprintf("location error: %s", string(b))
 }

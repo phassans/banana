@@ -50,4 +50,6 @@ const (
 	MaxDistanceForTodaysDeals = 15.0
 
 	MaxDistanceForFutureDeals = 25.0
+
+	MaxRangeAroundSunnyvale = 100.0
 )
