@@ -77,6 +77,11 @@ func (l *listingEngine) SearchListings(
 			if err != nil {
 				return nil, err
 			}
+
+			if resp == (clients.LatLong{}) {
+				return []shared.SearchListingResult{}, nil
+			}
+
 			currentLocation = shared.GeoLocation{Latitude: resp.Lat, Longitude: resp.Lon}
 			go func() {
 				err = l.AddGeoLocation(location, currentLocation)
