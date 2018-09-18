@@ -290,12 +290,12 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 			whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
 
 			// added this to remove all done deals
-			if searchDay == shared.SearchThisWeek {
+			/*if searchDay == shared.SearchThisWeek {
 				currentDate := time.Now().Format(shared.DateFormatSQL) //"2006-01-02"
 				currentTime := time.Now().Format(shared.TimeLayout24Hour)
 
 				whereClause.WriteString(fmt.Sprintf(" AND listing_date.listing_date = '%s' AND listing_date.end_time >= '%s'", currentDate, currentTime))
-			}
+			}*/
 
 		} else if searchDay == shared.SearchNextWeek {
 			curr := listingDate
