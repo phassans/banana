@@ -74,3 +74,12 @@ func (e ListingDoesNotExist) Error() string {
 	b, _ := json.Marshal(e)
 	return fmt.Sprintf("listingId does not exist: %s", string(b))
 }
+
+// ValidationError ...
+type LocationError struct {
+	Message string `json:"message,omitempty"`
+}
+
+func (l LocationError) Error() string {
+	return fmt.Sprintf("location error")
+}

@@ -79,7 +79,7 @@ func (l *listingEngine) SearchListings(
 			}
 
 			if resp == (clients.LatLong{}) {
-				return []shared.SearchListingResult{}, nil
+				return []shared.SearchListingResult{}, helper.LocationError{Message: "invalid location"}
 			}
 
 			currentLocation = shared.GeoLocation{Latitude: resp.Lat, Longitude: resp.Lon}
