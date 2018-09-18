@@ -71,6 +71,10 @@ func (l *listingEngine) SearchListings(
 		}
 		if currentLocation != (shared.GeoLocation{}) {
 			l.logger.Info().Msgf("GeoLocation found in DB")
+			// if invalid location
+			if currentLocation.Latitude == -1 && currentLocation.Longitude == -1 {
+				return []shared.SearchListingResult{}, helper.LocationError{Message: "invalid location"}
+			}
 		} else {
 			// else fetch from Google API getLatLonFromLocation
 			resp, err = clients.GetLatLong(location)
@@ -89,7 +93,7 @@ func (l *listingEngine) SearchListings(
 			}()
 
 			// if invalid location
-			if resp == (clients.LatLong{}) {
+			if currentLocation.Latitude == -1 && currentLocation.Longitude == -1 {
 				return []shared.SearchListingResult{}, helper.LocationError{Message: "invalid location"}
 			}
 

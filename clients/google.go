@@ -98,7 +98,7 @@ func GetLatLong(address string) (LatLong, error) {
 		if googleResponse.Status == "OK" {
 			return LatLong{Lat: googleResponse.Results[0].Geometry.Location.Lat, Lon: googleResponse.Results[0].Geometry.Location.Lng}, nil
 		} else if googleResponse.Status == "ZERO_RESULTS" {
-			return LatLong{}, nil
+			return LatLong{Lat: float64(-1), Lon: float64(-1)}, nil
 		}
 
 		return LatLong{}, fmt.Errorf("error determining lat&lon for addres: %s. status:%s", address, googleResponse.Status)
