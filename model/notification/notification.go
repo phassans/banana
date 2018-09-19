@@ -43,18 +43,63 @@ func NewNotificationEngine(psql *sql.DB, logger zerolog.Logger, businessEngine b
 	return &notificationEngine{psql, logger, businessEngine}
 }
 
+func (l *notificationEngine) isPhoneRegistered(phoneID string) (bool, error) {
+	rows := l.sql.QueryRow("SELECT registration_token FROM register_phone where phone_id = $1;", phoneID)
+
+	var registrationToken string
+	err := rows.Scan(&registrationToken)
+
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	if registrationToken != "" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 func (n *notificationEngine) RegisterPhone(registrationToken string, phoneID string, phoneModel string) error {
-
-	registerPhoneSQL := "INSERT INTO register_phone(registration_token,phone_id,phone_model) " +
-		"VALUES($1,$2,$3);"
-
-	rows, err := n.sql.Query(registerPhoneSQL, registrationToken, phoneID, phoneModel)
+	registered, err := n.isPhoneRegistered(phoneID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
-	defer rows.Close()
 
-	n.logger.Info().Msgf("registerPhone successful for phoneID:%s", phoneID)
+	if registered {
+		err := n.UpdatePhoneRegistrationToken(registrationToken, phoneID)
+		if err != nil {
+			return helper.DatabaseError{DBError: err.Error()}
+		}
+	} else {
+		registerPhoneSQL := "INSERT INTO register_phone(registration_token,phone_id,phone_model) " +
+			"VALUES($1,$2,$3);"
+
+		rows, err := n.sql.Query(registerPhoneSQL, registrationToken, phoneID, phoneModel)
+		if err != nil {
+			return helper.DatabaseError{DBError: err.Error()}
+		}
+		defer rows.Close()
+
+		n.logger.Info().Msgf("registerPhone successful for phoneID:%s", phoneID)
+	}
+
+	return nil
+}
+
+func (n *notificationEngine) UpdatePhoneRegistrationToken(registrationToken string, phoneID string) error {
+	updatePhoneRegistrationToken := "UPDATE register_phone SET registration_token=$1 WHERE phone_id=$2;"
+
+	_, err := n.sql.Exec(updatePhoneRegistrationToken, registrationToken, phoneID)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	n.logger.Info().Msgf("phone registered successfully: %s", phoneID)
 	return nil
 }
 
