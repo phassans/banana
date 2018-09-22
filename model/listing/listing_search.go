@@ -267,6 +267,9 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 			dateClause.WriteString("(")
 
 			if endDay == 0 {
+				if dateClause.String() == "(" {
+					return "", nil
+				}
 				dateClause.WriteString(")")
 			}
 
@@ -357,6 +360,11 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 	whereClause, err := getWhereClause(listingType, future, searchDay)
 	if err != nil {
 		return nil, err
+	}
+
+	// if no where clause nothing to do here, return
+	if whereClause == "" {
+		return nil, nil
 	}
 
 	splitKeywordsBySpace := strings.Split(keywords, " ")
