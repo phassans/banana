@@ -2,6 +2,7 @@ package listing
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -142,8 +143,35 @@ func (l *listingEngine) AddListingDates(listing *shared.Listing) error {
 				dayIndex := int(nextDate.Weekday())
 				if shared.DayMap[recurringDay] == dayIndex {
 					next := fmt.Sprintf("%d/%d/%d", int(month), day, year)
-					lDate = shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
-					listings = append(listings, lDate)
+
+					// check if endTimeExtendsBeyond midnight
+					endTimePieces := strings.Split(listing.EndTime, ":")
+					if len(endTimePieces) > 0 {
+						timeInHour, err := strconv.ParseInt(endTimePieces[0], 10, 64)
+						if err != nil {
+							return err
+						}
+
+						// if listing extends beyond midnight split into two
+						if timeInHour >= 0 && timeInHour <= 4 {
+							l.logger.Info().Msgf("listing extends beyond midnight")
+							lDate1 := shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: "23:59:59"}
+							listings = append(listings, lDate1)
+
+							temp := nextDate
+							nextDateSameListing := temp.Add(time.Hour * 24)
+							year, month, day := nextDateSameListing.Date()
+							nextDay := fmt.Sprintf("%d/%d/%d", int(month), day, year)
+
+							lDate2 := shared.ListingDate{ListingID: listing.ListingID, ListingDate: nextDay, StartTime: "00:00:00", EndTime: listing.EndTime}
+							listings = append(listings, lDate2)
+
+							l.logger.Info().Msgf("lDate1: %v and lDate2: %v", lDate1, lDate2)
+						} else {
+							lDate = shared.ListingDate{ListingID: listing.ListingID, ListingDate: next, StartTime: listing.StartTime, EndTime: listing.EndTime}
+							listings = append(listings, lDate)
+						}
+					}
 				}
 			}
 			curDate = nextDate
@@ -170,7 +198,7 @@ func (l *listingEngine) InsertListingDate(lDate shared.ListingDate) (int, error)
 		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 
-	l.logger.Info().Msgf("InsertListingDate successful for listing:%d", lDate.ListingID)
+	//l.logger.Info().Msgf("InsertListingDate successful for listing:%d", lDate.ListingID)
 	return listingDateID, nil
 }
 
