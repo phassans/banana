@@ -25,7 +25,7 @@ type UserEngine interface {
 	UserGet(userID int) (shared.BusinessUser, error)
 	UserVerify(email string, password string) (shared.BusinessUser, error)
 
-	ContactUs(phoneID string, uname string, email string, comments string) error
+	ContactUs(phoneID string, uname string, email string, subject string, comments string) error
 }
 
 // NewUserEngine returns an instance of userEngine
@@ -156,11 +156,11 @@ func getMD5Hash(text string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func (u *userEngine) ContactUs(phoneID string, uname string, email string, comments string) error {
+func (u *userEngine) ContactUs(phoneID string, uname string, email string, subject string, comments string) error {
 	var contactUsID int
-	err := u.sql.QueryRow("INSERT INTO contact_us(phone_id,uname,email,comments,contact_date) "+
-		"VALUES($1,$2,$3,$4,$5) returning contact_us_id;",
-		phoneID, uname, email, comments, time.Now()).Scan(&contactUsID)
+	err := u.sql.QueryRow("INSERT INTO contact_us(phone_id,uname,email,subject,comments,contact_date) "+
+		"VALUES($1,$2,$3,$4,$5,$6) returning contact_us_id;",
+		phoneID, uname, email, subject, comments, time.Now()).Scan(&contactUsID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
