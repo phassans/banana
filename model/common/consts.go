@@ -52,4 +52,6 @@ const (
 	MaxDistanceForFutureDeals = 25.0
 
 	MaxRangeAroundSunnyvale = 100.0
+
+	MaxDistanceToGroupNow = 100.0
 )

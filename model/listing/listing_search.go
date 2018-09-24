@@ -155,9 +155,25 @@ func (l *listingEngine) SearchListings(
 	if sortBy == shared.SortByTimeLeft {
 		searchListing = groupListingsBasedOnCurrentTime(searchListing)
 		return searchListing, nil
+	} else if sortBy == "" || sortBy == shared.SortByDistance {
+		searchListing = GroupListingsOnNow(searchListing)
+		return searchListing, nil
 	}
 
 	return searchListing, nil
+}
+
+func GroupListingsOnNow(listings []shared.SearchListingResult) []shared.SearchListingResult {
+	var searchListingsLeft []shared.SearchListingResult
+	var searchListingRange []shared.SearchListingResult
+	for _, listing := range listings {
+		if strings.Contains(listing.DateTimeRange, "left") && listing.DistanceFromLocation <= common.MaxDistanceToGroupNow {
+			searchListingsLeft = append(searchListingsLeft, listing)
+		} else {
+			searchListingRange = append(searchListingRange, listing)
+		}
+	}
+	return append(searchListingsLeft, searchListingRange...)
 }
 
 func groupListingsBasedOnCurrentTime(listings []shared.SearchListingResult) []shared.SearchListingResult {
