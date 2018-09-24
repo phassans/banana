@@ -204,6 +204,22 @@ type (
 		PhoneID      string `json:"phoneId"`
 		Cuisine      string `json:"cuisine"`
 	}
+
+	SearchRequest struct {
+		Future         bool     `json:"future"`
+		Search         bool     `json:"search,omitempty"`
+		ListingTypes   []string `json:"listingTypes,omitempty"`
+		Latitude       float64  `json:"latitude,omitempty"`
+		Longitude      float64  `json:"longitude,omitempty"`
+		Location       string   `json:"location,omitempty"`
+		PriceFilter    float64  `json:"priceFilter,omitempty"`
+		DietaryFilters []string `json:"dietaryFilters,omitempty"`
+		DistanceFilter string   `json:"distanceFilter,omitempty"`
+		Keywords       string   `json:"keywords,omitempty"`
+		SortBy         string   `json:"sortBy,omitempty"`
+		SearchDay      string   `json:"searchDay,omitempty"`
+		PhoneID        string   `json:"phoneId"`
+	}
 )
 
 var logger zerolog.Logger

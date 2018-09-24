@@ -29,22 +29,7 @@ type (
 		AddListing(listing *shared.Listing) (int, error)
 
 		// SearchListings is to search for listings
-		SearchListings(
-			listingType []string,
-			future bool,
-			latitude float64,
-			longitude float64,
-			Location string,
-			priceFilter float64,
-			dietaryFilter []string,
-			distanceFilter string,
-			keywords string,
-			searchDay string,
-			sortBy string,
-			phoneID string,
-			search bool,
-
-		) ([]shared.SearchListingResult, error)
+		SearchListings(request shared.SearchRequest) ([]shared.SearchListingResult, error)
 
 		// GetListingsByBusinessID returns listing based on businessID
 		GetListingsByBusinessID(businessID int, businessType string) ([]shared.Listing, error)

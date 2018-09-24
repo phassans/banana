@@ -3,6 +3,7 @@ package listing
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -28,27 +29,18 @@ const (
 "listing_image.path as path "*/
 )
 
-func (l *listingEngine) SearchListings(
-	listingTypes []string,
-	future bool,
-	latitude float64,
-	longitude float64,
-	location string,
-	priceFilter float64,
-	dietaryFilters []string,
-	distanceFilter string,
-	keywords string,
-	searchDay string,
-	sortBy string,
-	phoneID string,
-	search bool,
-) ([]shared.SearchListingResult, error) {
+func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.SearchListingResult, error) {
 
 	var listings []shared.Listing
 	var err error
 
+	go func(req shared.SearchRequest) {
+		err := l.LogSearchRequest(req)
+		l.logger.Error().Msgf("LogSearchRequest returned with error: %s", err)
+	}(request)
+
 	//GetListings
-	listings, err = l.GetListings(listingTypes, keywords, future, searchDay)
+	listings, err = l.GetListings(request.ListingTypes, request.Keywords, request.Future, request.SearchDay)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +54,9 @@ func (l *listingEngine) SearchListings(
 
 	var currentLocation shared.GeoLocation
 	var resp clients.LatLong
-	if location != "" && latitude == 0 && longitude == 0 {
+	if request.Location != "" && request.Latitude == 0 && request.Longitude == 0 {
 		// check DB first
-		currentLocation, err = l.GetGeoFromAddress(location)
+		currentLocation, err = l.GetGeoFromAddress(request.Location)
 		if err != nil {
 			l.logger.Error().Msgf("GetGeoFromAddress returned with error: %s", err)
 			return nil, err
@@ -77,7 +69,7 @@ func (l *listingEngine) SearchListings(
 			}
 		} else {
 			// else fetch from Google API getLatLonFromLocation
-			resp, err = clients.GetLatLong(location)
+			resp, err = clients.GetLatLong(request.Location)
 			if err != nil {
 				return nil, err
 			}
@@ -85,7 +77,7 @@ func (l *listingEngine) SearchListings(
 
 			// cache the result in database
 			go func() {
-				err = l.AddGeoLocation(location, currentLocation)
+				err = l.AddGeoLocation(request.Location, currentLocation)
 				if err != nil {
 					l.logger.Error().Msgf("AddGeoLocation error: %s", err)
 				}
@@ -102,7 +94,7 @@ func (l *listingEngine) SearchListings(
 
 		l.logger.Info().Msgf("geolocation lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
 	} else {
-		currentLocation = shared.GeoLocation{Latitude: latitude, Longitude: longitude}
+		currentLocation = shared.GeoLocation{Latitude: request.Latitude, Longitude: request.Longitude}
 	}
 
 	if !isDistanceInRange(currentLocation) {
@@ -113,23 +105,23 @@ func (l *listingEngine) SearchListings(
 	l.logger.Info().Msgf("search location: %v", currentLocation)
 
 	// sort Listings based on sortBy
-	sortListingEngine := NewSortListingEngine(listings, sortBy, currentLocation, l.sql)
-	listings, err = sortListingEngine.SortListings(future, searchDay, search, false)
+	sortListingEngine := NewSortListingEngine(listings, request.SortBy, currentLocation, l.sql)
+	listings, err = sortListingEngine.SortListings(request.Future, request.SearchDay, request.Search, false)
 	if err != nil {
 		return nil, err
 	}
 	l.logger.Info().Msgf("done sorting the listings. listings count: %d", len(listings))
 
 	// filterResults
-	listings, err = l.filterResults(listings, priceFilter, dietaryFilters, distanceFilter)
+	listings, err = l.filterResults(listings, request.PriceFilter, request.DietaryFilters, request.DistanceFilter)
 	if err != nil {
 		return nil, err
 	}
 	l.logger.Info().Msgf("applied filters. number of listings: %d", len(listings))
 
-	if phoneID != "" {
+	if request.PhoneID != "" {
 
-		listingIDFromFavorites, err := l.getAllFavoritesFromPhoneID(phoneID)
+		listingIDFromFavorites, err := l.getAllFavoritesFromPhoneID(request.PhoneID)
 		if err != nil {
 			return nil, err
 		}
@@ -152,10 +144,10 @@ func (l *listingEngine) SearchListings(
 		return searchListing, err
 	}
 
-	if sortBy == shared.SortByTimeLeft {
+	if request.SortBy == shared.SortByTimeLeft {
 		searchListing = groupListingsBasedOnCurrentTime(searchListing)
 		return searchListing, nil
-	} else if sortBy == "" || sortBy == shared.SortByDistance {
+	} else if request.SortBy == "" || request.SortBy == shared.SortByDistance {
 		searchListing = GroupListingsOnNow(searchListing)
 		return searchListing, nil
 	}
@@ -654,4 +646,21 @@ func isDistanceInRange(geoCode shared.GeoLocation) bool {
 	}
 
 	return false
+}
+
+func (l *listingEngine) LogSearchRequest(searchRequest shared.SearchRequest) error {
+	searchJSON, err := json.Marshal(searchRequest)
+	if err != nil {
+		return err
+	}
+
+	logSearchRequest := "INSERT INTO search(search_request,search_date) " +
+		"VALUES($1,$2);"
+
+	_, err = l.sql.Exec(logSearchRequest, string(searchJSON), time.Now())
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return nil
 }

@@ -69,21 +69,23 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.Keywords = ""
 	}
 
-	result, err := rtr.engines.SearchListings(
-		request.ListingTypes,
-		request.Future,
-		request.Latitude,
-		request.Longitude,
-		request.Location,
-		request.PriceFilter,
-		request.DietaryFilters,
-		request.DistanceFilter,
-		request.Keywords,
-		request.SearchDay,
-		request.SortBy,
-		request.PhoneID,
-		request.Search,
-	)
+	searchRequest := shared.SearchRequest{
+		ListingTypes:   request.ListingTypes,
+		Future:         request.Future,
+		Latitude:       request.Latitude,
+		Longitude:      request.Longitude,
+		Location:       request.Location,
+		PriceFilter:    request.PriceFilter,
+		DietaryFilters: request.DietaryFilters,
+		DistanceFilter: request.DistanceFilter,
+		Keywords:       request.Keywords,
+		SearchDay:      request.SearchDay,
+		SortBy:         request.SortBy,
+		PhoneID:        request.PhoneID,
+		Search:         request.Search,
+	}
+
+	result, err := rtr.engines.SearchListings(searchRequest)
 	return listingsSearchResult{Result: result, Error: NewAPIError(err), Message: populateSearchMessage(len(result), request.Search)}, err
 }
 

@@ -218,5 +218,13 @@ CREATE TABLE IF NOT EXISTS address_to_geo
   PRIMARY KEY (address)
 );
 
+CREATE TABLE IF NOT EXISTS search
+(
+  search_id       SERIAL UNIQUE,
+  search_request  TEXT  NOT NULL,
+  search_date     TIMESTAMP NOT NULL,
+  PRIMARY KEY (search_id)
+);
+
 INSERT INTO business_country (name)
 VALUES ('USA');
