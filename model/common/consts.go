@@ -53,5 +53,5 @@ const (
 
 	MaxRangeAroundSunnyvale = 100.0
 
-	MaxDistanceToGroupNow = 100.0
+	MaxDistanceToGroupNow = 7.5
 )
