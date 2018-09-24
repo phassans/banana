@@ -198,6 +198,7 @@ CREATE TABLE IF NOT EXISTS contact_us
   uname           TEXT,
   email           TEXT,
   comments        TEXT,
+  contact_date    TIMESTAMP NOT NULL,
   PRIMARY KEY (contact_us_id)
 );
 

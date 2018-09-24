@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"encoding/hex"
+	"time"
 
 	"fmt"
 
@@ -157,9 +158,9 @@ func getMD5Hash(text string) string {
 
 func (u *userEngine) ContactUs(phoneID string, uname string, email string, comments string) error {
 	var contactUsID int
-	err := u.sql.QueryRow("INSERT INTO contact_us(phone_id,uname,email,comments) "+
-		"VALUES($1,$2,$3,$4) returning contact_us_id;",
-		phoneID, uname, email, comments).Scan(&contactUsID)
+	err := u.sql.QueryRow("INSERT INTO contact_us(phone_id,uname,email,comments,contact_date) "+
+		"VALUES($1,$2,$3,$4,$5) returning contact_us_id;",
+		phoneID, uname, email, comments, time.Now()).Scan(&contactUsID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}
