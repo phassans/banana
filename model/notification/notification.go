@@ -2,6 +2,8 @@ package notification
 
 import (
 	"database/sql"
+	"encoding/json"
+	"log"
 	"time"
 
 	"fmt"
@@ -36,6 +38,7 @@ type (
 		DeleteNotification(notificationID int) error
 		GetAllNotifications(phoneID string) ([]shared.Notification, error)
 		RegisterPhone(registrationToken string, phoneID string, phoneModel string) error
+		GetStats() (string, error)
 	}
 )
 
@@ -90,6 +93,39 @@ func (n *notificationEngine) RegisterPhone(registrationToken string, phoneID str
 	}
 
 	return nil
+}
+
+func (n *notificationEngine) GetStats() (string, error) {
+	stats := make(map[string]int)
+
+	iosStats, err := n.GetStat("ios")
+	if err != nil {
+		return "", err
+	}
+	stats["ios"] = iosStats
+
+	androidStats, err := n.GetStat("android")
+	if err != nil {
+		return "", err
+	}
+	stats["android"] = androidStats
+
+	jsonString, err := json.Marshal(stats)
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonString), nil
+}
+
+func (n *notificationEngine) GetStat(phoneModel string) (int, error) {
+	var count int
+	row := n.sql.QueryRow("SELECT COUNT(*) FROM register_phone where phone_model=$1", phoneModel)
+	err := row.Scan(&count)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return 0, nil
 }
 
 func (n *notificationEngine) UpdatePhoneRegistrationToken(registrationToken string, phoneID string) error {
