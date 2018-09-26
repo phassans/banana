@@ -110,6 +110,8 @@ func (n *notificationEngine) GetStats() (string, error) {
 	}
 	stats["android"] = androidStats
 
+	stats["total"] = iosStats + androidStats
+
 	jsonString, err := json.Marshal(stats)
 	if err != nil {
 		return "", err
