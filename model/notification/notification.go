@@ -2,6 +2,7 @@ package notification
 
 import (
 	"database/sql"
+	"time"
 
 	"fmt"
 
@@ -76,10 +77,10 @@ func (n *notificationEngine) RegisterPhone(registrationToken string, phoneID str
 			return helper.DatabaseError{DBError: err.Error()}
 		}
 	} else {
-		registerPhoneSQL := "INSERT INTO register_phone(registration_token,phone_id,phone_model) " +
-			"VALUES($1,$2,$3);"
+		registerPhoneSQL := "INSERT INTO register_phone(registration_token,phone_id,phone_model,register_date) " +
+			"VALUES($1,$2,$3,$4);"
 
-		rows, err := n.sql.Query(registerPhoneSQL, registrationToken, phoneID, phoneModel)
+		rows, err := n.sql.Query(registerPhoneSQL, registrationToken, phoneID, phoneModel, time.Now())
 		if err != nil {
 			return helper.DatabaseError{DBError: err.Error()}
 		}
@@ -92,9 +93,9 @@ func (n *notificationEngine) RegisterPhone(registrationToken string, phoneID str
 }
 
 func (n *notificationEngine) UpdatePhoneRegistrationToken(registrationToken string, phoneID string) error {
-	updatePhoneRegistrationToken := "UPDATE register_phone SET registration_token=$1 WHERE phone_id=$2;"
+	updatePhoneRegistrationToken := "UPDATE register_phone SET registration_token=$1, update_date=$2 WHERE phone_id=$3;"
 
-	_, err := n.sql.Exec(updatePhoneRegistrationToken, registrationToken, phoneID)
+	_, err := n.sql.Exec(updatePhoneRegistrationToken, registrationToken, time.Now(), phoneID)
 	if err != nil {
 		return helper.DatabaseError{DBError: err.Error()}
 	}

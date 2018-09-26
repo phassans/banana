@@ -180,6 +180,8 @@ CREATE TABLE IF NOT EXISTS register_phone
   registration_token TEXT UNIQUE NOT NULL,
   phone_id           TEXT UNIQUE NOT NULL,
   phone_model        TEXT,
+  register_date      TIMESTAMP NULL,
+  update_date        TIMESTAMP NULL,
   PRIMARY KEY (registration_id)
 );
 
