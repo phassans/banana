@@ -120,12 +120,12 @@ func (n *notificationEngine) GetStats() (string, error) {
 
 func (n *notificationEngine) GetStat(phoneModel string) (int, error) {
 	var count int
-	row := n.sql.QueryRow("SELECT COUNT(*) FROM register_phone where phone_model=$1", phoneModel)
+	row := n.sql.QueryRow("SELECT COUNT(*) FROM register_phone where phone_model=$1;", phoneModel)
 	err := row.Scan(&count)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return 0, nil
+	return count, nil
 }
 
 func (n *notificationEngine) UpdatePhoneRegistrationToken(registrationToken string, phoneID string) error {
