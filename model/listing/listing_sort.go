@@ -192,8 +192,8 @@ func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay stri
 			return nil
 		}
 
-		days = append(days, curDate.Weekday().String())
 		if searchDay == shared.SearchThisWeek {
+			days = append(days, curDate.Weekday().String())
 			for i := 0; i < endDay; i++ {
 				nextDate := curDate.Add(time.Hour * 24)
 				days = append(days, nextDate.Weekday().String())
