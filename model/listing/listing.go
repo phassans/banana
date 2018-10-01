@@ -325,7 +325,7 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 	whereClause.WriteString(fmt.Sprintf(" WHERE listing.business_id = %d", businessID))
 	query := fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListingAdmin, whereClause.String())
 
-	fmt.Println("GetListingsByBusinessID ", query)
+	//fmt.Println("GetListingsByBusinessID ", query)
 
 	rows, err := l.sql.Query(query)
 	if err != nil {

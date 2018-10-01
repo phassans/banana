@@ -112,36 +112,7 @@ func (l *sortListingEngine) sortListingsByPrice() error {
 func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay string, isFavorite bool) error {
 	var ll []shared.SortView
 
-	/*var businessIDs []string
-	bUniqueMap := make(map[string]bool)
 	for _, listing := range l.listings {
-		strBID := strconv.Itoa(listing.BusinessID)
-
-		if _, ok := bUniqueMap[strBID]; !ok {
-			bUniqueMap[strBID] = true
-			businessIDs = append(businessIDs, strconv.Itoa(listing.BusinessID))
-		}
-	}
-
-	if len(businessIDs) == 0 {
-		return nil
-	}
-
-	businessGeos, err := l.GetAllListingsLatLon(businessIDs)
-	if err != nil {
-		return err
-	}*/
-
-	for _, listing := range l.listings {
-		// get LatLon
-		/*var geo shared.AddressGeo
-		for _, businessGeo := range businessGeos {
-			if businessGeo.BusinessID == listing.BusinessID {
-				geo = businessGeo
-				break
-			}
-		}*/
-
 		// append latLon
 		fromMobile := haversine.Coord{Lat: l.currentLocation.Latitude, Lon: l.currentLocation.Longitude}
 		fromDB := haversine.Coord{Lat: listing.Latitude, Lon: listing.Longitude}
@@ -170,6 +141,10 @@ func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay stri
 	}
 	l.listings = listingsResult
 
+	return l.GroupListingsBasedOnSearchDay(searchDay)
+}
+
+func (l *sortListingEngine) GroupListingsBasedOnSearchDay(searchDay string) error {
 	// group them by day
 	if searchDay != "" {
 		var days []string
@@ -183,7 +158,7 @@ func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay stri
 		endDay := 0
 		switch searchDay {
 		case shared.SearchThisWeek:
-			fmt.Println("listingDate.Weekday().String()", curDate.Weekday().String())
+			//fmt.Println("listingDate.Weekday().String()", curDate.Weekday().String())
 			endDay = 6 - shared.DayMap[strings.ToLower(curDate.Weekday().String())]
 		case shared.SearchNextWeek:
 			startDay = 6 - shared.DayMap[strings.ToLower(curDate.Weekday().String())]
@@ -286,7 +261,7 @@ func (l *sortListingEngine) GetAllListingsLatLon(businessIDs []string) ([]shared
 	businesses := strings.Join(businessIDs, ",")
 
 	businessesQuery := fmt.Sprintf("SELECT address_id, business_id, latitude, longitude  FROM business_address WHERE business_id IN (%s)", businesses)
-	fmt.Println(businessesQuery)
+	//fmt.Println(businessesQuery)
 
 	rows, err := l.sql.Query(businessesQuery)
 	defer rows.Close()

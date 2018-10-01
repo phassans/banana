@@ -521,6 +521,11 @@ func calculateTimeLeftForSearch(listingDate string, listingStartTime string, lis
 
 	lEndTime := getListingDateTime(listingDate, listingEndTime)
 	listingEndTimeFormatted, err := time.Parse(shared.DateTimeFormat, lEndTime)
+	hr := listingEndTimeFormatted.Hour()
+	if hr >= 1 && hr <= 4 {
+		listingEndTimeFormatted = listingEndTimeFormatted.Add(24 * time.Hour)
+	}
+
 	if err != nil {
 		return 0, err
 	}
