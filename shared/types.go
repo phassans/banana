@@ -154,12 +154,14 @@ type (
 
 	// BusinessAddress fields of business address
 	BusinessAddress struct {
-		Street     string `json:"street"`
-		City       string `json:"city"`
-		PostalCode string `json:"postalCode"`
-		State      string `json:"state"`
-		BusinessID int    `json:"businessID"`
-		AddressID  int    `json:"addressID"`
+		Street     string  `json:"street"`
+		City       string  `json:"city"`
+		PostalCode string  `json:"postalCode"`
+		State      string  `json:"state"`
+		BusinessID int     `json:"businessID"`
+		AddressID  int     `json:"addressID"`
+		Latitude   float64 `json:"latitude"`
+		Longitude  float64 `json:"longitude"`
 	}
 
 	// BusinessCuisine list of business cuisines

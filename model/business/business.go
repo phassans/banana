@@ -204,7 +204,7 @@ func getBusinessHoursFormatted(bHours []shared.Bhour) ([]string, error) {
 func (b *businessEngine) getBusinessAddressFromID(businessID int) (shared.BusinessAddress, error) {
 	var businessAddress shared.BusinessAddress
 
-	rows := b.sql.QueryRow("SELECT street, city, postal_code, state, business_id, address_id FROM business_address where business_id = $1;", businessID)
+	rows := b.sql.QueryRow("SELECT street, city, postal_code, state, business_id, address_id,latitude,longitude FROM business_address where business_id = $1;", businessID)
 	err := rows.Scan(
 		&businessAddress.Street,
 		&businessAddress.City,
@@ -212,6 +212,8 @@ func (b *businessEngine) getBusinessAddressFromID(businessID int) (shared.Busine
 		&businessAddress.State,
 		&businessAddress.BusinessID,
 		&businessAddress.AddressID,
+		&businessAddress.Latitude,
+		&businessAddress.Longitude,
 	)
 	if err != nil {
 		return shared.BusinessAddress{}, helper.DatabaseError{DBError: err.Error()}
