@@ -75,6 +75,7 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 		request.Cuisine,
 		request.UserID,
 	)
+
 	request.BusinessID = businessID
 	request.AddressID = addressID
 	result := businessAddResult{businessAddRequest: request, Error: NewAPIError(err)}

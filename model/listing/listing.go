@@ -133,8 +133,13 @@ func (l *listingEngine) AddDietaryRestrictionsToListings(listings []shared.Listi
 }
 
 func optimizeImage(img string) string {
+	logger := shared.GetLogger()
 	if img != "" {
 		imgParts := strings.Split(img, "/upload")
+		if len(imgParts) != 2 {
+			logger.Error().Msgf("image does not have two parts", img)
+			return img
+		}
 		return fmt.Sprintf("%s/upload/q_auto,f_auto,fl_lossy%s", imgParts[0], imgParts[1])
 	}
 	return img

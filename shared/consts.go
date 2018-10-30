@@ -73,4 +73,32 @@ var (
 
 	// ListingTypes possible
 	ListingTypes = []string{"", "meal", "happyhour"}
+
+	imagesMap = map[string]int{
+		"Asian Appetizers": 4,
+		"BBQ":              2,
+		"Bar snacks":       10,
+		"Beer":             22,
+		"Burger":           6,
+		"Chinese Food":     14,
+		"Cocktail":         9,
+		"Coffee":           1,
+		"Curry":            4,
+		"Ice cream":        1,
+		"Italian":          4,
+		"Mediterranean":    8,
+		"Mexican":          18,
+		"Milk Tea Boba":    1,
+		"Oysters":          11,
+		"Pizza":            8,
+		"Poke":             2,
+		"Ramen":            4,
+		"Skewers":          3,
+		"Special Drinks":   10,
+		"Sushi":            16,
+		"Tacos":            12,
+		"Thai":             5,
+		"Wine":             17,
+		"Wings":            8,
+	}
 )
