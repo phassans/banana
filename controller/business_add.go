@@ -85,7 +85,7 @@ func (r createBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 func (r createBusinessEndpoint) Validate(request interface{}) error {
 	input := request.(businessAddRequest)
 
-	var businessFields = []string{input.Name, input.Phone, input.Street, input.City, input.PostalCode, input.State}
+	var businessFields = []string{input.Name, input.Street, input.City, input.PostalCode, input.State}
 
 	for _, field := range businessFields {
 		if strings.TrimSpace(field) == "" {

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"reflect"
 
@@ -38,10 +37,11 @@ func (rtr *router) newPostHandler(endpoint postEndpoint) http.HandlerFunc {
 		}
 		logger = logger.With().
 			Str("endpoint", endpoint.GetPath()).
-			Str("query", fmt.Sprintf("%#v", request.Elem().Interface())).
+			//Str("query", fmt.Sprintf("%#v", request.Elem().Interface())).
 			Int("status", GetErrorStatus(err)).Logger()
 		if err != nil {
 			logger.Error().Msgf(err.Error())
+			err = json.NewEncoder(w).Encode(result)
 			return
 		}
 		logger.Info().Msgf("POST success")

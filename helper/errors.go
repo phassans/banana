@@ -38,6 +38,7 @@ func (b BusinessError) Error() string {
 // DuplicateEntity ...
 type DuplicateEntity struct {
 	Name string `json:"name,omitempty"`
+	ID   int    `json:"id,omitempty"`
 }
 
 func (e DuplicateEntity) Error() string {

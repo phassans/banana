@@ -47,7 +47,7 @@ func (b *businessEngine) AddBusiness(
 	}
 
 	if businessID != 0 {
-		return 0, 0, helper.DuplicateEntity{Name: businessName}
+		return businessID, 0, helper.DuplicateEntity{Name: businessName, ID: businessID}
 	}
 
 	lastInsertBusinessID, err := b.addBusinessInfo(businessName, phone, website)
