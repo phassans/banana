@@ -144,6 +144,16 @@ type (
 		Longitude  float64
 	}
 
+	BusinessD struct {
+		BusinessID int    `json:"businessId"`
+		Name       string `json:"name"`
+		Phone      string `json:"phone"`
+		Website    string `json:"website"`
+		Street     string `json:"street"`
+		City       string `json:"city"`
+		PostalCode string `json:"postalCode"`
+	}
+
 	// Business fields
 	Business struct {
 		BusinessID int    `json:"businessId"`
@@ -173,7 +183,7 @@ type (
 	BusinessInfo struct {
 		Business        Business        `json:"business"`
 		BusinessAddress BusinessAddress `json:"businessAddress"`
-		BusinessCuisine BusinessCuisine `json:"businessCuisine"`
+		BusinessCuisine BusinessCuisine `json:"businessCuisine,omitempty"`
 		Hours           []Bhour         `json:"businessHours,omitempty"`
 		HoursFormatted  []string        `json:"businessHoursFormatted,omitempty"`
 	}
