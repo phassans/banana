@@ -3,12 +3,12 @@
 go build .
 
 #check if banana process is running
-ps -ef | grep banana
+ps -ef | grep ./banana
 if [ $? -eq 0 ]
 then
   echo "banana Running..."
   echo "killing process..."
-  ps -ef | grep banana | grep -v grep | awk '{print $2}' | xargs kill
+  ps -ef | grep ./banana | grep -v grep | awk '{print $2}' | xargs kill
   if [ $? -eq 0 ]
     then
     echo "banana process killed!"
