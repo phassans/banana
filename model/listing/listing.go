@@ -40,6 +40,9 @@ type (
 		// GetListingInfo returns listing info
 		GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error)
 
+		// GetListingInfo returns listing info
+		UpdateListingDate(listingID int) error
+
 		// MassageAndPopulateSearchListings to massage and populate search result
 		MassageAndPopulateSearchListings([]shared.Listing, bool) ([]shared.SearchListingResult, error)
 
@@ -222,6 +225,42 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	return messageListingsDateAndTime(listing)
 }
 
+func (l *listingEngine) UpdateListingDate(listingID int) error {
+	//GetListingByID
+	listing, err := l.GetListingByIDForUpdate(listingID)
+	if err != nil {
+		return err
+	}
+
+	if listing.ListingID == 0 {
+		return helper.ListingDoesNotExist{ListingID: listingID}
+	}
+
+	// get recurring info
+	if listing.Recurring {
+		if err != nil {
+			return helper.DatabaseError{DBError: err.Error()}
+		}
+		listing.RecurringDays, err = l.GetRecurringListing(listingID)
+	}
+
+	lis, err := messageListingsDateAndTime(listing)
+	if err != nil {
+		return err
+	}
+
+	if err := l.deleteListingDate(listingID); err != nil {
+		return nil
+	}
+
+	// insert into listing_date
+	if err := l.AddListingDates(&lis); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func messageListingsDateAndTime(listing shared.Listing) (shared.Listing, error) {
 	logger := shared.GetLogger()
 	// convert StartTime
@@ -311,6 +350,49 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 		&listing.ListingDateID,
 		&listing.ListingDate,
 		&listing.ImageLink,
+	)
+	if err != nil {
+		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	listing.ImageLink = optimizeImage(listing.ImageLink)
+	listing.EndDate = sqlEndDate.String
+	listing.RecurringEndDate = sqlRecurringEndDate.String
+
+	return listing, nil
+}
+
+func (l *listingEngine) GetListingByIDForUpdate(listingID int) (shared.Listing, error) {
+	selectFields := fmt.Sprintf("%s", common.ListingFields)
+
+	var whereClause bytes.Buffer
+	whereClause.WriteString(fmt.Sprintf(" WHERE listing.listing_id = %d", listingID))
+	query := fmt.Sprintf("%s %s %s;", selectFields, "FROM listing", whereClause.String())
+
+	//fmt.Println("GetListingByID ", query)
+
+	rows := l.sql.QueryRow(query)
+
+	var listing shared.Listing
+	var sqlEndDate sql.NullString
+	var sqlRecurringEndDate sql.NullString
+	err := rows.Scan(
+		&listing.Title,
+		&listing.OldPrice,
+		&listing.NewPrice,
+		&listing.Discount,
+		&listing.DiscountDescription,
+		&listing.Description,
+		&listing.StartDate,
+		&sqlEndDate,
+		&listing.StartTime,
+		&listing.EndTime,
+		&listing.MultipleDays,
+		&listing.Recurring,
+		&sqlRecurringEndDate,
+		&listing.Type,
+		&listing.BusinessID,
+		&listing.ListingID,
 	)
 	if err != nil {
 		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}

@@ -47,6 +47,7 @@ var (
 		businessInfo,
 		userGet,
 		getStats,
+		listingUpdateDate,
 	}
 
 	// createEndpoints lists POST endpoints that create records.
