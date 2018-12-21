@@ -225,37 +225,45 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	return messageListingsDateAndTime(listing)
 }
 
-func (l *listingEngine) UpdateListingDate(listingID int) error {
+func (l *listingEngine) UpdateListingDate(listingIDs int) error {
 	//GetListingByID
-	listing, err := l.GetListingByIDForUpdate(listingID)
+
+	ids, err := l.getAllListingIDs()
 	if err != nil {
 		return err
 	}
 
-	if listing.ListingID == 0 {
-		return helper.ListingDoesNotExist{ListingID: listingID}
-	}
-
-	// get recurring info
-	if listing.Recurring {
+	for _, id := range ids {
+		listing, err := l.GetListingByIDForUpdate(id)
 		if err != nil {
-			return helper.DatabaseError{DBError: err.Error()}
+			return err
 		}
-		listing.RecurringDays, err = l.GetRecurringListing(listingID)
-	}
 
-	lis, err := messageListingsDateAndTime(listing)
-	if err != nil {
-		return err
-	}
+		if listing.ListingID == 0 {
+			return helper.ListingDoesNotExist{ListingID: id}
+		}
 
-	if err := l.deleteListingDate(listingID); err != nil {
-		return nil
-	}
+		// get recurring info
+		if listing.Recurring {
+			if err != nil {
+				return helper.DatabaseError{DBError: err.Error()}
+			}
+			listing.RecurringDays, err = l.GetRecurringListing(id)
+		}
 
-	// insert into listing_date
-	if err := l.AddListingDates(&lis); err != nil {
-		return err
+		lis, err := messageListingsDateAndTime(listing)
+		if err != nil {
+			return err
+		}
+
+		if err := l.deleteListingDate(id); err != nil {
+			return nil
+		}
+
+		// insert into listing_date
+		if err := l.AddListingDates(&lis); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -499,6 +507,31 @@ func (l *listingEngine) isFavorite(phoneID string, listingID int) bool {
 
 func (l *listingEngine) getAllFavoritesFromPhoneID(phoneID string) ([]int, error) {
 	rows, err := l.sql.Query("SELECT listing_id FROM favorites where phone_id = $1;", phoneID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var listingIDs []int
+	for rows.Next() {
+		var id int
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		listingIDs = append(listingIDs, id)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return listingIDs, nil
+}
+
+func (l *listingEngine) getAllListingIDs() ([]int, error) {
+	rows, err := l.sql.Query("SELECT listing_id FROM listing;")
 	if err != nil {
 		return nil, err
 	}
