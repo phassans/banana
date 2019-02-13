@@ -7,7 +7,6 @@ import (
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/model/listing"
-	"github.com/phassans/exville/common"
 	"github.com/rs/zerolog"
 )
 
@@ -79,7 +78,7 @@ func (u *upvoteEngine) GetUpVotes(listingID int) (int, error) {
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
-		return 0, common.DatabaseError{DBError: err.Error()}
+		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	return count, nil
@@ -93,7 +92,7 @@ func (u *upvoteEngine) GetUpVoteByPhoneID(phoneID string, listingID int) (int, e
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
-		return 0, common.DatabaseError{DBError: err.Error()}
+		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 
 	return upvoteID, nil
