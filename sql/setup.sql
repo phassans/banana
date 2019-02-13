@@ -228,5 +228,15 @@ CREATE TABLE IF NOT EXISTS search
   PRIMARY KEY (search_id)
 );
 
+CREATE TABLE IF NOT EXISTS upvotes
+(
+  upvote_id SERIAL,
+  phone_id    TEXT NOT NULL,
+  listing_id  INT  NOT NULL,
+  upvote_date TIMESTAMP NOT NULL,
+  PRIMARY KEY (upvote_id, phone_id),
+  FOREIGN KEY (listing_id) REFERENCES listing (listing_id)
+);
+
 INSERT INTO business_country (name)
 VALUES ('USA');

@@ -80,6 +80,10 @@ var (
 		preferenceAll,
 
 		contactUs,
+
+		upvoteAdd,
+		upvoteDelete,
+		upvoteCount,
 	}
 )
 
