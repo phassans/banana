@@ -120,12 +120,12 @@ func (r listingsSearchEndpoint) Validate(request interface{}) error {
 	}
 
 	if req.SearchDay != "" {
-		if strings.ToLower(req.SearchDay) != shared.SearchToday &&
+		/*if strings.ToLower(req.SearchDay) != shared.SearchToday &&
 			strings.ToLower(req.SearchDay) != shared.SearchTomorrow &&
 			strings.ToLower(req.SearchDay) != shared.SearchThisWeek &&
 			strings.ToLower(req.SearchDay) != shared.SearchNextWeek {
 			return helper.ValidationError{Message: fmt.Sprint("listing search failed, invalid 'searchDay'")}
-		}
+		}*/
 	}
 
 	if strings.TrimSpace(req.SortBy) != "" && strings.ToLower(req.SortBy) != "distance" &&
