@@ -84,6 +84,8 @@ var (
 		upvoteAdd,
 		upvoteDelete,
 		upvoteCount,
+
+		happyHourSubmit,
 	}
 )
 

@@ -238,5 +238,19 @@ CREATE TABLE IF NOT EXISTS upvotes
   FOREIGN KEY (listing_id) REFERENCES listing (listing_id)
 );
 
+CREATE TABLE IF NOT EXISTS happyhour
+(
+  hh_id   SERIAL UNIQUE,
+  phone_id        TEXT  NOT NULL,
+  name            TEXT,
+  email           TEXT,
+  business_owner  TEXT,
+  restaurant      TEXT,
+  city            TEXT,
+  description     TEXT,
+  submission_date TIMESTAMP NOT NULL,
+  PRIMARY KEY (hh_id)
+);
+
 INSERT INTO business_country (name)
 VALUES ('USA');
