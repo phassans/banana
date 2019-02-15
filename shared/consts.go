@@ -33,6 +33,9 @@ const (
 	// SortByDateAdded ...
 	SortByDateAdded = "dateAdded"
 
+	// SortByMostPopular ...
+	SortByMostPopular = "mostPopular"
+
 	// ListingTypeMeal ...
 	ListingTypeMeal = "meal"
 

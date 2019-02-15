@@ -55,6 +55,8 @@ func (l *sortListingEngine) SortListings(isFuture bool, searchDay string, isSear
 	} else if l.sortingType == shared.SortByDateAdded {
 		//l.sortListingsByDateAdded()
 		return l.listings, nil
+	} else if l.sortingType == shared.SortByMostPopular {
+		return l.listings, nil
 	}
 
 	return l.listings, nil

@@ -128,8 +128,9 @@ func (r listingsSearchEndpoint) Validate(request interface{}) error {
 		}*/
 	}
 
-	if strings.TrimSpace(req.SortBy) != "" && strings.ToLower(req.SortBy) != "distance" &&
-		strings.ToLower(req.SortBy) != "timeleft" && strings.ToLower(req.SortBy) != "price" {
+	if strings.TrimSpace(req.SortBy) != "" && strings.ToLower(req.SortBy) != shared.SortByDistance &&
+		strings.ToLower(req.SortBy) != shared.SortByTimeLeft && strings.ToLower(req.SortBy) != shared.SortByPrice &&
+		strings.ToLower(req.SortBy) != shared.SortByDateAdded && strings.ToLower(req.SortBy) != shared.SortByMostPopular {
 		return helper.ValidationError{Message: fmt.Sprint("listing search failed, invalid 'sortBy'")}
 	}
 
