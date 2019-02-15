@@ -26,6 +26,7 @@ type UserEngine interface {
 	UserVerify(email string, password string) (shared.BusinessUser, error)
 
 	ContactUs(phoneID string, uname string, email string, subject string, comments string) error
+	ReportInaccurate(phoneID string, listing int) error
 }
 
 // NewUserEngine returns an instance of userEngine
@@ -167,5 +168,18 @@ func (u *userEngine) ContactUs(phoneID string, uname string, email string, subje
 
 	u.logger.Info().Msgf("successfully added a user comment with ID: %d", contactUsID)
 
+	return nil
+}
+
+func (u *userEngine) ReportInaccurate(phoneID string, listingID int) error {
+	var reportInaccurateId int
+	err := u.sql.QueryRow("INSERT INTO report_inaccurate(phone_id,listing_id,report_inaccurate_add_date) "+
+		"VALUES($1,$2,$3) returning report_inaccurate_id;",
+		phoneID, listingID, time.Now()).Scan(&reportInaccurateId)
+	if err != nil {
+		return helper.DatabaseError{DBError: err.Error()}
+	}
+
+	u.logger.Info().Msgf("successfully registered ReportInaccurate with ID: %d", reportInaccurateId)
 	return nil
 }

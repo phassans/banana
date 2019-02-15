@@ -252,5 +252,15 @@ CREATE TABLE IF NOT EXISTS happyhour
   PRIMARY KEY (hh_id)
 );
 
+CREATE TABLE IF NOT EXISTS report_inaccurate
+(
+  report_inaccurate_id SERIAL,
+  phone_id    TEXT NOT NULL,
+  listing_id  INT  NOT NULL,
+  report_inaccurate_add_date TIMESTAMP NOT NULL,
+  PRIMARY KEY (report_inaccurate_id),
+  FOREIGN KEY (listing_id) REFERENCES listing (listing_id)
+);
+
 INSERT INTO business_country (name)
 VALUES ('USA');

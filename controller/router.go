@@ -86,6 +86,7 @@ var (
 		upvoteCount,
 
 		happyHourSubmit,
+		reportInaccurate,
 	}
 )
 
