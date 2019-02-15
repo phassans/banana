@@ -31,10 +31,10 @@ const (
 	SortByTimeLeft = "timeLeft"
 
 	// SortByDateAdded ...
-	SortByDateAdded = "dateAdded"
+	SortByDateAdded = "dateadded"
 
 	// SortByMostPopular ...
-	SortByMostPopular = "mostPopular"
+	SortByMostPopular = "mostpopular"
 
 	// ListingTypeMeal ...
 	ListingTypeMeal = "meal"
