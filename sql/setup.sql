@@ -252,6 +252,16 @@ CREATE TABLE IF NOT EXISTS happyhour
   PRIMARY KEY (hh_id)
 );
 
+CREATE TABLE IF NOT EXISTS happyhour_images
+(
+  hh_image_id     SERIAL UNIQUE,
+  hh_id           INT  NOT NULL,
+  image_name      TEXT,
+  submission_date TIMESTAMP NOT NULL,
+  PRIMARY KEY (hh_image_id),
+  FOREIGN KEY (hh_id) REFERENCES happyhour (hh_id)
+);
+
 CREATE TABLE IF NOT EXISTS report_inaccurate
 (
   report_inaccurate_id SERIAL,

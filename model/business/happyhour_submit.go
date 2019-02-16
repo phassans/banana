@@ -16,3 +16,14 @@ func (b *businessEngine) SubmitHappyHour(PhoneID string, Name string, Email stri
 	}
 	return lastInsertHHID, nil
 }
+
+func (b *businessEngine) SubmitHappyHourImages(happyHourID int, imageName string) (int, error) {
+	// insert happyhour images
+	var lastInsertHHID int
+	err := b.sql.QueryRow("INSERT INTO happyhour_images(hh_id,image_name,submission_date) "+
+		"VALUES($1,$2,$3) returning hh_id;", happyHourID, imageName, time.Now()).Scan(&lastInsertHHID)
+	if err != nil {
+		return 0, helper.DatabaseError{DBError: err.Error()}
+	}
+	return lastInsertHHID, nil
+}

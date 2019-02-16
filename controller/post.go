@@ -18,7 +18,8 @@ func (rtr *router) newPostHandler(endpoint postEndpoint) http.HandlerFunc {
 		request := reflect.New(reflect.TypeOf(endpoint.HTTPRequest()))
 		err = json.NewDecoder(r.Body).Decode(request.Interface())
 		if err != nil {
-			//err = ErrInvalidJSON{Err: err}
+			w.WriteHeader(http.StatusInternalServerError)
+			err = json.NewEncoder(w).Encode(err)
 			return
 		}
 		r.Body.Close()
