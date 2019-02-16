@@ -53,6 +53,7 @@ type (
 		Favorite             *Favorite     `json:"favorite,omitempty"`
 		Latitude             float64       `json:"latitude,omitempty"`
 		Longitude            float64       `json:"longitude,omitempty"`
+		UpVotes              int           `json:"upvotes"`
 	}
 
 	// SearchListingResult result of search
@@ -73,6 +74,7 @@ type (
 		IsFavorite           bool     `json:"isFavorite"`
 		DateTimeRange        string   `json:"dateTimeRange"`
 		ListingDateID        int      `json:"listingDateId,omitempty"`
+		Upvotes              int      `json:"upvotes"`
 	}
 
 	// ListingInfo combination of Business and Listing

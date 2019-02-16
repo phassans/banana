@@ -186,12 +186,18 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 		return shared.Listing{}, helper.ListingDoesNotExist{ListingID: listingID}
 	}
 
+	upvotes, err := l.GetUpVotes(listing.ListingID)
+	if err != nil {
+		return shared.Listing{}, err
+	}
+	listing.UpVotes = upvotes
+
 	// add dietary req's
-	reqs, err := l.GetDietaryRestriction(listing.ListingID)
+	/*reqs, err := l.GetDietaryRestriction(listing.ListingID)
 	if err != nil {
 		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 	}
-	listing.DietaryRestrictions = reqs
+	listing.DietaryRestrictions = reqs*/
 
 	// get recurring info
 	if listing.Recurring {

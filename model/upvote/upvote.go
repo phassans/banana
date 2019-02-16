@@ -5,17 +5,15 @@ import (
 	"time"
 
 	"github.com/phassans/banana/helper"
-	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/model/listing"
 	"github.com/rs/zerolog"
 )
 
 type (
 	upvoteEngine struct {
-		sql            *sql.DB
-		logger         zerolog.Logger
-		businessEngine business.BusinessEngine
-		listingEngine  listing.ListingEngine
+		sql           *sql.DB
+		logger        zerolog.Logger
+		listingEngine listing.ListingEngine
 	}
 
 	// UpvoteEngine interface which holds all methods
@@ -27,8 +25,8 @@ type (
 )
 
 // NewUpvoteEngine returns an instance of upvoteEngine
-func NewUpvoteEngine(psql *sql.DB, logger zerolog.Logger, businessEngine business.BusinessEngine, listingEngine listing.ListingEngine) UpvoteEngine {
-	return &upvoteEngine{psql, logger, businessEngine, listingEngine}
+func NewUpvoteEngine(psql *sql.DB, logger zerolog.Logger, listingEngine listing.ListingEngine) UpvoteEngine {
+	return &upvoteEngine{psql, logger, listingEngine}
 }
 
 func (u *upvoteEngine) AddUpVote(phoneID string, listingID int) error {

@@ -46,6 +46,14 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 	}
 	l.logger.Info().Msgf("total number of listing found: %d", len(listings))
 
+	for i := 0; i < len(listings); i++ {
+		upvotes, err := l.GetUpVotes(listings[i].ListingID)
+		if err != nil {
+			return nil, err
+		}
+		listings[i].UpVotes = upvotes
+	}
+
 	// addDietaryRestrictionsToListings
 	/*listings, err = l.AddDietaryRestrictionsToListings(listings)
 	if err != nil {
@@ -514,6 +522,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			IsFavorite:           listing.IsFavorite,
 			DateTimeRange:        dateTimeRange,
 			ListingDateID:        listing.ListingDateID,
+			Upvotes:              listing.UpVotes,
 		}
 		listingsResult = append(listingsResult, sr)
 	}
@@ -687,4 +696,18 @@ func (l *listingEngine) LogSearchRequest(searchRequest shared.SearchRequest) err
 	}
 
 	return nil
+}
+
+func (u *listingEngine) GetUpVotes(listingID int) (int, error) {
+	var count int
+	rows := u.sql.QueryRow("SELECT count(*) FROM upvotes WHERE listing_id = $1", listingID)
+	err := rows.Scan(&count)
+
+	if err == sql.ErrNoRows {
+		return 0, nil
+	} else if err != nil {
+		return 0, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return count, nil
 }
