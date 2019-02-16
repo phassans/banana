@@ -23,7 +23,7 @@ type (
 
 func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseMultipartForm(100000)
+		err := r.ParseMultipartForm(10000000)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
