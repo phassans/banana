@@ -84,14 +84,15 @@ func (u *upvoteEngine) DeleteUpVote(phoneID string, listingID int) (int, error) 
 }
 
 func (u *upvoteEngine) GetUpVotes(listingID int) (int, error) {
-	var count int
-	rows := u.sql.QueryRow("SELECT count(*) FROM upvotes WHERE listing_id = $1", listingID)
-	err := rows.Scan(&count)
-
-	if err == sql.ErrNoRows {
-		return 0, nil
-	} else if err != nil {
+	rows, err := u.sql.Query("SELECT upvote_id FROM upvotes WHERE listing_id = $1", listingID)
+	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
+	}
+	defer rows.Close()
+
+	count := 0
+	for rows.Next() {
+		count++
 	}
 
 	return count, nil
