@@ -709,14 +709,15 @@ func (l *listingEngine) LogSearchRequest(searchRequest shared.SearchRequest) err
 }
 
 func (u *listingEngine) GetUpVotes(listingID int) (int, error) {
-	var count int
-	rows := u.sql.QueryRow("SELECT count(*) FROM upvotes WHERE listing_id = $1", listingID)
-	err := rows.Scan(&count)
-
-	if err == sql.ErrNoRows {
-		return 0, nil
-	} else if err != nil {
+	rows, err := u.sql.Query("SELECT upvote_id FROM upvotes WHERE listing_id = $1", listingID)
+	if err != nil {
 		return 0, helper.DatabaseError{DBError: err.Error()}
+	}
+	defer rows.Close()
+
+	count := 0
+	for rows.Next() {
+		count++
 	}
 
 	return count, nil

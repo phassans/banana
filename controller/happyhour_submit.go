@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
 )
@@ -23,7 +25,7 @@ type (
 
 func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseMultipartForm(10000000)
+		err := r.ParseMultipartForm(32 << 20)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
@@ -65,7 +67,15 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 			return
 		}
 
+		fileNames := make([]string, len(images))
 		for i, _ := range images {
+
+			uuid, err := uuid.NewRandom()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			//for each fileheader, get a handle to the actual file
 			file, err := images[i].Open()
 			defer file.Close()
@@ -73,8 +83,11 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+
+			fileName := fmt.Sprintf("upload_images/%s_%s", uuid, images[i].Filename)
+			fileNames[i] = fileName
 			//create destination file making sure the path is writeable.
-			dst, err := os.Create("upload_images/" + images[i].Filename)
+			dst, err := os.Create(fileName)
 			defer dst.Close()
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -96,8 +109,7 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 		}
 
 		for i, _ := range images {
-			imageWithPath := "upload_images/" + images[i].Filename
-			_, err := rtr.engines.SubmitHappyHourImages(hhID, imageWithPath)
+			_, err := rtr.engines.SubmitHappyHourImages(hhID, fileNames[i])
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})

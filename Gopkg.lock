@@ -38,6 +38,14 @@
   version = "v3.3.3"
 
 [[projects]]
+  digest = "1:236d7e1bdb50d8f68559af37dbcf9d142d56b431c9b2176d41e2a009b664cda8"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   digest = "1:6ab1e622fb50f45de0807207f3ff11c004dbe7fac8e9a14c36e44bb6369f585e"
   name = "github.com/goware/emailx"
@@ -100,6 +108,7 @@
     "github.com/afex/hystrix-go/hystrix",
     "github.com/davecgh/go-spew/spew",
     "github.com/go-chi/chi",
+    "github.com/google/uuid",
     "github.com/goware/emailx",
     "github.com/lib/pq",
     "github.com/pkg/errors",
