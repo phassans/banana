@@ -194,11 +194,12 @@ type (
 
 	// SortView possible types
 	SortView struct {
-		Listing           Listing
-		Mile              float64
-		Price             float64
-		TimeLeft          float64
-		FavoriteDateAdded time.Time
+		Listing     Listing
+		Mile        float64
+		Price       float64
+		TimeLeft    float64
+		ListingDate time.Time
+		UpVotes     int
 	}
 
 	// CurrentLocation ...

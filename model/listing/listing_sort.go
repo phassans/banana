@@ -53,10 +53,9 @@ func (l *sortListingEngine) SortListings(isFuture bool, searchDay string, isSear
 	} else if l.sortingType == shared.SortByTimeLeft {
 		l.sortListingsByTimeLeft()
 	} else if l.sortingType == shared.SortByDateAdded {
-		//l.sortListingsByDateAdded()
-		return l.listings, nil
+		l.sortListingsByDateAdded()
 	} else if l.sortingType == shared.SortByMostPopular {
-		return l.listings, nil
+		l.sortListingsByMostPopular()
 	}
 
 	return l.listings, nil
@@ -78,6 +77,22 @@ func (l *sortListingEngine) sortListingsByTimeLeft() error {
 	// put in listing struct
 	var listingsResult []shared.Listing
 	for _, view := range l.orderListings(ll, shared.SortByTimeLeft) {
+		listingsResult = append(listingsResult, view.Listing)
+	}
+	l.listings = listingsResult
+	return nil
+}
+
+func (l *sortListingEngine) sortListingsByMostPopular() error {
+	var ll []shared.SortView
+	for _, listing := range l.listings {
+		s := shared.SortView{Listing: listing, UpVotes: listing.UpVotes}
+		ll = append(ll, s)
+	}
+
+	// put in listing struct
+	var listingsResult []shared.Listing
+	for _, view := range l.orderListings(ll, shared.SortByMostPopular) {
 		listingsResult = append(listingsResult, view.Listing)
 	}
 	l.listings = listingsResult
@@ -214,11 +229,11 @@ func getMaxDistance(isFuture bool) float64 {
 func (l *sortListingEngine) sortListingsByDateAdded() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
-		favoriteAddTimeFormatted, err := time.Parse(shared.DateTimeFormat, listing.Favorite.FavoriteAddDate)
+		listingDateFormatted, err := time.Parse(shared.DateTimeFormat, listing.ListingDate)
 		if err != nil {
 			return err
 		}
-		s := shared.SortView{Listing: listing, FavoriteDateAdded: favoriteAddTimeFormatted}
+		s := shared.SortView{Listing: listing, ListingDate: listingDateFormatted}
 		ll = append(ll, s)
 	}
 
@@ -250,8 +265,13 @@ func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType 
 		return listings
 	case shared.SortByDateAdded:
 		sort.Slice(listings, func(i, j int) bool {
-			fmt.Printf("%t\n", listings[j].FavoriteDateAdded.Before(listings[i].FavoriteDateAdded))
-			return listings[j].FavoriteDateAdded.Before(listings[i].FavoriteDateAdded)
+			fmt.Printf("%t\n", listings[j].ListingDate.Before(listings[i].ListingDate))
+			return listings[j].ListingDate.Before(listings[i].ListingDate)
+		})
+		return listings
+	case shared.SortByMostPopular:
+		sort.Slice(listings, func(i, j int) bool {
+			return listings[i].UpVotes > listings[j].UpVotes
 		})
 		return listings
 	}
