@@ -11,6 +11,8 @@ DROP TABLE IF EXISTS listing_image;
 DROP TABLE IF EXISTS listing_dietary_restrictions;
 
 DROP TABLE IF EXISTS favorites;
+DROP TABLE IF EXISTS report_inaccurate;
+DROP TABLE IF EXISTS upvotes;
 
 DROP TABLE IF EXISTS listing;
 DROP TABLE IF EXISTS business;
@@ -22,3 +24,6 @@ DROP TYPE IF EXISTS dietary_restrictions;
 DROP TYPE IF EXISTS days_of_month;
 
 DROP TABLE IF EXISTS preferences;
+
+DROP TABLE IF EXISTS happyhour_images;
+DROP TABLE IF EXISTS happyhour;

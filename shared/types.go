@@ -54,6 +54,7 @@ type (
 		Latitude             float64       `json:"latitude,omitempty"`
 		Longitude            float64       `json:"longitude,omitempty"`
 		UpVotes              int           `json:"upvotes"`
+		IsUserVoted          bool          `json:"isUserUpVoted"`
 	}
 
 	// SearchListingResult result of search
@@ -75,6 +76,7 @@ type (
 		DateTimeRange        string   `json:"dateTimeRange"`
 		ListingDateID        int      `json:"listingDateId,omitempty"`
 		Upvotes              int      `json:"upvotes"`
+		IsUserVoted          bool     `json:"isUserUpVoted"`
 	}
 
 	// ListingInfo combination of Business and Listing

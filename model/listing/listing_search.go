@@ -52,6 +52,15 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 			return nil, err
 		}
 		listings[i].UpVotes = upvotes
+
+		id, err := l.GetUpVoteByPhoneID(request.PhoneID, listings[i].ListingID)
+		if err != nil {
+			return nil, err
+		}
+
+		if id > 0 {
+			listings[i].IsUserVoted = true
+		}
 	}
 
 	// addDietaryRestrictionsToListings
@@ -523,6 +532,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			DateTimeRange:        dateTimeRange,
 			ListingDateID:        listing.ListingDateID,
 			Upvotes:              listing.UpVotes,
+			IsUserVoted:          listing.IsUserVoted,
 		}
 		listingsResult = append(listingsResult, sr)
 	}
@@ -710,4 +720,18 @@ func (u *listingEngine) GetUpVotes(listingID int) (int, error) {
 	}
 
 	return count, nil
+}
+
+func (u *listingEngine) GetUpVoteByPhoneID(phoneID string, listingID int) (int, error) {
+	var upvoteID int
+	rows := u.sql.QueryRow("SELECT upvote_id FROM upvotes WHERE phone_id = $1 AND listing_id = $2", phoneID, listingID)
+	err := rows.Scan(&upvoteID)
+
+	if err == sql.ErrNoRows {
+		return 0, nil
+	} else if err != nil {
+		return 0, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	return upvoteID, nil
 }
