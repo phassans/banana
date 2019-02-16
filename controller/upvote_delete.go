@@ -18,7 +18,7 @@ type (
 	upvoteDeleteResponse struct {
 		upvoteDeleteRequest
 		Error *APIError `json:"error,omitempty"`
-		Count int       `json:"count,omitempty"`
+		Count int       `json:"count"`
 	}
 
 	upvoteDeleteEndpoint struct{}
