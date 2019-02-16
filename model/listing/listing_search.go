@@ -17,108 +17,39 @@ import (
 	"github.com/umahmood/haversine"
 )
 
-const (
-/*SearchSelect = "SELECT listing.title as title, listing.old_price as old_price, listing.new_price as new_price," +
-"listing.discount as discount, listing.discount_description as discount_description, listing.description as description, listing.start_date as start_date," +
-"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time," +
-"listing.multiple_days as multiple_days," +
-"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
-"listing.business_id as business_id, listing.listing_id as listing_id, " +
-"business.name as bname, " +
-"listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date, " +
-"listing_image.path as path "*/
-)
-
 func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.SearchListingResult, error) {
-
 	var listings []shared.Listing
 	var err error
 
+	// log search Request
 	go func(req shared.SearchRequest) {
 		err := l.LogSearchRequest(req)
 		l.logger.Error().Msgf("LogSearchRequest returned with error: %s", err)
 	}(request)
 
-	//GetListings
+	// GetListings
 	listings, err = l.GetListings(request.ListingTypes, request.Keywords, request.Future, request.SearchDay)
 	if err != nil {
 		return nil, err
 	}
 	l.logger.Info().Msgf("total number of listing found: %d", len(listings))
 
-	for i := 0; i < len(listings); i++ {
-		upvotes, err := l.GetUpVotes(listings[i].ListingID)
-		if err != nil {
-			return nil, err
-		}
-		listings[i].UpVotes = upvotes
-
-		id, err := l.GetUpVoteByPhoneID(request.PhoneID, listings[i].ListingID)
-		if err != nil {
-			return nil, err
-		}
-
-		if id > 0 {
-			listings[i].IsUserVoted = true
-		}
+	// populate UpVotes
+	if err := l.populateUpVotes(request.PhoneID, listings); err != nil {
+		return nil, err
 	}
 
-	// addDietaryRestrictionsToListings
-	/*listings, err = l.AddDietaryRestrictionsToListings(listings)
+	// determine current location
+	currentLocation, err := l.determineCurrentLocation(request)
 	if err != nil {
 		return nil, err
-	}*/
-
-	var currentLocation shared.GeoLocation
-	var resp clients.LatLong
-	if request.Location != "" && request.Latitude == 0 && request.Longitude == 0 {
-		// check DB first
-		currentLocation, err = l.GetGeoFromAddress(request.Location)
-		if err != nil {
-			l.logger.Error().Msgf("GetGeoFromAddress returned with error: %s", err)
-			return nil, err
-		}
-		if currentLocation != (shared.GeoLocation{}) {
-			l.logger.Info().Msgf("GeoLocation found in DB")
-			// if invalid location
-			if currentLocation.Latitude == -1 && currentLocation.Longitude == -1 {
-				return []shared.SearchListingResult{}, helper.LocationError{Message: "invalid location"}
-			}
-		} else {
-			// else fetch from Google API getLatLonFromLocation
-			resp, err = clients.GetLatLong(request.Location)
-			if err != nil {
-				return nil, err
-			}
-			currentLocation = shared.GeoLocation{Latitude: resp.Lat, Longitude: resp.Lon}
-
-			// cache the result in database
-			go func() {
-				err = l.AddGeoLocation(request.Location, currentLocation)
-				if err != nil {
-					l.logger.Error().Msgf("AddGeoLocation error: %s", err)
-				}
-
-			}()
-
-			// if invalid location
-			if currentLocation.Latitude == -1 && currentLocation.Longitude == -1 {
-				return []shared.SearchListingResult{}, helper.LocationError{Message: "invalid location"}
-			}
-
-			l.logger.Info().Msgf("GeoLocation found in Google")
-		}
-
-		l.logger.Info().Msgf("geolocation lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
-	} else {
-		currentLocation = shared.GeoLocation{Latitude: request.Latitude, Longitude: request.Longitude}
 	}
 
+	// isLocationInRange
 	if !isDistanceInRange(currentLocation) {
 		l.logger.Error().Msgf("location not in range: %v", currentLocation)
 		return []shared.SearchListingResult{}, helper.LocationError{Message: "location not in range"}
 	}
-
 	l.logger.Info().Msgf("search location: %v", currentLocation)
 
 	// sort Listings based on sortBy
@@ -136,11 +67,33 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 	}
 	l.logger.Info().Msgf("applied filters. number of listings: %d", len(listings))
 
-	if request.PhoneID != "" {
+	// populate favorites
+	if err := l.populateFavorites(request.PhoneID, listings); err != nil {
+		return nil, err
+	}
 
-		listingIDFromFavorites, err := l.getAllFavoritesFromPhoneID(request.PhoneID)
+	// getSearchListingsFromListings
+	searchListing, err := l.MassageAndPopulateSearchListings(listings, false, request.SearchDay)
+	if err != nil {
+		return searchListing, err
+	}
+
+	if request.SortBy == shared.SortByTimeLeft {
+		searchListing = groupListingsBasedOnCurrentTime(searchListing)
+		return searchListing, nil
+	} else if request.SortBy == "" || request.SortBy == shared.SortByDistance {
+		searchListing = GroupListingsOnNow(searchListing)
+		return searchListing, nil
+	}
+
+	return searchListing, nil
+}
+
+func (l *listingEngine) populateFavorites(phoneID string, listings []shared.Listing) error {
+	if phoneID != "" {
+		listingIDFromFavorites, err := l.getAllFavoritesFromPhoneID(phoneID)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		for i := 0; i < len(listings); i++ {
@@ -156,20 +109,77 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 		l.logger.Info().Msgf("tagging listings as favourites")
 	}
 
-	searchListing, err := l.MassageAndPopulateSearchListings(listings, false)
-	if err != nil {
-		return searchListing, err
+	return nil
+}
+
+func (l *listingEngine) populateUpVotes(phoneID string, listings []shared.Listing) error {
+	for i := 0; i < len(listings); i++ {
+		upvotes, err := l.GetUpVotes(listings[i].ListingID)
+		if err != nil {
+			return err
+		}
+		listings[i].UpVotes = upvotes
+
+		id, err := l.GetUpVoteByPhoneID(phoneID, listings[i].ListingID)
+		if err != nil {
+			return err
+		}
+
+		if id > 0 {
+			listings[i].IsUserVoted = true
+		}
+	}
+	return nil
+}
+
+func (l *listingEngine) determineCurrentLocation(request shared.SearchRequest) (shared.GeoLocation, error) {
+	var currentLocation shared.GeoLocation
+	var resp clients.LatLong
+	var err error
+	if request.Location != "" && request.Latitude == 0 && request.Longitude == 0 {
+		// check DB first
+		currentLocation, err = l.GetGeoFromAddress(request.Location)
+		if err != nil {
+			l.logger.Error().Msgf("GetGeoFromAddress returned with error: %s", err)
+			return currentLocation, err
+		}
+		if currentLocation != (shared.GeoLocation{}) {
+			l.logger.Info().Msgf("GeoLocation found in DB")
+			// if invalid location
+			if currentLocation.Latitude == -1 && currentLocation.Longitude == -1 {
+				return currentLocation, helper.LocationError{Message: "invalid location"}
+			}
+		} else {
+			// else fetch from Google API getLatLonFromLocation
+			resp, err = clients.GetLatLong(request.Location)
+			if err != nil {
+				return currentLocation, err
+			}
+			currentLocation = shared.GeoLocation{Latitude: resp.Lat, Longitude: resp.Lon}
+
+			// cache the result in database
+			go func() {
+				err = l.AddGeoLocation(request.Location, currentLocation)
+				if err != nil {
+					l.logger.Error().Msgf("AddGeoLocation error: %s", err)
+				}
+
+			}()
+
+			// if invalid location
+			if currentLocation.Latitude == -1 && currentLocation.Longitude == -1 {
+				return currentLocation, helper.LocationError{Message: "invalid location"}
+			}
+
+			l.logger.Info().Msgf("GeoLocation found in Google")
+		}
+
+		l.logger.Info().Msgf("geolocation lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
+	} else {
+		currentLocation = shared.GeoLocation{Latitude: request.Latitude, Longitude: request.Longitude}
 	}
 
-	if request.SortBy == shared.SortByTimeLeft {
-		searchListing = groupListingsBasedOnCurrentTime(searchListing)
-		return searchListing, nil
-	} else if request.SortBy == "" || request.SortBy == shared.SortByDistance {
-		searchListing = GroupListingsOnNow(searchListing)
-		return searchListing, nil
-	}
-
-	return searchListing, nil
+	return currentLocation, nil
 }
 
 func GroupListingsOnNow(listings []shared.SearchListingResult) []shared.SearchListingResult {
@@ -500,7 +510,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 	return listings, nil
 }
 
-func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing, isFavorite bool) ([]shared.SearchListingResult, error) {
+func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing, isFavorite bool, searchDay string) ([]shared.SearchListingResult, error) {
 	var listingsResult []shared.SearchListingResult
 	for _, listing := range listings {
 		timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)

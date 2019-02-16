@@ -44,7 +44,7 @@ type (
 		UpdateListingDate(listingID int) error
 
 		// MassageAndPopulateSearchListings to massage and populate search result
-		MassageAndPopulateSearchListings([]shared.Listing, bool) ([]shared.SearchListingResult, error)
+		MassageAndPopulateSearchListings([]shared.Listing, bool, string) ([]shared.SearchListingResult, error)
 
 		// DeleteListing to delete the listing
 		DeleteListing(listingID int) error
