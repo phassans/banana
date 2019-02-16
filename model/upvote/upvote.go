@@ -18,8 +18,8 @@ type (
 
 	// UpvoteEngine interface which holds all methods
 	UpvoteEngine interface {
-		AddUpVote(phoneID string, listingID int) error
-		DeleteUpVote(phoneID string, listingID int) error
+		AddUpVote(phoneID string, listingID int) (int, error)
+		DeleteUpVote(phoneID string, listingID int) (int, error)
 		GetUpVotes(listingID int) (int, error)
 	}
 )
@@ -29,23 +29,28 @@ func NewUpvoteEngine(psql *sql.DB, logger zerolog.Logger, listingEngine listing.
 	return &upvoteEngine{psql, logger, listingEngine}
 }
 
-func (u *upvoteEngine) AddUpVote(phoneID string, listingID int) error {
+func (u *upvoteEngine) AddUpVote(phoneID string, listingID int) (int, error) {
 	upvoteIDOld, err := u.GetUpVoteByPhoneID(phoneID, listingID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if upvoteIDOld != 0 {
+		count, err := u.GetUpVotes(listingID)
+		if err != nil {
+			return 0, err
+		}
+
 		u.logger.Info().Msgf("already upvoted with ID: %d", upvoteIDOld)
-		return nil
+		return count, nil
 	}
 
 	listing, err := u.listingEngine.GetListingByID(listingID, 0, 0)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if listing.ListingID == 0 {
-		return helper.ListingDoesNotExist{ListingID: listingID}
+		return 0, helper.ListingDoesNotExist{ListingID: listingID}
 	}
 
 	var upvoteID int
@@ -53,19 +58,29 @@ func (u *upvoteEngine) AddUpVote(phoneID string, listingID int) error {
 		"VALUES($1,$2,$3) returning upvote_id;",
 		phoneID, listingID, time.Now()).Scan(&upvoteID)
 	if err != nil {
-		return helper.DatabaseError{DBError: err.Error()}
+		return 0, helper.DatabaseError{DBError: err.Error()}
 	}
 
+	count, err := u.GetUpVotes(listingID)
+	if err != nil {
+		return 0, err
+	}
 	u.logger.Info().Msgf("successfully upvoted with ID: %d", upvoteID)
-	return nil
+	return count, nil
 }
 
-func (u *upvoteEngine) DeleteUpVote(phoneID string, listingID int) error {
+func (u *upvoteEngine) DeleteUpVote(phoneID string, listingID int) (int, error) {
 	sqlStatement := `DELETE FROM upvotes WHERE phone_id = $1 AND listing_id = $2;`
 	u.logger.Info().Msgf("down voting with query: %s and listing: %d", sqlStatement, listingID)
 
 	_, err := u.sql.Exec(sqlStatement, phoneID, listingID)
-	return err
+
+	count, err := u.GetUpVotes(listingID)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, err
 }
 
 func (u *upvoteEngine) GetUpVotes(listingID int) (int, error) {

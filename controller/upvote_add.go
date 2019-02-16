@@ -18,6 +18,7 @@ type (
 	upvoteAddResponse struct {
 		upvoteAddRequest
 		Error *APIError `json:"error,omitempty"`
+		Count int       `json:"count"`
 	}
 
 	upvoteAddEndpoint struct{}
@@ -39,8 +40,8 @@ func (r upvoteAddEndpoint) Execute(ctx context.Context, rtr *router, requestI in
 		return nil, err
 	}
 
-	err := rtr.engines.AddUpVote(request.PhoneID, request.ListingID)
-	result := upvoteAddResponse{upvoteAddRequest: request, Error: NewAPIError(err)}
+	count, err := rtr.engines.AddUpVote(request.PhoneID, request.ListingID)
+	result := upvoteAddResponse{upvoteAddRequest: request, Error: NewAPIError(err), Count: count}
 	return result, err
 }
 

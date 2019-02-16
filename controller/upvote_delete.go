@@ -18,6 +18,7 @@ type (
 	upvoteDeleteResponse struct {
 		upvoteDeleteRequest
 		Error *APIError `json:"error,omitempty"`
+		Count int       `json:"count,omitempty"`
 	}
 
 	upvoteDeleteEndpoint struct{}
@@ -39,8 +40,8 @@ func (r upvoteDeleteEndpoint) Execute(ctx context.Context, rtr *router, requestI
 		return nil, err
 	}
 
-	err := rtr.engines.DeleteUpVote(request.PhoneID, request.ListingID)
-	result := upvoteDeleteResponse{upvoteDeleteRequest: request, Error: NewAPIError(err)}
+	count, err := rtr.engines.DeleteUpVote(request.PhoneID, request.ListingID)
+	result := upvoteDeleteResponse{upvoteDeleteRequest: request, Error: NewAPIError(err), Count: count}
 	return result, err
 }
 
