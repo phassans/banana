@@ -186,11 +186,21 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 		return shared.Listing{}, helper.ListingDoesNotExist{ListingID: listingID}
 	}
 
+	// getUpVotes
 	upvotes, err := l.GetUpVotes(listing.ListingID)
 	if err != nil {
 		return shared.Listing{}, err
 	}
 	listing.UpVotes = upvotes
+
+	// tag isUserUpVoted
+	id, err := l.GetUpVoteByPhoneID(phoneID, listing.ListingID)
+	if err != nil {
+		return shared.Listing{}, err
+	}
+	if id > 0 {
+		listing.IsUserVoted = true
+	}
 
 	// add dietary req's
 	/*reqs, err := l.GetDietaryRestriction(listing.ListingID)
