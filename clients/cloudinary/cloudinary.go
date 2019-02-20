@@ -15,7 +15,7 @@ type (
 
 	Client interface {
 		Upload(values map[string]io.Reader) (Response, error)
-		MustOpen(f string) *os.File
+		MustOpen(f string) (*os.File, error)
 	}
 
 	Response struct {

@@ -108,8 +108,15 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 				return
 			}
 
+			f, err := cloudinaryClient.MustOpen(fileName)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
+				return
+			}
+
 			values := map[string]io.Reader{
-				"file":          cloudinaryClient.MustOpen(fileName), // lets assume its this file
+				"file":          f,
 				"upload_preset": strings.NewReader(cloudinary.UPLOAD_PRESET),
 			}
 			cloudinaryResponse, err = cloudinaryClient.Upload(values)

@@ -90,11 +90,10 @@ func (c *client) Upload(values map[string]io.Reader) (Response, error) {
 	return cloudinaryResponse, nil
 }
 
-func (c *client) MustOpen(f string) *os.File {
-	fmt.Printf("file to open  %s", f)
+func (c *client) MustOpen(f string) (*os.File, error) {
 	r, err := os.Open(f)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return r
+	return r, nil
 }
