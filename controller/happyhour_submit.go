@@ -12,8 +12,13 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/phassans/banana/clients/cloudinary"
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/shared"
+)
+
+const (
+	IMAGE_FOLDER_PATH = "upload_images/"
 )
 
 type (
@@ -67,7 +72,10 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 			return
 		}
 
-		fileNames := make([]string, len(images))
+		cloudinaryClient := cloudinary.NewCloudinaryClient(logger)
+		var cloudinaryResponse cloudinary.Response
+
+		imageLinks := make([]string, len(images))
 		for i, _ := range images {
 
 			uuid, err := uuid.NewRandom()
@@ -85,7 +93,6 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 			}
 
 			fileName := fmt.Sprintf("upload_images/%s_%s", uuid, images[i].Filename)
-			fileNames[i] = fileName
 			//create destination file making sure the path is writeable.
 			dst, err := os.Create(fileName)
 			defer dst.Close()
@@ -100,6 +107,19 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
 				return
 			}
+
+			values := map[string]io.Reader{
+				"file":          cloudinaryClient.MustOpen(fileName), // lets assume its this file
+				"upload_preset": strings.NewReader(cloudinary.UPLOAD_PRESET),
+			}
+			cloudinaryResponse, err = cloudinaryClient.Upload(values)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
+				return
+			}
+
+			imageLinks[i] = cloudinaryResponse.URL
 		}
 
 		hhID, err := rtr.engines.SubmitHappyHour(phoneID, name, email, businessOwnerBool, restaurant, city, description)
@@ -109,7 +129,7 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 		}
 
 		for i, _ := range images {
-			_, err := rtr.engines.SubmitHappyHourImages(hhID, fileNames[i])
+			_, err := rtr.engines.SubmitHappyHourImages(hhID, imageLinks[i])
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
