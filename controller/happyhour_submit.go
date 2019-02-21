@@ -73,9 +73,7 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 		}
 
 		cloudinaryClient := cloudinary.NewCloudinaryClient(logger)
-		var cloudinaryResponse cloudinary.Response
-
-		imageLinks := make([]string, len(images))
+		fileNames := make([]string, len(images))
 		for i, _ := range images {
 
 			uuid, err := uuid.NewRandom()
@@ -93,6 +91,7 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 			}
 
 			fileName := fmt.Sprintf("upload_images/%s_%s", uuid, images[i].Filename)
+			fileNames[i] = fileName
 			//create destination file making sure the path is writeable.
 			dst, err := os.Create(fileName)
 			defer dst.Close()
@@ -107,26 +106,6 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
 				return
 			}
-
-			f, err := cloudinaryClient.MustOpen(fileName)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
-				return
-			}
-
-			values := map[string]io.Reader{
-				"file":          f,
-				"upload_preset": strings.NewReader(cloudinary.UPLOAD_PRESET),
-			}
-			cloudinaryResponse, err = cloudinaryClient.Upload(values)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
-				return
-			}
-
-			imageLinks[i] = cloudinaryResponse.URL
 		}
 
 		hhID, err := rtr.engines.SubmitHappyHour(phoneID, name, email, businessOwnerBool, restaurant, city, description)
@@ -136,11 +115,29 @@ func (rtr *router) newImageHandler(endpoint postEndpoint) http.HandlerFunc {
 		}
 
 		for i, _ := range images {
-			_, err := rtr.engines.SubmitHappyHourImages(hhID, imageLinks[i])
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
-			}
+			go func(i int) {
+				f, err := cloudinaryClient.MustOpen(fileNames[i])
+				if err != nil {
+					logger.Error().Msgf("error opening file: %s", err)
+					return
+				}
+
+				values := map[string]io.Reader{
+					"file":          f,
+					"upload_preset": strings.NewReader(cloudinary.UPLOAD_PRESET),
+				}
+				cloudinaryResponse, err := cloudinaryClient.Upload(values)
+				if err != nil {
+					logger.Error().Msgf("error uploading file to cloudinary: %s", err)
+					return
+				}
+
+				_, err = rtr.engines.SubmitHappyHourImages(hhID, cloudinaryResponse.URL)
+				if err != nil {
+					logger.Error().Msgf("error updating DB: %s", err)
+					return
+				}
+			}(i)
 		}
 
 		w.WriteHeader(http.StatusOK)

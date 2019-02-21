@@ -12,7 +12,7 @@ import (
 
 func TestClient_Upload(t *testing.T) {
 	cloudinaryClient := NewCloudinaryClient(shared.GetLogger())
-	f, err := cloudinaryClient.MustOpen("../../upload_images/HungryHourOK_300.jpg")
+	f, err := cloudinaryClient.MustOpen("../../upload_images/6c073578-cd61-4347-8bf7-e6a8a56e5edf_IMG_9615.JPG")
 	require.NoError(t, err)
 	//prepare the reader instances to encode
 	values := map[string]io.Reader{
