@@ -158,7 +158,7 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 	var whereClause bytes.Buffer
 	whereClause.WriteString(fmt.Sprintf(" WHERE favorites.phone_id = '%s'", phoneID))
 
-	selectFields := fmt.Sprintf("%s, %s, %s, %s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingBusinessAddressFields, common.ListingDateFields, common.ListingImageFields, common.FavoriteFields)
+	selectFields := fmt.Sprintf("%s, %s, %s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingBusinessAddressFields, common.ListingImageFields, common.FavoriteFields)
 	//fmt.Println("selectFields: ", selectFields)
 
 	query := fmt.Sprintf("%s %s %s order by favorites.favorite_add_date desc;", selectFields, common.FromClauseFavorites, whereClause.String())
@@ -199,8 +199,6 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 			&listing.BusinessName,
 			&listing.Latitude,
 			&listing.Longitude,
-			&listing.ListingDateID,
-			&listing.ListingDate,
 			&listing.ListingImage,
 			&fid,
 			&sqlFavoriteAddDate,
