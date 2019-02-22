@@ -115,6 +115,10 @@ func NewRESTRouter(engines model.Engine) http.Handler {
 	)
 
 	rtr.Route(apiVersion, func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Get("/openapp/{id}", rtr.RedirectHandler())
+		})
+
 		for _, endpoint := range getEndpoints {
 			r.Group(func(r chi.Router) {
 				r.Get(endpoint.GetPath(), rtr.newGetHandler(endpoint))
