@@ -18,7 +18,7 @@ func (rtr *router) RedirectHandler() http.HandlerFunc {
 		//http.Redirect(w, r, redirectURL, 301)
 		//w.WriteHeader(200)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		h := fmt.Sprintf("<html><head></head><a href=\"%s\">this</a></html>", redirectURL)
+		h := fmt.Sprintf("<html><head></head><a style=\"font-size:30px;\" href=\"%s\">Open in hungryhour app? click here!</a></html>", redirectURL)
 		fmt.Fprintln(w, h)
 	}
 }
