@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	HTML_CONTENT = `<html><head></head><a style=\"font-size:30px;\" href=\"%s\">Open in hungryhour app? click here!</a></html>`
+	HTML_CONTENT = `<html><head></head><a style="font-size:30px;" href="%s">Open in hungryhour app? click here!</a></html>`
 )
 
 func (rtr *router) LinkHandler() http.HandlerFunc {
