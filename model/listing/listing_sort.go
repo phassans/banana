@@ -53,7 +53,11 @@ func (l *sortListingEngine) SortListings(isFuture bool, searchDay string, isSear
 	} else if l.sortingType == shared.SortByTimeLeft {
 		l.sortListingsByTimeLeft()
 	} else if l.sortingType == shared.SortByDateAdded {
-		l.sortListingsByDateAdded()
+		if isFavorite {
+			l.sortListingsByFavoriteDateAdded()
+		} else {
+			l.sortListingsByDateAdded()
+		}
 	} else if l.sortingType == shared.SortByMostPopular {
 		l.sortListingsByMostPopular()
 	}
@@ -230,6 +234,26 @@ func (l *sortListingEngine) sortListingsByDateAdded() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 		listingDateFormatted, err := time.Parse(shared.DateTimeFormat, listing.ListingCreateDate)
+		if err != nil {
+			return err
+		}
+		s := shared.SortView{Listing: listing, ListingDate: listingDateFormatted}
+		ll = append(ll, s)
+	}
+
+	// put in listing struct
+	var listingsResult []shared.Listing
+	for _, view := range l.orderListings(ll, shared.SortByDateAdded) {
+		listingsResult = append(listingsResult, view.Listing)
+	}
+
+	return nil
+}
+
+func (l *sortListingEngine) sortListingsByFavoriteDateAdded() error {
+	var ll []shared.SortView
+	for _, listing := range l.listings {
+		listingDateFormatted, err := time.Parse(shared.DateTimeFormat, listing.Favorite.FavoriteAddDate)
 		if err != nil {
 			return err
 		}
