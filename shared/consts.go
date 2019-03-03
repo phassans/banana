@@ -31,7 +31,7 @@ const (
 	SortByTimeLeft = "timeLeft"
 
 	// SortByDateAdded ...
-	SortByDateAdded = "dateadded"
+	SortByDateAdded = "dateAdded"
 
 	// SortByMostPopular ...
 	SortByMostPopular = "mostpopular"
