@@ -356,6 +356,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 	var listing shared.Listing
 	var sqlEndDate sql.NullString
 	var sqlRecurringEndDate sql.NullString
+	var sqlCreateDate sql.NullString
 	err := rows.Scan(
 		&listing.Title,
 		&listing.OldPrice,
@@ -373,6 +374,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 		&listing.Type,
 		&listing.BusinessID,
 		&listing.ListingID,
+		&sqlCreateDate,
 		&listing.BusinessName,
 		&listing.ListingDateID,
 		&listing.ListingDate,
@@ -385,6 +387,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 	listing.ImageLink = optimizeImage(listing.ImageLink)
 	listing.EndDate = sqlEndDate.String
 	listing.RecurringEndDate = sqlRecurringEndDate.String
+	listing.ListingCreateDate = sqlCreateDate.String
 
 	return listing, nil
 }
@@ -403,6 +406,7 @@ func (l *listingEngine) GetListingByIDForUpdate(listingID int) (shared.Listing, 
 	var listing shared.Listing
 	var sqlEndDate sql.NullString
 	var sqlRecurringEndDate sql.NullString
+	var sqlCreateDate sql.NullString
 	err := rows.Scan(
 		&listing.Title,
 		&listing.OldPrice,
@@ -420,6 +424,7 @@ func (l *listingEngine) GetListingByIDForUpdate(listingID int) (shared.Listing, 
 		&listing.Type,
 		&listing.BusinessID,
 		&listing.ListingID,
+		&sqlCreateDate,
 	)
 	if err != nil {
 		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
@@ -428,6 +433,7 @@ func (l *listingEngine) GetListingByIDForUpdate(listingID int) (shared.Listing, 
 	listing.ImageLink = optimizeImage(listing.ImageLink)
 	listing.EndDate = sqlEndDate.String
 	listing.RecurringEndDate = sqlRecurringEndDate.String
+	listing.ListingCreateDate = sqlCreateDate.String
 
 	return listing, nil
 }
@@ -450,6 +456,7 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 	var listings []shared.Listing
 	var sqlEndDate sql.NullString
 	var sqlRecurringEndDate sql.NullString
+	var sqlCreateDate sql.NullString
 	for rows.Next() {
 		var listing shared.Listing
 		err = rows.Scan(
@@ -469,6 +476,7 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
+			&sqlCreateDate,
 			&listing.BusinessName,
 			&listing.ImageLink,
 		)
@@ -478,6 +486,7 @@ func (l *listingEngine) GetListingsByBusinessID(businessID int, status string) (
 		listing.ImageLink = optimizeImage(listing.ImageLink)
 		listing.EndDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
+		listing.ListingCreateDate = sqlCreateDate.String
 
 		// add dietary req's
 		var reqs []string

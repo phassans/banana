@@ -485,6 +485,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 	var listings []shared.Listing
 	var sqlEndDate sql.NullString
 	var sqlRecurringEndDate sql.NullString
+	var sqlCreateDate sql.NullString
 	for rows.Next() {
 		var listing shared.Listing
 		err = rows.Scan(
@@ -504,6 +505,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
+			&sqlCreateDate,
 			&listing.BusinessName,
 			&listing.Latitude,
 			&listing.Longitude,
@@ -517,6 +519,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 		listing.ListingImage = optimizeImage(listing.ListingImage)
 		listing.EndDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
+		listing.ListingCreateDate = sqlCreateDate.String
 		listings = append(listings, listing)
 	}
 
