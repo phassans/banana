@@ -59,6 +59,10 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 		Str("sortBy", request.SortBy).Logger()
 	logger.Info().Msgf("search request")
 
+	if request.SortBy == "dateadded" {
+		request.SortBy = shared.SortByDateAdded
+	}
+
 	// validate input
 	if err := r.Validate(request); err != nil {
 		return nil, err
@@ -132,7 +136,7 @@ func (r listingsSearchEndpoint) Validate(request interface{}) error {
 		strings.ToLower(req.SortBy) != shared.SortByDistance &&
 		strings.ToLower(req.SortBy) != shared.SortByTimeLeft &&
 		strings.ToLower(req.SortBy) != shared.SortByPrice &&
-		strings.ToLower(req.SortBy) != shared.SortByDateAdded &&
+		req.SortBy != shared.SortByDateAdded &&
 		strings.ToLower(req.SortBy) != shared.SortByMostPopular {
 		return helper.ValidationError{Message: fmt.Sprint("listing search failed, invalid 'sortBy'")}
 	}
