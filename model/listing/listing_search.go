@@ -760,6 +760,42 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 	}
 }
 
+func determineDealDateTimeRangeDetailsView(listingStartTime string, listingEndTime string, recurringDays []string) (string, error) {
+	var buffer bytes.Buffer
+	// determine startTime in format
+	sTime, err := shared.GetTimeIn12HourFormat(listingStartTime)
+	if err != nil {
+		return "", nil
+	}
+
+	// determine endTime in format
+	eTime, err := shared.GetTimeIn12HourFormat(listingEndTime)
+	if err != nil {
+		return "", nil
+	}
+
+	if len(recurringDays) == 7 {
+		buffer.WriteString("All Days ")
+	} else if len(recurringDays) == 6 || len(recurringDays) == 5 || len(recurringDays) == 4 {
+		buffer.WriteString(strings.Title(recurringDays[0][0:3]) + "-" + strings.Title(recurringDays[len(recurringDays)-1][0:3]))
+		buffer.WriteString(": ")
+	} else if len(recurringDays) == 1 {
+		buffer.WriteString(strings.Title(recurringDays[0][0:3]))
+		buffer.WriteString(": ")
+	} else {
+		for i, day := range recurringDays {
+			buffer.WriteString(strings.Title(day[0:3]))
+			if i != len(recurringDays)-1 {
+				buffer.WriteString(",")
+			}
+		}
+		buffer.WriteString(": ")
+	}
+
+	buffer.WriteString(sTime + "-" + eTime)
+	return buffer.String(), nil
+}
+
 func isDistanceInRange(geoCode shared.GeoLocation) bool {
 	realLocation := haversine.Coord{Lat: geoCode.Latitude, Lon: geoCode.Longitude}
 	sunnyvaleLocation := haversine.Coord{Lat: float64(37.36883), Lon: float64(-122.0363496)}
