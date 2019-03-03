@@ -229,7 +229,7 @@ func getMaxDistance(isFuture bool) float64 {
 func (l *sortListingEngine) sortListingsByDateAdded() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
-		listingDateFormatted, err := time.Parse(shared.DateTimeFormat, listing.ListingDate)
+		listingDateFormatted, err := time.Parse(shared.DateTimeFormat, listing.ListingCreateDate)
 		if err != nil {
 			return err
 		}

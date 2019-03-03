@@ -619,6 +619,47 @@ func (l *listingEngine) MassageAndPopulateSearchListingsWeekly(listings []shared
 	return listingsResult, nil
 }
 
+func (l *listingEngine) MassageAndPopulateSearchListingsFavorites(listings []shared.Listing, isFavorite bool, searchDay string) ([]shared.SearchListingResult, error) {
+	var listingsResult []shared.SearchListingResult
+	for _, listing := range listings {
+
+		// get recurring info
+
+		recDays, err := l.GetRecurringListing(listing.ListingID)
+		if err != nil {
+			return nil, nil
+		}
+
+		dateTimeRange, err := determineDealDateTimeRangeDetailsView(listing.StartTime, listing.EndTime, recDays)
+		if err != nil {
+			return nil, nil
+		}
+
+		sr := shared.SearchListingResult{
+			ListingID:            listing.ListingID,
+			ListingType:          listing.Type,
+			Title:                listing.Title,
+			Description:          listing.Description,
+			BusinessID:           listing.BusinessID,
+			BusinessName:         listing.BusinessName,
+			Price:                listing.NewPrice,
+			Discount:             listing.Discount,
+			DiscountDescription:  listing.DiscountDescription,
+			DietaryRestrictions:  listing.DietaryRestrictions,
+			TimeLeft:             0,
+			ListingImage:         listing.ListingImage,
+			DistanceFromLocation: listing.DistanceFromLocation,
+			IsFavorite:           listing.IsFavorite,
+			DateTimeRange:        dateTimeRange,
+			ListingDateID:        listing.ListingDateID,
+			Upvotes:              listing.UpVotes,
+			IsUserVoted:          listing.IsUserVoted,
+		}
+		listingsResult = append(listingsResult, sr)
+	}
+	return listingsResult, nil
+}
+
 func calculateTimeLeftForSearch(listingDate string, listingStartTime string, listingEndTime string) (int, error) {
 	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
 		return 0, nil

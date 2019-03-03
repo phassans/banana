@@ -50,10 +50,10 @@ func (r favoritesViewEndpoint) Validate(request interface{}) error {
 	}
 
 	if strings.TrimSpace(req.SortBy) != "" &&
-		strings.TrimSpace(req.SortBy) != "dateAdded" &&
-		strings.ToLower(req.SortBy) != "distance" &&
-		strings.ToLower(req.SortBy) != "timeleft" &&
-		strings.ToLower(req.SortBy) != "price" {
+		strings.TrimSpace(req.SortBy) != shared.SortByDateAdded &&
+		strings.ToLower(req.SortBy) != shared.SortByDistance &&
+		strings.ToLower(req.SortBy) != shared.SortByPrice &&
+		strings.ToLower(req.SortBy) != shared.SortByTimeLeft {
 		return helper.ValidationError{Message: fmt.Sprint("favorite all failed, invalid 'sortBy'")}
 	}
 

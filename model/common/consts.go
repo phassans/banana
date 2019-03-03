@@ -6,7 +6,7 @@ const (
 		"listing.end_date as end_date, listing.start_time as start_time, listing.end_time as end_time, " +
 		"listing.multiple_days as multiple_days, " +
 		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
-		"listing.business_id as business_id, listing.listing_id as listing_id "
+		"listing.business_id as business_id, listing.listing_id as listing_id, listing.listing_create_date as listing_create_date "
 
 	ListingDateFields = "listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date"
 

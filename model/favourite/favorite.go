@@ -110,7 +110,7 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 	}
 	f.logger.Info().Msgf("done sorting the listings in favorite. listings count: %d", len(listings))
 
-	return f.listingEngine.MassageAndPopulateSearchListings(listings, true, "")
+	return f.listingEngine.MassageAndPopulateSearchListingsFavorites(listings, true, "")
 
 }
 
@@ -177,6 +177,7 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 		var sqlEndDate sql.NullString
 		var sqlRecurringEndDate sql.NullString
 		var sqlFavoriteAddDate sql.NullString
+		var sqlCreateDate sql.NullString
 		var listing shared.Listing
 		var fid int
 		err = rows.Scan(
@@ -196,6 +197,7 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 			&listing.Type,
 			&listing.BusinessID,
 			&listing.ListingID,
+			&sqlCreateDate,
 			&listing.BusinessName,
 			&listing.Latitude,
 			&listing.Longitude,
@@ -207,6 +209,7 @@ func (f *favoriteEngine) GetListingsPhoneID(phoneID string) ([]shared.Listing, e
 		listing.Favorite = &shared.Favorite{fid, listing.ListingID, listing.ListingDateID, sqlFavoriteAddDate.String}
 		listing.StartDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
+		listing.ListingCreateDate = sqlCreateDate.String
 
 		if err != nil {
 			return nil, helper.DatabaseError{DBError: err.Error()}

@@ -42,6 +42,7 @@ type (
 		ListingImage         string        `json:"listingImage,omitempty"`
 		DistanceFromLocation float64       `json:"distanceFromLocation,omitempty"`
 		ListingDate          string        `json:"listingDate"`
+		ListingCreateDate    string        `json:"listingCreateDate"`
 		ListingStatus        string        `json:"listingStatus,omitempty"`
 		TimeLeft             int           `json:"timeLeft"`
 		ImageLink            string        `json:"imageLink,omitempty"`

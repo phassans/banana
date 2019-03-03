@@ -46,6 +46,12 @@ type (
 		// MassageAndPopulateSearchListings to massage and populate search result
 		MassageAndPopulateSearchListings([]shared.Listing, bool, string) ([]shared.SearchListingResult, error)
 
+		// MassageAndPopulateSearchListingsWeekly to massage and populate search result
+		MassageAndPopulateSearchListingsWeekly([]shared.Listing, bool, string) ([]shared.SearchListingResult, error)
+
+		// MassageAndPopulateSearchListingsFavorites to massage and populate search result
+		MassageAndPopulateSearchListingsFavorites([]shared.Listing, bool, string) ([]shared.SearchListingResult, error)
+
 		// DeleteListing to delete the listing
 		DeleteListing(listingID int) error
 
@@ -211,10 +217,10 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 
 	// get recurring info
 	if listing.Recurring {
+		listing.RecurringDays, err = l.GetRecurringListing(listingID)
 		if err != nil {
 			return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
 		}
-		listing.RecurringDays, err = l.GetRecurringListing(listingID)
 	}
 
 	//GetBusinessInfo
