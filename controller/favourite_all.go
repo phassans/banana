@@ -50,7 +50,7 @@ func (r favoritesViewEndpoint) Validate(request interface{}) error {
 	}
 
 	if strings.TrimSpace(req.SortBy) != "" &&
-		strings.TrimSpace(req.SortBy) != strings.ToLower(shared.SortByDateAdded) &&
+		strings.ToLower(strings.TrimSpace(req.SortBy)) != shared.SortByDateAdded &&
 		strings.ToLower(req.SortBy) != shared.SortByDistance &&
 		strings.ToLower(req.SortBy) != shared.SortByPrice &&
 		strings.ToLower(req.SortBy) != shared.SortByTimeLeft {
