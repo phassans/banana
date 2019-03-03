@@ -72,10 +72,18 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 		return nil, err
 	}
 
+	var searchListing []shared.SearchListingResult
 	// getSearchListingsFromListings
-	searchListing, err := l.MassageAndPopulateSearchListings(listings, false, request.SearchDay)
-	if err != nil {
-		return searchListing, err
+	if isWeekDay(request.SearchDay) {
+		searchListing, err = l.MassageAndPopulateSearchListingsWeekly(listings, false, request.SearchDay)
+		if err != nil {
+			return searchListing, err
+		}
+	} else {
+		searchListing, err = l.MassageAndPopulateSearchListings(listings, false, request.SearchDay)
+		if err != nil {
+			return searchListing, err
+		}
 	}
 
 	if request.SortBy == shared.SortByTimeLeft {
@@ -87,6 +95,15 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 	}
 
 	return searchListing, nil
+}
+
+func isWeekDay(sday string) bool {
+	for day := range shared.DayMap {
+		if day == sday {
+			return true
+		}
+	}
+	return false
 }
 
 func (l *listingEngine) populateFavorites(phoneID string, listings []shared.Listing) error {
@@ -521,6 +538,59 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 		_, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, true, timeLeft, isFavorite)
 		if err != nil {
 			return nil, err
+		}
+		//l.logger.Info().Msgf("dateTimeRange: %s", dateTimeRange)
+
+		sr := shared.SearchListingResult{
+			ListingID:            listing.ListingID,
+			ListingType:          listing.Type,
+			Title:                listing.Title,
+			Description:          listing.Description,
+			BusinessID:           listing.BusinessID,
+			BusinessName:         listing.BusinessName,
+			Price:                listing.NewPrice,
+			Discount:             listing.Discount,
+			DiscountDescription:  listing.DiscountDescription,
+			DietaryRestrictions:  listing.DietaryRestrictions,
+			TimeLeft:             0,
+			ListingImage:         listing.ListingImage,
+			DistanceFromLocation: listing.DistanceFromLocation,
+			IsFavorite:           listing.IsFavorite,
+			DateTimeRange:        dateTimeRange,
+			ListingDateID:        listing.ListingDateID,
+			Upvotes:              listing.UpVotes,
+			IsUserVoted:          listing.IsUserVoted,
+		}
+		listingsResult = append(listingsResult, sr)
+	}
+	return listingsResult, nil
+}
+
+func (l *listingEngine) GetDateTimeRangeForWeeklyListing(searchDay string, listingStartTime string, listingEndTime string) (string, error) {
+	var buffer bytes.Buffer
+	// determine startTime in format
+	sTime, err := shared.GetTimeIn12HourFormat(listingStartTime)
+	if err != nil {
+		return "", nil
+	}
+
+	// determine endTime in format
+	eTime, err := shared.GetTimeIn12HourFormat(listingEndTime)
+	if err != nil {
+		return "", nil
+	}
+
+	buffer.WriteString(strings.Title(searchDay) + " " + sTime + "-" + eTime)
+	return buffer.String(), nil
+}
+
+func (l *listingEngine) MassageAndPopulateSearchListingsWeekly(listings []shared.Listing, isFavorite bool, searchDay string) ([]shared.SearchListingResult, error) {
+	var listingsResult []shared.SearchListingResult
+	for _, listing := range listings {
+
+		dateTimeRange, err := l.GetDateTimeRangeForWeeklyListing(searchDay, listing.StartTime, listing.EndTime)
+		if err != nil {
+			return nil, nil
 		}
 		//l.logger.Info().Msgf("dateTimeRange: %s", dateTimeRange)
 
