@@ -289,7 +289,7 @@ func (l *sortListingEngine) orderListings(listings []shared.SortView, orderType 
 		return listings
 	case shared.SortByDateAdded:
 		sort.Slice(listings, func(i, j int) bool {
-			fmt.Printf("%t\n", listings[j].ListingDate.Before(listings[i].ListingDate))
+			//fmt.Printf("%t\n", listings[j].ListingDate.Before(listings[i].ListingDate))
 			return listings[j].ListingDate.Before(listings[i].ListingDate)
 		})
 		return listings

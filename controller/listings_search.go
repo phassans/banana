@@ -90,17 +90,18 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 	}
 
 	result, err := rtr.engines.SearchListings(searchRequest)
-	return listingsSearchResult{Result: result, Error: NewAPIError(err), Message: populateSearchMessage(len(result), request.Search)}, err
+	result = []shared.SearchListingResult{}
+	return listingsSearchResult{Result: result, Error: NewAPIError(err), Message: populateSearchMessage(len(result), request.Keywords)}, err
 }
 
-func populateSearchMessage(numberOfResults int, isSearch bool) string {
+func populateSearchMessage(numberOfResults int, keywords string) string {
 	if numberOfResults > 0 {
 		return ""
 	}
 
-	if numberOfResults == 0 && isSearch {
+	if numberOfResults == 0 && keywords != "" {
 		return "no result found"
-	} else if numberOfResults == 0 && !isSearch {
+	} else if numberOfResults == 0 && keywords == "" {
 		return "no deals"
 	}
 
