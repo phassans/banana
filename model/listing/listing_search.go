@@ -461,7 +461,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 		}
 
 		searchQuery = fmt.Sprintf("SELECT title, old_price, new_price, discount, discount_description, description, start_date, end_date, "+
-			"start_time, end_time, multiple_days, recurring, recurring_date, listing_type, business_id, listing_id, bname, latitude, longitude, listing_date_id, listing_date, path "+
+			"start_time, end_time, multiple_days, recurring, recurring_date, listing_type, business_id, listing_id, listing_create_date, bname, latitude, longitude, listing_date_id, listing_date, path "+
 			"FROM (%s, "+
 			"to_tsvector('english', business.name) || "+
 			"to_tsvector('english', listing.title) || "+
