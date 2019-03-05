@@ -56,6 +56,7 @@ type (
 		Longitude            float64       `json:"longitude,omitempty"`
 		UpVotes              int           `json:"upvotes"`
 		IsUserVoted          bool          `json:"isUserUpVoted"`
+		SubmittedBy          string        `json:"submittedBy"`
 	}
 
 	// SearchListingResult result of search

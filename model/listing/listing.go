@@ -183,7 +183,7 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	//var listingInfo shared.Listing
 
 	//GetListingByID
-	listing, err := l.GetListingByID(listingID, 0, listingDateID)
+	listing, err := l.GetListingByID(listingID, 0, 0)
 	if err != nil {
 		return shared.Listing{}, err
 	}
@@ -240,6 +240,7 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	if phoneID != "" {
 		listing.IsFavorite = l.isFavorite(phoneID, listingID)
 	}
+	listing.SubmittedBy = "HungryHour Team"
 
 	return messageListingsDateAndTime(listing)
 }
