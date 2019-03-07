@@ -156,7 +156,7 @@ func (l *sortListingEngine) sortListingsByDistance(isFuture bool, searchDay stri
 	}
 
 	// put in listing struct
-	var listingsResult []shared.Listing
+	var listingsResult = make([]shared.Listing, 0)
 	for _, view := range l.orderListings(ll, shared.SortByDistance) {
 		listingsResult = append(listingsResult, view.Listing)
 	}

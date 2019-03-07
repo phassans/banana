@@ -72,7 +72,7 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 		return nil, err
 	}
 
-	var searchListing []shared.SearchListingResult
+	var searchListing = make([]shared.SearchListingResult, 0)
 	// getSearchListingsFromListings
 	if isWeekDay(request.SearchDay) {
 		searchListing, err = l.MassageAndPopulateSearchListingsWeekly(listings, false, request.SearchDay)
@@ -200,8 +200,8 @@ func (l *listingEngine) determineCurrentLocation(request shared.SearchRequest) (
 }
 
 func GroupListingsOnNow(listings []shared.SearchListingResult) []shared.SearchListingResult {
-	var searchListingsLeft []shared.SearchListingResult
-	var searchListingRange []shared.SearchListingResult
+	var searchListingsLeft = make([]shared.SearchListingResult, 0)
+	var searchListingRange = make([]shared.SearchListingResult, 0)
 	for _, listing := range listings {
 		if strings.Contains(listing.DateTimeRange, "left") && listing.DistanceFromLocation <= common.MaxDistanceToGroupNow {
 			searchListingsLeft = append(searchListingsLeft, listing)
@@ -531,7 +531,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 }
 
 func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing, isFavorite bool, searchDay string) ([]shared.SearchListingResult, error) {
-	var listingsResult []shared.SearchListingResult
+	var listingsResult = make([]shared.SearchListingResult, 0)
 	for _, listing := range listings {
 		timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
 		if err != nil {
