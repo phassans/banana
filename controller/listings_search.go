@@ -90,7 +90,6 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 	}
 
 	result, err := rtr.engines.SearchListings(searchRequest)
-	result = []shared.SearchListingResult{}
 	return listingsSearchResult{Result: result, Error: NewAPIError(err), Message: populateSearchMessage(len(result), request.Keywords)}, err
 }
 

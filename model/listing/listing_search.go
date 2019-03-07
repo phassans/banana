@@ -46,10 +46,10 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 	}
 
 	// isLocationInRange
-	if !isDistanceInRange(currentLocation) {
+	/*if !isDistanceInRange(currentLocation) {
 		l.logger.Error().Msgf("location not in range: %v", currentLocation)
 		return []shared.SearchListingResult{}, helper.LocationError{Message: "location not in range"}
-	}
+	}*/
 	l.logger.Info().Msgf("search location: %v", currentLocation)
 
 	// sort Listings based on sortBy
