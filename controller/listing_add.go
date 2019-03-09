@@ -85,7 +85,7 @@ func (r addListingEndpoint) Validate(request interface{}) error {
 		return helper.ValidationError{Message: fmt.Sprint("listing add failed, invalid 'listingType'")}
 	}
 
-	var businessFields = []string{input.Title, input.Description, input.StartDate, input.StartTime, input.EndTime}
+	var businessFields = []string{input.Title, input.StartDate, input.StartTime, input.EndTime}
 	for _, field := range businessFields {
 		if strings.TrimSpace(field) == "" {
 			return helper.ValidationError{Message: fmt.Sprint("listing add failed, missing mandatory fields")}

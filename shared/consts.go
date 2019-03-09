@@ -19,7 +19,7 @@ const (
 	TimeLayout12Hour = "3:04pm"
 
 	// CountryID default USA
-	CountryID = 1
+	CountryID = 2
 
 	// SortByDistance ...
 	SortByDistance = "distance"
