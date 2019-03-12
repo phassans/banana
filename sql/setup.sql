@@ -274,3 +274,5 @@ CREATE TABLE IF NOT EXISTS report_inaccurate
 
 INSERT INTO business_country (name)
 VALUES ('USA');
+INSERT INTO business_country (name)
+VALUES ('INDIA');

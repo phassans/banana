@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"strings"
 
@@ -71,6 +72,11 @@ func (r listingsSearchEndpoint) Execute(ctx context.Context, rtr *router, reques
 	// if search keyword is "all cuisines" then search for everything
 	if strings.ToLower(request.Keywords) == "all cuisines" {
 		request.Keywords = ""
+	}
+
+	currentDate := time.Now()
+	if strings.ToLower(currentDate.Weekday().String()) == strings.ToLower(request.SearchDay) {
+		request.SearchDay = "today"
 	}
 
 	searchRequest := shared.SearchRequest{
