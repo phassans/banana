@@ -40,6 +40,7 @@ type (
 		RecurringEndDate     string        `json:"recurringEndDate,omitempty"`
 		Type                 string        `json:"listingType"`
 		ListingImage         string        `json:"listingImage,omitempty"`
+		ListingImages        []string      `json:"listingImages,omitempty"`
 		DistanceFromLocation float64       `json:"distanceFromLocation,omitempty"`
 		ListingDate          string        `json:"listingDate"`
 		ListingCreateDate    string        `json:"listingCreateDate"`
@@ -74,6 +75,7 @@ type (
 		DietaryRestrictions        []string `json:"dietaryRestrictions"`
 		TimeLeft                   int      `json:"timeLeft"`
 		ListingImage               string   `json:"listingImage"`
+		ListingImages              []string `json:"listingImages,omitempty"`
 		DistanceFromLocation       float64  `json:"distanceFromLocation"`
 		DistanceFromLocationString string   `json:"distanceFromLocationString"`
 		IsFavorite                 bool     `json:"isFavorite"`

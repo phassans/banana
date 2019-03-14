@@ -504,6 +504,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 			return nil, helper.DatabaseError{DBError: err.Error()}
 		}
 		listing.ListingImage = optimizeImage(listing.ListingImage)
+		listing.ListingImages = []string{optimizeImage(listing.ListingImage)}
 		listing.EndDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
 		listing.ListingCreateDate = sqlCreateDate.String
@@ -545,6 +546,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			DietaryRestrictions:        listing.DietaryRestrictions,
 			TimeLeft:                   0,
 			ListingImage:               listing.ListingImage,
+			ListingImages:              []string{listing.ListingImage},
 			DistanceFromLocation:       listing.DistanceFromLocation,
 			DistanceFromLocationString: GetDistanceFromLocationInString(listing.DistanceFromLocation, listing.CurrentLocation),
 			IsFavorite:                 listing.IsFavorite,
@@ -560,7 +562,6 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 
 func GetDistanceFromLocationInString(distance float64, location shared.GeoLocation) string {
 	zone := latlong.LookupZoneName(location.Latitude, location.Longitude)
-	fmt.Println("zone", zone)
 	var kms float64
 	if zone == "Asia/Kolkata" {
 		kms = distance * 1.609344
@@ -611,6 +612,7 @@ func (l *listingEngine) MassageAndPopulateSearchListingsWeekly(listings []shared
 			DietaryRestrictions:        listing.DietaryRestrictions,
 			TimeLeft:                   0,
 			ListingImage:               listing.ListingImage,
+			ListingImages:              []string{listing.ListingImage},
 			DistanceFromLocation:       listing.DistanceFromLocation,
 			DistanceFromLocationString: GetDistanceFromLocationInString(listing.DistanceFromLocation, listing.CurrentLocation),
 			IsFavorite:                 listing.IsFavorite,
@@ -653,6 +655,7 @@ func (l *listingEngine) MassageAndPopulateSearchListingsFavorites(listings []sha
 			DietaryRestrictions:        listing.DietaryRestrictions,
 			TimeLeft:                   0,
 			ListingImage:               listing.ListingImage,
+			ListingImages:              []string{listing.ListingImage},
 			DistanceFromLocation:       listing.DistanceFromLocation,
 			DistanceFromLocationString: GetDistanceFromLocationInString(listing.DistanceFromLocation, listing.CurrentLocation),
 			IsFavorite:                 listing.IsFavorite,

@@ -387,6 +387,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 	}
 
 	listing.ImageLink = optimizeImage(listing.ImageLink)
+	listing.ListingImages = []string{optimizeImage(listing.ImageLink)}
 	listing.EndDate = sqlEndDate.String
 	listing.RecurringEndDate = sqlRecurringEndDate.String
 	listing.ListingCreateDate = sqlCreateDate.String
