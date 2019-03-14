@@ -22,6 +22,14 @@
   revision = "fa1af6a1f4f56e0e50d427fe901cd604d8c6fb8a"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ba1ad3d6c76aa0be912fb1265a281a0c0d4021c5b8e9a36039a467ac9ba106a1"
+  name = "github.com/bradfitz/latlong"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f3db6d0dff40d47957be82e1a6645574fb041f95"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -125,6 +133,7 @@
   input-imports = [
     "github.com/NYTimes/gziphandler",
     "github.com/afex/hystrix-go/hystrix",
+    "github.com/bradfitz/latlong",
     "github.com/davecgh/go-spew/spew",
     "github.com/go-chi/chi",
     "github.com/google/uuid",
