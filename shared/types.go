@@ -57,6 +57,7 @@ type (
 		UpVotes              int           `json:"upvotes"`
 		IsUserVoted          bool          `json:"isUserUpVoted"`
 		SubmittedBy          string        `json:"submittedBy"`
+		CurrentLocation      GeoLocation   `json:"geoLocation,omitempty"`
 	}
 
 	// SearchListingResult result of search

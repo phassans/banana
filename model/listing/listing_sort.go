@@ -69,7 +69,7 @@ func (l *sortListingEngine) sortListingsByTimeLeft() error {
 	var ll []shared.SortView
 	for _, listing := range l.listings {
 
-		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime)
+		timeLeft, err := calculateTimeLeft(listing.ListingDate, listing.EndTime, l.currentLocation)
 		if err != nil {
 			return err
 		}
@@ -169,7 +169,13 @@ func (l *sortListingEngine) GroupListingsBasedOnSearchDay(searchDay string) erro
 	// group them by day
 	if searchDay != "" {
 		var days []string
-		currentDate := time.Now().Format(shared.DateFormat)
+
+		timeInZone, err := getCurrentTimeInTimeZone(l.currentLocation)
+		if err != nil {
+			return err
+		}
+
+		currentDate := timeInZone.Format(shared.DateFormat)
 		curDate, err := time.Parse(shared.DateFormat, currentDate)
 		if err != nil {
 			return err

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-
 	"strings"
+	"time"
 
+	"github.com/bradfitz/latlong"
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/business"
 	"github.com/phassans/banana/model/common"
@@ -648,4 +649,15 @@ func (l *listingEngine) AddGeoLocation(location string, geoLocation shared.GeoLo
 
 	l.logger.Info().Msgf("added geoLocation successful for location:%s", location)
 	return nil
+}
+
+func getCurrentTimeInTimeZone(location shared.GeoLocation) (time.Time, error) {
+	zone := latlong.LookupZoneName(location.Latitude, location.Longitude)
+
+	t := time.Now()
+	utc, err := time.LoadLocation(zone)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return t.In(utc), nil
 }

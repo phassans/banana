@@ -67,7 +67,7 @@ func (l *listingEngine) FilterByDietaryRestrictions(listings []shared.Listing, d
 
 func (l *listingEngine) getListingStatus(listing shared.Listing) string {
 
-	startDateTimeLeft, err := calculateTimeLeft(listing.StartDate, listing.EndTime)
+	startDateTimeLeft, err := calculateTimeLeft(listing.StartDate, listing.EndTime, listing.CurrentLocation)
 	if err != nil {
 		return ""
 	}
@@ -79,7 +79,7 @@ func (l *listingEngine) getListingStatus(listing shared.Listing) string {
 	}
 
 	if listing.MultipleDays {
-		endDateTimeLeft, err := calculateTimeLeft(listing.EndDate, listing.EndTime)
+		endDateTimeLeft, err := calculateTimeLeft(listing.EndDate, listing.EndTime, listing.CurrentLocation)
 		if err != nil {
 			return ""
 		}
@@ -88,7 +88,7 @@ func (l *listingEngine) getListingStatus(listing shared.Listing) string {
 			return shared.ListingEnded
 		}
 	} else if listing.Recurring {
-		recurringEndDateTimeLeft, err := calculateTimeLeft(listing.RecurringEndDate, listing.EndTime)
+		recurringEndDateTimeLeft, err := calculateTimeLeft(listing.RecurringEndDate, listing.EndTime, listing.CurrentLocation)
 		if err != nil {
 			return ""
 		}

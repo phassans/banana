@@ -27,8 +27,14 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 		l.logger.Error().Msgf("LogSearchRequest returned with error: %s", err)
 	}(request)
 
+	// determine current location
+	currentLocation, err := l.determineCurrentLocation(request)
+	if err != nil {
+		return nil, err
+	}
+
 	// GetListings
-	listings, err = l.GetListings(request.ListingTypes, request.Keywords, request.Future, request.SearchDay)
+	listings, err = l.GetListings(request.ListingTypes, request.Keywords, request.Future, request.SearchDay, currentLocation)
 	if err != nil {
 		return nil, err
 	}
@@ -36,12 +42,6 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 
 	// populate UpVotes
 	if err := l.populateUpVotes(request.PhoneID, listings); err != nil {
-		return nil, err
-	}
-
-	// determine current location
-	currentLocation, err := l.determineCurrentLocation(request)
-	if err != nil {
 		return nil, err
 	}
 
@@ -247,7 +247,7 @@ func (l *listingEngine) filterResults(listings []shared.Listing, priceFilter flo
 	return listings, err
 }
 
-func getListingTypeWhereClause(listingTypes []string) string {
+func (l *listingEngine) getListingTypeWhereClause(listingTypes []string) string {
 	var listingTypesClause bytes.Buffer
 	if len(listingTypes) > 0 {
 		listingTypesClause.WriteString("(")
@@ -264,38 +264,23 @@ func getListingTypeWhereClause(listingTypes []string) string {
 	return listingTypesClause.String()
 }
 
-func getWhereClause(listingTypes []string, future bool, searchDay string) (string, error) {
+func (l *listingEngine) getWhereClause(listingTypes []string, future bool, searchDay string, loc shared.GeoLocation) (string, error) {
 	var whereClause bytes.Buffer
-	if future {
-		var dateClause bytes.Buffer
 
-		currentDate := time.Now().Format(shared.DateFormat)
-		listingDate, err := time.Parse(shared.DateFormat, currentDate)
-		if err != nil {
-			return "", helper.DatabaseError{DBError: err.Error()}
-		}
+	timeInZone, err := getCurrentTimeInTimeZone(loc)
+	if err != nil {
+		return "", err
+	}
 
-		curr := listingDate
-		dateClause.WriteString("(")
-		for i := 0; i < common.MaxFutureDays; i++ {
-			nextDate := curr.Add(time.Hour * 24)
-			if i == common.MaxFutureDays-1 {
-				dateClause.WriteString(fmt.Sprintf("'%s')", strings.Split(nextDate.String(), " ")[0]))
-			} else {
-				dateClause.WriteString(fmt.Sprintf("'%s',", strings.Split(nextDate.String(), " ")[0]))
-			}
-			curr = nextDate
-		}
-		whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
-	} else if searchDay == "today" || searchDay == "" {
-		currentDate := time.Now().Format(shared.DateFormatSQL) //"2006-01-02"
-		currentTime := time.Now().Format(shared.TimeLayout24Hour)
+	if searchDay == "today" || searchDay == "" {
+		currentDate := timeInZone.Format(shared.DateFormatSQL) //"2006-01-02"
+		currentTime := timeInZone.Format(shared.TimeLayout24Hour)
 
 		whereClause.WriteString(fmt.Sprintf("WHERE listing_date.listing_date = '%s' AND listing_date.end_time >= '%s'", currentDate, currentTime))
 	} else if searchDay == shared.SearchTomorrow || searchDay == shared.SearchThisWeek || searchDay == shared.SearchNextWeek {
 		var dateClause bytes.Buffer
 
-		currentDate := time.Now().Format(shared.DateFormat)
+		currentDate := timeInZone.Format(shared.DateFormat)
 		listingDate, err := time.Parse(shared.DateFormat, currentDate)
 		if err != nil {
 			return "", helper.DatabaseError{DBError: err.Error()}
@@ -355,7 +340,7 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 			whereClause.WriteString(fmt.Sprintf("WHERE listing_date IN %s", dateClause.String()))
 		}
 	} else if searchDay != "" {
-		currentDate := time.Now().Format(shared.DateFormat)
+		currentDate := timeInZone.Format(shared.DateFormat)
 		listingDate, err := time.Parse(shared.DateFormat, currentDate)
 		if err != nil {
 			return "", helper.DatabaseError{DBError: err.Error()}
@@ -376,7 +361,7 @@ func getWhereClause(listingTypes []string, future bool, searchDay string) (strin
 	}
 
 	if len(listingTypes) > 0 {
-		whereClause.WriteString(fmt.Sprintf(" AND listing_type in %s", getListingTypeWhereClause(listingTypes)))
+		whereClause.WriteString(fmt.Sprintf(" AND listing_type in %s", l.getListingTypeWhereClause(listingTypes)))
 	}
 
 	//fmt.Println(whereClause.String())
@@ -407,14 +392,14 @@ func (l *listingEngine) getKeywordsFromCategory(keywords string) ([]string, erro
 	return foundKeywords, nil
 }
 
-func (l *listingEngine) GetListings(listingType []string, keywords string, future bool, searchDay string) ([]shared.Listing, error) {
+func (l *listingEngine) GetListings(listingType []string, keywords string, future bool, searchDay string, loc shared.GeoLocation) ([]shared.Listing, error) {
 	if searchDay == shared.SearchThisWeek {
-		todaysListings, err := l.getListings(listingType, keywords, future, shared.SearchToday)
+		todaysListings, err := l.getListings(listingType, keywords, future, shared.SearchToday, loc)
 		if err != nil {
 			return nil, err
 		}
 
-		thisWeekListings, err := l.getListings(listingType, keywords, future, shared.SearchThisWeek)
+		thisWeekListings, err := l.getListings(listingType, keywords, future, shared.SearchThisWeek, loc)
 		if err != nil {
 			return nil, err
 		}
@@ -422,13 +407,13 @@ func (l *listingEngine) GetListings(listingType []string, keywords string, futur
 		todaysListings = append(todaysListings, thisWeekListings...)
 		return todaysListings, nil
 	}
-	return l.getListings(listingType, keywords, future, searchDay)
+	return l.getListings(listingType, keywords, future, searchDay, loc)
 
 }
 
-func (l *listingEngine) getListings(listingType []string, keywords string, future bool, searchDay string) ([]shared.Listing, error) {
+func (l *listingEngine) getListings(listingType []string, keywords string, future bool, searchDay string, loc shared.GeoLocation) ([]shared.Listing, error) {
 	// determine where clause
-	whereClause, err := getWhereClause(listingType, future, searchDay)
+	whereClause, err := l.getWhereClause(listingType, future, searchDay, loc)
 	if err != nil {
 		return nil, err
 	}
@@ -520,6 +505,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 		listing.EndDate = sqlEndDate.String
 		listing.RecurringEndDate = sqlRecurringEndDate.String
 		listing.ListingCreateDate = sqlCreateDate.String
+		listing.CurrentLocation = loc
 		listings = append(listings, listing)
 	}
 
@@ -533,12 +519,12 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listing, isFavorite bool, searchDay string) ([]shared.SearchListingResult, error) {
 	var listingsResult = make([]shared.SearchListingResult, 0)
 	for _, listing := range listings {
-		timeLeft, err := calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime)
+		timeLeft, err := l.calculateTimeLeftForSearch(listing.ListingDate, listing.StartTime, listing.EndTime, listing.CurrentLocation)
 		if err != nil {
 			return nil, err
 		}
 
-		_, dateTimeRange, err := determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, true, timeLeft, isFavorite)
+		_, dateTimeRange, err := l.determineDealDateTimeRange(listing.ListingDate, listing.StartTime, listing.EndTime, true, timeLeft, isFavorite, listing.CurrentLocation)
 		if err != nil {
 			return nil, err
 		}
@@ -663,13 +649,18 @@ func (l *listingEngine) MassageAndPopulateSearchListingsFavorites(listings []sha
 	return listingsResult, nil
 }
 
-func calculateTimeLeftForSearch(listingDate string, listingStartTime string, listingEndTime string) (int, error) {
+func (l *listingEngine) calculateTimeLeftForSearch(listingDate string, listingStartTime string, listingEndTime string, loc shared.GeoLocation) (int, error) {
 	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
 		return 0, nil
 	}
 
 	// get current date and time
-	currentDateTime := time.Now().Format(shared.DateTimeFormat)
+	timeInZone, err := getCurrentTimeInTimeZone(loc)
+	if err != nil {
+		return 0, nil
+	}
+
+	currentDateTime := timeInZone.Format(shared.DateTimeFormat)
 	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)
 	if err != nil {
 		return 0, err
@@ -700,13 +691,19 @@ func calculateTimeLeftForSearch(listingDate string, listingStartTime string, lis
 	return int(timeLeftInHours), nil
 }
 
-func calculateTimeLeft(listingDate string, listingEndTime string) (int, error) {
+func calculateTimeLeft(listingDate string, listingEndTime string, loc shared.GeoLocation) (int, error) {
 	if listingDate == "" || listingEndTime == "" {
 		return 0, nil
 	}
 
 	// get current date and time
-	currentDateTime := time.Now().Format(shared.DateTimeFormat)
+	// get current date and time
+	timeInZone, err := getCurrentTimeInTimeZone(loc)
+	if err != nil {
+		return 0, nil
+	}
+
+	currentDateTime := timeInZone.Format(shared.DateTimeFormat)
 	currentDateTimeFormatted, err := time.Parse(shared.DateTimeFormat, currentDateTime)
 	if err != nil {
 		return 0, err
@@ -737,7 +734,7 @@ func inTimeSpan(start, end, check time.Time) bool {
 	return check.After(start) && check.Before(end)
 }
 
-func determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string, isSearch bool, timeLeft int, isFavorite bool) (string, string, error) {
+func (l *listingEngine) determineDealDateTimeRange(listingDate string, listingStartTime string, listingEndTime string, isSearch bool, timeLeft int, isFavorite bool, loc shared.GeoLocation) (string, string, error) {
 
 	if listingDate == "" || listingStartTime == "" || listingEndTime == "" {
 		return "", "", nil
@@ -755,7 +752,12 @@ func determineDealDateTimeRange(listingDate string, listingStartTime string, lis
 			buffer.WriteString(fmt.Sprintf("%s %d, ", listingDateFormatted.Month().String()[0:3], listingDateFormatted.Day()))
 		}
 
-		if time.Now().Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
+		timeInZone, err := getCurrentTimeInTimeZone(loc)
+		if err != nil {
+			return "", "", nil
+		}
+
+		if timeInZone.Format(shared.DateFormat) != listingDateFormatted.Format(shared.DateFormat) {
 			if isSearch {
 				buffer.WriteString(listingDateFormatted.Weekday().String()[0:3] + ": ")
 			} else {
