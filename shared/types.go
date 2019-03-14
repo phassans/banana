@@ -62,24 +62,25 @@ type (
 
 	// SearchListingResult result of search
 	SearchListingResult struct {
-		ListingID            int      `json:"listingId"`
-		ListingType          string   `json:"listingType"`
-		Title                string   `json:"title"`
-		Description          string   `json:"description"`
-		BusinessID           int      `json:"businessId"`
-		BusinessName         string   `json:"businessName"`
-		Price                float64  `json:"price"`
-		Discount             float64  `json:"discount"`
-		DiscountDescription  string   `json:"discountDescription"`
-		DietaryRestrictions  []string `json:"dietaryRestrictions"`
-		TimeLeft             int      `json:"timeLeft"`
-		ListingImage         string   `json:"listingImage"`
-		DistanceFromLocation float64  `json:"distanceFromLocation"`
-		IsFavorite           bool     `json:"isFavorite"`
-		DateTimeRange        string   `json:"dateTimeRange"`
-		ListingDateID        int      `json:"listingDateId,omitempty"`
-		Upvotes              int      `json:"upvotes"`
-		IsUserVoted          bool     `json:"isUserUpVoted"`
+		ListingID                  int      `json:"listingId"`
+		ListingType                string   `json:"listingType"`
+		Title                      string   `json:"title"`
+		Description                string   `json:"description"`
+		BusinessID                 int      `json:"businessId"`
+		BusinessName               string   `json:"businessName"`
+		Price                      float64  `json:"price"`
+		Discount                   float64  `json:"discount"`
+		DiscountDescription        string   `json:"discountDescription"`
+		DietaryRestrictions        []string `json:"dietaryRestrictions"`
+		TimeLeft                   int      `json:"timeLeft"`
+		ListingImage               string   `json:"listingImage"`
+		DistanceFromLocation       float64  `json:"distanceFromLocation"`
+		DistanceFromLocationString string   `json:"distanceFromLocationString"`
+		IsFavorite                 bool     `json:"isFavorite"`
+		DateTimeRange              string   `json:"dateTimeRange"`
+		ListingDateID              int      `json:"listingDateId,omitempty"`
+		Upvotes                    int      `json:"upvotes"`
+		IsUserVoted                bool     `json:"isUserUpVoted"`
 	}
 
 	// ListingInfo combination of Business and Listing

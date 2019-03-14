@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bradfitz/latlong"
+
 	"github.com/phassans/banana/clients"
 	"github.com/phassans/banana/helper"
 	"github.com/phassans/banana/model/common"
@@ -531,28 +533,41 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 		//l.logger.Info().Msgf("dateTimeRange: %s", dateTimeRange)
 
 		sr := shared.SearchListingResult{
-			ListingID:            listing.ListingID,
-			ListingType:          listing.Type,
-			Title:                listing.Title,
-			Description:          listing.Description,
-			BusinessID:           listing.BusinessID,
-			BusinessName:         listing.BusinessName,
-			Price:                listing.NewPrice,
-			Discount:             listing.Discount,
-			DiscountDescription:  listing.DiscountDescription,
-			DietaryRestrictions:  listing.DietaryRestrictions,
-			TimeLeft:             0,
-			ListingImage:         listing.ListingImage,
-			DistanceFromLocation: listing.DistanceFromLocation,
-			IsFavorite:           listing.IsFavorite,
-			DateTimeRange:        dateTimeRange,
-			ListingDateID:        listing.ListingDateID,
-			Upvotes:              listing.UpVotes,
-			IsUserVoted:          listing.IsUserVoted,
+			ListingID:                  listing.ListingID,
+			ListingType:                listing.Type,
+			Title:                      listing.Title,
+			Description:                listing.Description,
+			BusinessID:                 listing.BusinessID,
+			BusinessName:               listing.BusinessName,
+			Price:                      listing.NewPrice,
+			Discount:                   listing.Discount,
+			DiscountDescription:        listing.DiscountDescription,
+			DietaryRestrictions:        listing.DietaryRestrictions,
+			TimeLeft:                   0,
+			ListingImage:               listing.ListingImage,
+			DistanceFromLocation:       listing.DistanceFromLocation,
+			DistanceFromLocationString: GetDistanceFromLocationInString(listing.DistanceFromLocation, listing.CurrentLocation),
+			IsFavorite:                 listing.IsFavorite,
+			DateTimeRange:              dateTimeRange,
+			ListingDateID:              listing.ListingDateID,
+			Upvotes:                    listing.UpVotes,
+			IsUserVoted:                listing.IsUserVoted,
 		}
 		listingsResult = append(listingsResult, sr)
 	}
 	return listingsResult, nil
+}
+
+func GetDistanceFromLocationInString(distance float64, location shared.GeoLocation) string {
+	zone := latlong.LookupZoneName(location.Latitude, location.Longitude)
+	fmt.Println("zone", zone)
+	var kms float64
+	if zone == "Asia/Kolkata" {
+		kms = distance * 1.609344
+		return fmt.Sprintf("%.2fkm", kms)
+	}
+
+	return fmt.Sprintf("%.2fmi", distance)
 }
 
 func (l *listingEngine) GetDateTimeRangeForWeeklyListing(searchDay string, listingStartTime string, listingEndTime string) (string, error) {
@@ -584,24 +599,25 @@ func (l *listingEngine) MassageAndPopulateSearchListingsWeekly(listings []shared
 		//l.logger.Info().Msgf("dateTimeRange: %s", dateTimeRange)
 
 		sr := shared.SearchListingResult{
-			ListingID:            listing.ListingID,
-			ListingType:          listing.Type,
-			Title:                listing.Title,
-			Description:          listing.Description,
-			BusinessID:           listing.BusinessID,
-			BusinessName:         listing.BusinessName,
-			Price:                listing.NewPrice,
-			Discount:             listing.Discount,
-			DiscountDescription:  listing.DiscountDescription,
-			DietaryRestrictions:  listing.DietaryRestrictions,
-			TimeLeft:             0,
-			ListingImage:         listing.ListingImage,
-			DistanceFromLocation: listing.DistanceFromLocation,
-			IsFavorite:           listing.IsFavorite,
-			DateTimeRange:        dateTimeRange,
-			ListingDateID:        listing.ListingDateID,
-			Upvotes:              listing.UpVotes,
-			IsUserVoted:          listing.IsUserVoted,
+			ListingID:                  listing.ListingID,
+			ListingType:                listing.Type,
+			Title:                      listing.Title,
+			Description:                listing.Description,
+			BusinessID:                 listing.BusinessID,
+			BusinessName:               listing.BusinessName,
+			Price:                      listing.NewPrice,
+			Discount:                   listing.Discount,
+			DiscountDescription:        listing.DiscountDescription,
+			DietaryRestrictions:        listing.DietaryRestrictions,
+			TimeLeft:                   0,
+			ListingImage:               listing.ListingImage,
+			DistanceFromLocation:       listing.DistanceFromLocation,
+			DistanceFromLocationString: GetDistanceFromLocationInString(listing.DistanceFromLocation, listing.CurrentLocation),
+			IsFavorite:                 listing.IsFavorite,
+			DateTimeRange:              dateTimeRange,
+			ListingDateID:              listing.ListingDateID,
+			Upvotes:                    listing.UpVotes,
+			IsUserVoted:                listing.IsUserVoted,
 		}
 		listingsResult = append(listingsResult, sr)
 	}
@@ -625,24 +641,25 @@ func (l *listingEngine) MassageAndPopulateSearchListingsFavorites(listings []sha
 		}
 
 		sr := shared.SearchListingResult{
-			ListingID:            listing.ListingID,
-			ListingType:          listing.Type,
-			Title:                listing.Title,
-			Description:          listing.Description,
-			BusinessID:           listing.BusinessID,
-			BusinessName:         listing.BusinessName,
-			Price:                listing.NewPrice,
-			Discount:             listing.Discount,
-			DiscountDescription:  listing.DiscountDescription,
-			DietaryRestrictions:  listing.DietaryRestrictions,
-			TimeLeft:             0,
-			ListingImage:         listing.ListingImage,
-			DistanceFromLocation: listing.DistanceFromLocation,
-			IsFavorite:           listing.IsFavorite,
-			DateTimeRange:        dateTimeRange,
-			ListingDateID:        listing.ListingDateID,
-			Upvotes:              listing.UpVotes,
-			IsUserVoted:          listing.IsUserVoted,
+			ListingID:                  listing.ListingID,
+			ListingType:                listing.Type,
+			Title:                      listing.Title,
+			Description:                listing.Description,
+			BusinessID:                 listing.BusinessID,
+			BusinessName:               listing.BusinessName,
+			Price:                      listing.NewPrice,
+			Discount:                   listing.Discount,
+			DiscountDescription:        listing.DiscountDescription,
+			DietaryRestrictions:        listing.DietaryRestrictions,
+			TimeLeft:                   0,
+			ListingImage:               listing.ListingImage,
+			DistanceFromLocation:       listing.DistanceFromLocation,
+			DistanceFromLocationString: GetDistanceFromLocationInString(listing.DistanceFromLocation, listing.CurrentLocation),
+			IsFavorite:                 listing.IsFavorite,
+			DateTimeRange:              dateTimeRange,
+			ListingDateID:              listing.ListingDateID,
+			Upvotes:                    listing.UpVotes,
+			IsUserVoted:                listing.IsUserVoted,
 		}
 		listingsResult = append(listingsResult, sr)
 	}
