@@ -13,6 +13,7 @@ import (
 	"github.com/phassans/banana/model/common"
 	"github.com/phassans/banana/shared"
 	"github.com/rs/zerolog"
+	"github.com/umahmood/haversine"
 )
 
 type (
@@ -39,7 +40,7 @@ type (
 		GetListingByID(listingID int, businessID int, listingDateID int) (shared.Listing, error)
 
 		// GetListingInfo returns listing info
-		GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error)
+		GetListingInfo(listingID int, phoneID string, latitude float64, longitude float64) (shared.Listing, error)
 
 		// GetListingInfo returns listing info
 		UpdateListingDate(listingID int) error
@@ -180,7 +181,7 @@ func (l *listingEngine) GetListingsDietaryRestriction(listingID int) ([]string, 
 	return rests, nil
 }
 
-func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID string) (shared.Listing, error) {
+func (l *listingEngine) GetListingInfo(listingID int, phoneID string, latitude float64, longitude float64) (shared.Listing, error) {
 	//var listingInfo shared.Listing
 
 	//GetListingByID
@@ -237,6 +238,16 @@ func (l *listingEngine) GetListingInfo(listingID int, listingDateID int, phoneID
 	}
 	listing.TimeLeft = 0
 	listing.DateTimeRange = dateTimeRange
+
+	if latitude != 0.0 || longitude != 0.0 {
+		fromDB := haversine.Coord{Lat: listing.Business.BusinessAddress.Latitude, Lon: listing.Business.BusinessAddress.Longitude}
+		fromMobile := haversine.Coord{Lat: latitude, Lon: longitude}
+		mi, _ := haversine.Distance(fromMobile, fromDB)
+		if mi <= getMaxDistance(false) {
+			listing.DistanceFromLocation = mi
+			listing.DistanceFromLocationString = GetDistanceFromLocationInString(listing.DistanceFromLocation, shared.GeoLocation{latitude, longitude})
+		}
+	}
 
 	if phoneID != "" {
 		listing.IsFavorite = l.isFavorite(phoneID, listingID)
