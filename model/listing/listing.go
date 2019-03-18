@@ -243,10 +243,8 @@ func (l *listingEngine) GetListingInfo(listingID int, phoneID string, latitude f
 		fromDB := haversine.Coord{Lat: listing.Business.BusinessAddress.Latitude, Lon: listing.Business.BusinessAddress.Longitude}
 		fromMobile := haversine.Coord{Lat: latitude, Lon: longitude}
 		mi, _ := haversine.Distance(fromMobile, fromDB)
-		if mi <= getMaxDistance(false) {
-			listing.DistanceFromLocation = mi
-			listing.DistanceFromLocationString = GetDistanceFromLocationInString(listing.DistanceFromLocation, shared.GeoLocation{latitude, longitude})
-		}
+		listing.DistanceFromLocation = mi
+		listing.DistanceFromLocationString = GetDistanceFromLocationInString(listing.DistanceFromLocation, shared.GeoLocation{latitude, longitude})
 	}
 
 	if phoneID != "" {
