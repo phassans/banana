@@ -15,6 +15,7 @@ type (
 		SortBy    string  `json:"sortBy,omitempty"`
 		Latitude  float64 `json:"latitude,omitempty"`
 		Longitude float64 `json:"longitude,omitempty"`
+		Location  string  `json:"location,omitempty"`
 	}
 
 	favoritesViewResult struct {
@@ -39,6 +40,7 @@ func (r favoritesViewEndpoint) Execute(ctx context.Context, rtr *router, request
 		request.SortBy,
 		request.Latitude,
 		request.Longitude,
+		request.Location,
 	)
 	return favoritesViewResult{Result: result, Error: NewAPIError(err)}, err
 }

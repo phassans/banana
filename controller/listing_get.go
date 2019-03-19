@@ -27,6 +27,7 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 	}
 
 	phoneID := values.Get("phoneId")
+	location := values.Get("location")
 
 	var latitude float64
 	if values.Get("latitude") != "" {
@@ -53,7 +54,7 @@ func (r listingEndpoint) Do(ctx context.Context, rtr *router, values url.Values)
 		Str("phoneID", phoneID).Logger()
 	logger.Info().Msgf("listing get request")
 
-	listingInfo, err := rtr.engines.GetListingInfo(listingID, phoneID, latitude, longitude)
+	listingInfo, err := rtr.engines.GetListingInfo(listingID, phoneID, latitude, longitude, location)
 	if err != nil {
 		return nil, err
 	}

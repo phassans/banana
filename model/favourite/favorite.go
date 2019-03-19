@@ -26,7 +26,7 @@ type (
 	FavoriteEngine interface {
 		AddFavorite(phoneID string, listingID int, listingDateID int) error
 		DeleteFavorite(phoneID string, listingID int, listingDateID int) error
-		GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64) ([]shared.SearchListingResult, error)
+		GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64, location string) ([]shared.SearchListingResult, error)
 	}
 )
 
@@ -81,7 +81,7 @@ func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int, listingDa
 	return f.listingEngine.MassageAndPopulateSearchListings(listings)
 }*/
 
-func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64) ([]shared.SearchListingResult, error) {
+func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude float64, longitude float64, location string) ([]shared.SearchListingResult, error) {
 	/*favorites, err := f.GetAllFavoritesIDs(phoneID)
 	if err != nil {
 		return nil, err
@@ -98,12 +98,17 @@ func (f *favoriteEngine) GetAllFavorites(phoneID string, sortBy string, latitude
 		listings = append(listings, listing)
 	}*/
 
+	geoLocation, err := f.listingEngine.DetermineCurrentLocation(location, latitude, longitude)
+	if err != nil {
+		return nil, err
+	}
+
 	listings, err := f.GetListingsPhoneID(phoneID)
 	if err != nil {
 		return nil, err
 	}
 
-	sortEngine := listing.NewSortListingEngine(listings, sortBy, shared.GeoLocation{Latitude: latitude, Longitude: longitude}, f.sql)
+	sortEngine := listing.NewSortListingEngine(listings, sortBy, geoLocation, f.sql)
 	listings, err = sortEngine.SortListings(false, "", false, true)
 	if err != nil {
 		return nil, err

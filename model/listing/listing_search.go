@@ -30,7 +30,7 @@ func (l *listingEngine) SearchListings(request shared.SearchRequest) ([]shared.S
 	}(request)
 
 	// determine current location
-	currentLocation, err := l.determineCurrentLocation(request)
+	currentLocation, err := l.DetermineCurrentLocation(request.Location, request.Latitude, request.Longitude)
 	if err != nil {
 		return nil, err
 	}
@@ -151,13 +151,13 @@ func (l *listingEngine) populateUpVotes(phoneID string, listings []shared.Listin
 	return nil
 }
 
-func (l *listingEngine) determineCurrentLocation(request shared.SearchRequest) (shared.GeoLocation, error) {
+func (l *listingEngine) DetermineCurrentLocation(location string, latitude float64, longitude float64) (shared.GeoLocation, error) {
 	var currentLocation shared.GeoLocation
 	var resp clients.LatLong
 	var err error
-	if request.Location != "" && request.Latitude == 0 && request.Longitude == 0 {
+	if location != "" && latitude == 0 && longitude == 0 {
 		// check DB first
-		currentLocation, err = l.GetGeoFromAddress(request.Location)
+		currentLocation, err = l.GetGeoFromAddress(location)
 		if err != nil {
 			l.logger.Error().Msgf("GetGeoFromAddress returned with error: %s", err)
 			return currentLocation, err
@@ -170,7 +170,7 @@ func (l *listingEngine) determineCurrentLocation(request shared.SearchRequest) (
 			}
 		} else {
 			// else fetch from Google API getLatLonFromLocation
-			resp, err = clients.GetLatLong(request.Location)
+			resp, err = clients.GetLatLong(location)
 			if err != nil {
 				return currentLocation, err
 			}
@@ -178,7 +178,7 @@ func (l *listingEngine) determineCurrentLocation(request shared.SearchRequest) (
 
 			// cache the result in database
 			go func() {
-				err = l.AddGeoLocation(request.Location, currentLocation)
+				err = l.AddGeoLocation(location, currentLocation)
 				if err != nil {
 					l.logger.Error().Msgf("AddGeoLocation error: %s", err)
 				}
@@ -195,7 +195,7 @@ func (l *listingEngine) determineCurrentLocation(request shared.SearchRequest) (
 
 		l.logger.Info().Msgf("geolocation lat: %f and lon: %f", currentLocation.Latitude, currentLocation.Longitude)
 	} else {
-		currentLocation = shared.GeoLocation{Latitude: request.Latitude, Longitude: request.Longitude}
+		currentLocation = shared.GeoLocation{Latitude: latitude, Longitude: longitude}
 	}
 
 	return currentLocation, nil
