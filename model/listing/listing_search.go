@@ -541,6 +541,7 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 			BusinessID:                 listing.BusinessID,
 			BusinessName:               listing.BusinessName,
 			Price:                      listing.NewPrice,
+			PriceInString:              GetPriceFromLocationInString(listing.NewPrice, listing.CurrentLocation),
 			Discount:                   listing.Discount,
 			DiscountDescription:        listing.DiscountDescription,
 			DietaryRestrictions:        listing.DietaryRestrictions,
@@ -558,6 +559,18 @@ func (l *listingEngine) MassageAndPopulateSearchListings(listings []shared.Listi
 		listingsResult = append(listingsResult, sr)
 	}
 	return listingsResult, nil
+}
+
+func GetPriceFromLocationInString(price float64, location shared.GeoLocation) string {
+	if price == 0.0 {
+		return ""
+	}
+	zone := latlong.LookupZoneName(location.Latitude, location.Longitude)
+	if zone == "Asia/Kolkata" {
+		return fmt.Sprintf("₹ %.2f", price)
+	}
+
+	return fmt.Sprintf("$ %.2f", price)
 }
 
 func GetDistanceFromLocationInString(distance float64, location shared.GeoLocation) string {
@@ -607,6 +620,7 @@ func (l *listingEngine) MassageAndPopulateSearchListingsWeekly(listings []shared
 			BusinessID:                 listing.BusinessID,
 			BusinessName:               listing.BusinessName,
 			Price:                      listing.NewPrice,
+			PriceInString:              GetPriceFromLocationInString(listing.NewPrice, listing.CurrentLocation),
 			Discount:                   listing.Discount,
 			DiscountDescription:        listing.DiscountDescription,
 			DietaryRestrictions:        listing.DietaryRestrictions,
@@ -650,6 +664,7 @@ func (l *listingEngine) MassageAndPopulateSearchListingsFavorites(listings []sha
 			BusinessID:                 listing.BusinessID,
 			BusinessName:               listing.BusinessName,
 			Price:                      listing.NewPrice,
+			PriceInString:              GetPriceFromLocationInString(listing.NewPrice, listing.CurrentLocation),
 			Discount:                   listing.Discount,
 			DiscountDescription:        listing.DiscountDescription,
 			DietaryRestrictions:        listing.DietaryRestrictions,

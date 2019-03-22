@@ -26,6 +26,7 @@ type (
 		BusinessName               string        `json:"businessName"`
 		OldPrice                   float64       `json:"oldPrice,omitempty"`
 		NewPrice                   float64       `json:"newPrice,omitempty"`
+		PriceInString              string        `json:"priceInString"`
 		Discount                   float64       `json:"discount,omitempty"`
 		DiscountDescription        string        `json:"discountDescription,omitempty"`
 		DietaryRestrictions        []string      `json:"dietaryRestrictions,omitempty"`
@@ -71,6 +72,7 @@ type (
 		BusinessID                 int      `json:"businessId"`
 		BusinessName               string   `json:"businessName"`
 		Price                      float64  `json:"price"`
+		PriceInString              string   `json:"priceInString"`
 		Discount                   float64  `json:"discount"`
 		DiscountDescription        string   `json:"discountDescription"`
 		DietaryRestrictions        []string `json:"dietaryRestrictions"`
