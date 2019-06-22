@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/phassans/banana/model/donforgetto"
+
 	"github.com/phassans/banana/db"
 	"github.com/phassans/banana/model"
 	"github.com/phassans/banana/model/business"
@@ -38,6 +40,7 @@ func main() {
 	notificationEngine := notification.NewNotificationEngine(roach.Db, logger, businessEngine)
 	prefernceEngine := prefernce.NewPreferenceEngine(roach.Db, logger)
 	upvoteEngine := upvote.NewUpvoteEngine(roach.Db, logger, listingEngine)
+	donforgettoEngine := donforgetto.NewDonforgettoEngine(roach.Db, logger)
 
 	engines := model.NewGenericEngine(
 		businessEngine,
@@ -47,6 +50,7 @@ func main() {
 		notificationEngine,
 		prefernceEngine,
 		upvoteEngine,
+		donforgettoEngine,
 	)
 
 	// start the server

@@ -246,6 +246,27 @@ type (
 		SearchDay      string   `json:"searchDay,omitempty"`
 		PhoneID        string   `json:"phoneId"`
 	}
+
+	Education struct {
+		Name   string
+		Degree string
+		Stream string
+		Year   int
+	}
+
+	Company struct {
+		Name     string
+		Location string
+	}
+
+	Channel struct {
+		Name string
+	}
+
+	Channels struct {
+		EducationChannels []Channel
+		CompanyChannels   []Channel
+	}
 )
 
 var logger zerolog.Logger

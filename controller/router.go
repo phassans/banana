@@ -87,6 +87,9 @@ var (
 
 		happyHourSubmit,
 		reportInaccurate,
+
+		fetchUser,
+		fetchUserChannels,
 	}
 )
 

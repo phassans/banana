@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/phassans/banana/model/business"
+	"github.com/phassans/banana/model/donforgetto"
 	"github.com/phassans/banana/model/favourite"
 	"github.com/phassans/banana/model/listing"
 	"github.com/phassans/banana/model/notification"
@@ -18,11 +19,18 @@ type genericEngine struct {
 	notification.NotificationEngine
 	prefernce.PreferenceEngine
 	upvote.UpvoteEngine
+	donforgetto.DonforgettoEngine
 }
 
 // NewGenericEngine returns genericEngine
-func NewGenericEngine(businessEngine business.BusinessEngine, userEngine user.UserEngine, listingEngine listing.ListingEngine,
-	favouriteEngine favourite.FavoriteEngine, notificationEngine notification.NotificationEngine, preferenceEngine prefernce.PreferenceEngine, upvoteEngine upvote.UpvoteEngine) Engine {
+func NewGenericEngine(businessEngine business.BusinessEngine,
+	userEngine user.UserEngine,
+	listingEngine listing.ListingEngine,
+	favouriteEngine favourite.FavoriteEngine,
+	notificationEngine notification.NotificationEngine,
+	preferenceEngine prefernce.PreferenceEngine,
+	upvoteEngine upvote.UpvoteEngine,
+	donforgettoEngine donforgetto.DonforgettoEngine) Engine {
 	return &genericEngine{
 		businessEngine,
 		listingEngine,
@@ -31,6 +39,7 @@ func NewGenericEngine(businessEngine business.BusinessEngine, userEngine user.Us
 		notificationEngine,
 		preferenceEngine,
 		upvoteEngine,
+		donforgettoEngine,
 	}
 }
 
@@ -43,4 +52,5 @@ type Engine interface {
 	notification.NotificationEngine
 	prefernce.PreferenceEngine
 	upvote.UpvoteEngine
+	donforgetto.DonforgettoEngine
 }
