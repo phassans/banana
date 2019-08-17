@@ -90,6 +90,8 @@ var (
 
 		fetchUser,
 		fetchUserChannels,
+
+		webhook,
 	}
 )
 
