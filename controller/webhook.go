@@ -2,6 +2,9 @@ package controller
 
 import (
 	"context"
+	"os"
+
+	"github.com/rs/zerolog"
 )
 
 type (
@@ -18,14 +21,14 @@ type (
 		Tuesday    string `json:"tuesday"`
 
 		// Listing
-		Title         string `json:"title"`
-		Description   string `json:"description"`
-		StartDate     string `json:"startDate"`
-		EndDate       string `json:"endDate"`
-		RecurringDays string `json:"recurringDays"`
-		StartTime     string `json:"startTime"`
-		EndTime       string `json:"endTime"`
-		AddTime       string `json:"addTime"`
+		Title         string   `json:"title"`
+		Description   string   `json:"description"`
+		StartDate     string   `json:"startDate"`
+		EndDate       string   `json:"endDate"`
+		RecurringDays []string `json:"recurringDays"`
+		StartTime     string   `json:"startTime"`
+		EndTime       string   `json:"endTime"`
+		AddTime       string   `json:"addTime"`
 	}
 
 	webhookResult struct {
@@ -44,6 +47,9 @@ func (r webhookEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 	if err := r.Validate(requestI); err != nil {
 		return nil, err
 	}
+
+	l := zerolog.New(os.Stdout)
+	l.Info().Msgf("%v", request)
 
 	result := webhookResult{webhookRequest: request}
 	return result, nil
