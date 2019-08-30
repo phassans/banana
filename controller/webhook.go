@@ -13,7 +13,7 @@ type (
 	webhookRequest struct {
 		// Business
 		Name       string `json:"name"`
-		Phone      string `json:"phone"`
+		Phone      string `json:"phone,omitempty"`
 		Website    string `json:"website,omitempty"`
 		Street     string `json:"street"`
 		City       string `json:"city"`
@@ -28,16 +28,18 @@ type (
 		Sunday     string `json:"sunday"`
 
 		// Listing
-		Title               string   `json:"title"`
-		Description         string   `json:"description"`
-		DiscountDescription string   `json:"discountDescription,omitempty"`
-		StartDate           string   `json:"startDate"`
-		RecurringEndDate    string   `json:"recurringEndDate,omitempty"`
-		RecurringDays       []string `json:"recurringDays"`
-		StartTime           string   `json:"startTime"`
-		EndTime             string   `json:"endTime"`
-		AddTime             string   `json:"addTime"`
-		ListingID           int      `json:"listingId,omitempty"`
+
+		Listings []struct {
+			Title               string   `json:"title"`
+			Description         string   `json:"description"`
+			DiscountDescription string   `json:"discountDescription,omitempty"`
+			StartDate           string   `json:"startDate"`
+			RecurringEndDate    string   `json:"recurringEndDate,omitempty"`
+			RecurringDays       []string `json:"recurringDays"`
+			StartTime           string   `json:"startTime"`
+			EndTime             string   `json:"endTime"`
+			ListingID           int      `json:"listingId,omitempty"`
+		} `json:"listings"`
 	}
 
 	webhookResult struct {
@@ -63,6 +65,7 @@ func (r webhookEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 	hoursInfo := r.getBusinessHours(request)
 	log.Info().Msgf("hoursInfo %v", hoursInfo)
 
+	businessID := 999
 	/*businessID, _, err := rtr.engines.AddBusiness(
 		request.Name,
 		request.Phone,
@@ -80,28 +83,37 @@ func (r webhookEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 		return result, nil
 	}*/
 
-	for i, day := range request.RecurringDays {
-		request.RecurringDays[i] = strings.ToLower(day)
-	}
+	for i, listing := range request.Listings {
+		// convert to lower
+		for i, day := range listing.RecurringDays {
+			listing.RecurringDays[i] = strings.ToLower(day)
+		}
 
-	/*l := shared.Listing{
-		Title:               request.Title,
-		DiscountDescription: request.DiscountDescription,
-		Description:         request.Description,
-		StartDate:           request.StartDate,
-		StartTime:           request.StartTime,
-		EndTime:             request.EndTime,
-		BusinessID:          businessID,
-		MultipleDays:        false,
-		EndDate:             request.RecurringEndDate,
-		Recurring:           true,
-		RecurringDays:       request.RecurringDays,
-		RecurringEndDate:    request.RecurringEndDate,
-		Type:                "happyhour",
-	}
+		// submit listing
+		l := shared.Listing{
+			Title:               listing.Title,
+			DiscountDescription: listing.DiscountDescription,
+			Description:         listing.Description,
+			StartDate:           listing.StartDate,
+			StartTime:           listing.StartTime,
+			EndTime:             listing.EndTime,
+			BusinessID:          businessID,
+			MultipleDays:        false,
+			EndDate:             listing.RecurringEndDate,
+			Recurring:           true,
+			RecurringDays:       listing.RecurringDays,
+			RecurringEndDate:    listing.RecurringEndDate,
+			Type:                "happyhour",
+		}
+		log.Info().Msgf("listing %d %v", i, l)
 
-	listingID, err := rtr.engines.AddListing(&l)
-	request.ListingID = listingID*/
+		//listingID, err := rtr.engines.AddListing(&l)
+		listing.ListingID = 888
+		/*if err != nil {
+			result := webhookResult{webhookRequest: request, Error: NewAPIError(err)}
+			return result, err
+		}*/
+	}
 
 	result := webhookResult{webhookRequest: request, Error: NewAPIError(nil)}
 	return result, nil
