@@ -65,8 +65,7 @@ func (r webhookEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 	hoursInfo := r.getBusinessHours(request)
 	log.Info().Msgf("hoursInfo %v", hoursInfo)
 
-	businessID := 999
-	/*businessID, _, err := rtr.engines.AddBusiness(
+	businessID, _, err := rtr.engines.AddBusiness(
 		request.Name,
 		request.Phone,
 		request.Website,
@@ -81,7 +80,7 @@ func (r webhookEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 	if err != nil {
 		result := webhookResult{webhookRequest: request, Error: NewAPIError(err)}
 		return result, nil
-	}*/
+	}
 
 	for i, listing := range request.Listings {
 		// convert to lower
@@ -107,12 +106,12 @@ func (r webhookEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 		}
 		log.Info().Msgf("listing %d %v", i, l)
 
-		//listingID, err := rtr.engines.AddListing(&l)
-		listing.ListingID = 888
-		/*if err != nil {
+		listingID, err := rtr.engines.AddListing(&l)
+		listing.ListingID = listingID
+		if err != nil {
 			result := webhookResult{webhookRequest: request, Error: NewAPIError(err)}
 			return result, err
-		}*/
+		}
 	}
 
 	result := webhookResult{webhookRequest: request, Error: NewAPIError(nil)}
