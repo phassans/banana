@@ -39,6 +39,7 @@ type (
 			StartTime           string   `json:"startTime"`
 			EndTime             string   `json:"endTime"`
 			ListingID           int      `json:"listingId,omitempty"`
+			ImageLink           string   `json:"imageLink,omitempty"`
 		} `json:"listings"`
 	}
 
@@ -103,6 +104,7 @@ func (r webhookEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 			RecurringDays:       listing.RecurringDays,
 			RecurringEndDate:    listing.RecurringEndDate,
 			Type:                "happyhour",
+			ImageLink:           listing.ImageLink,
 		}
 		log.Info().Msgf("listing %d %v", i, l)
 
