@@ -8,6 +8,8 @@ const (
 		"listing.recurring as recurring, listing.recurring_end_date as recurring_date, listing.listing_type as listing_type, " +
 		"listing.business_id as business_id, listing.listing_id as listing_id, listing.listing_create_date as listing_create_date "
 
+	ListingFieldsDebug = "SELECT listing.title as title "
+
 	ListingDateFields = "listing_date.listing_date_id as listing_date_id, listing_date.listing_date as listing_date"
 
 	ListingBusinessFields = "business.name as bname"
@@ -27,7 +29,7 @@ const (
 	FromClauseListingWithAddress = "FROM listing " +
 		"INNER JOIN listing_date ON listing.listing_id = listing_date.listing_id " +
 		"INNER JOIN business ON listing.business_id = business.business_id " +
-		"INNER JOIN business_cuisine ON listing.business_id = business_cuisine.business_id " +
+		//"INNER JOIN business_cuisine ON listing.business_id = business_cuisine.business_id " +
 		"INNER JOIN business_address ON listing.business_id = business_address.business_id " +
 		"INNER JOIN listing_image ON listing.listing_id = listing_image.listing_id"
 

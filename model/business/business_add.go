@@ -105,8 +105,8 @@ func (b *businessEngine) addBusinessAddress(
 	businessID int,
 ) (int, error) {
 
-	//geoAddress := fmt.Sprintf("%s,%s,%s", street, city, state)
-	geoAddress := fmt.Sprintf("%s", street)
+	geoAddress := fmt.Sprintf("%s,%s,%s", street, city, state)
+	//geoAddress := fmt.Sprintf("%s", street)
 	resp, err := clients.GetLatLong(geoAddress)
 	if err != nil {
 		return 0, err
