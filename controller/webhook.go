@@ -79,6 +79,7 @@ func (r webhookEndpoint) Execute(ctx context.Context, rtr *router, requestI inte
 		1,
 	)
 	if err != nil {
+
 		result := webhookResult{webhookRequest: request, Error: NewAPIError(err)}
 		return result, nil
 	}

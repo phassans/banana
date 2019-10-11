@@ -60,6 +60,8 @@ type BusinessEngine interface {
 
 	SubmitHappyHour(PhoneID string, Name string, Email string, BusinessOwner bool, Restaurant string, City string, Description string) (int, error)
 	SubmitHappyHourImages(happyHourID int, imageName string) (int, error)
+
+	BusinessDelete(businessID int) error
 }
 
 // NewBusinessEngine returns an instance of businessEngine

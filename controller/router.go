@@ -58,6 +58,7 @@ var (
 
 		businessAdd,
 		businessEdit,
+		businessDelete,
 
 		listingAdd,
 		listingsSearch,

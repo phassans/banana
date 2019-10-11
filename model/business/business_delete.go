@@ -1,5 +1,33 @@
 package business
 
+func (b *businessEngine) BusinessDelete(businessID int) error {
+	if err := b.deleteBusinessHoursFromID(businessID); err != nil {
+		return err
+	}
+
+	if err := b.deleteBusinessCuisineFromID(businessID); err != nil {
+		return err
+	}
+
+	if err := b.deleteBusinessAddressFromBusinessID(businessID); err != nil {
+		return err
+	}
+
+	if err := b.deleteBusinessFromID(businessID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *businessEngine) deleteBusinessAddressFromBusinessID(businessID int) error {
+	sqlStatement := `DELETE FROM business_address WHERE business_id = $1;`
+	b.logger.Info().Msgf("deleting address with query: %s and business_id: %d", sqlStatement, businessID)
+
+	_, err := b.sql.Exec(sqlStatement, businessID)
+	return err
+}
+
 func (b *businessEngine) deleteBusinessAddressFromID(addressID int) error {
 	sqlStatement := `DELETE FROM business_address WHERE address_id = $1;`
 	b.logger.Info().Msgf("deleting address with query: %s and business_id: %d", sqlStatement, addressID)
