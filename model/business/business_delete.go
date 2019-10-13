@@ -22,7 +22,7 @@ func (b *businessEngine) BusinessDelete(businessID int) error {
 		for _, l := range listings {
 			lists += l.Title + ","
 		}
-		return helper.BusinessError{fmt.Sprintf("cannot delete business. Followings listings are tied - %s", lists[:len(lists)-2])}
+		return helper.BusinessError{fmt.Sprintf("cannot delete business. Followings listings are tied - %s", lists[:len(lists)-1])}
 	}
 
 	if err := b.deleteBusinessHoursFromID(businessID); err != nil {
