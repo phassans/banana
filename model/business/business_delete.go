@@ -18,11 +18,11 @@ func (b *businessEngine) BusinessDelete(businessID int) error {
 	}
 
 	if len(listings) > 0 {
-		var lists []string
+		var lists string
 		for _, l := range listings {
-			lists = append(lists, l.Title)
+			lists += l.Title + ","
 		}
-		return helper.BusinessError{fmt.Sprintf("cannot delete business. Followings listings are tied - %s", lists)}
+		return helper.BusinessError{fmt.Sprintf("cannot delete business. Followings listings are tied - %s", lists[:len(lists)-2])}
 	}
 
 	if err := b.deleteBusinessHoursFromID(businessID); err != nil {
