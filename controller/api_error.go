@@ -52,6 +52,8 @@ func GetErrorStatus(err error) int {
 		return http.StatusBadRequest
 	case helper.DatabaseError:
 		return http.StatusBadRequest
+	case helper.BusinessError:
+		return http.StatusBadRequest
 	case *APIError:
 		return err.Code
 	default:
