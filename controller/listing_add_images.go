@@ -140,10 +140,9 @@ func (rtr *router) newListingImageHandler(endpoint postEndpoint) http.HandlerFun
 			w.WriteHeader(http.StatusBadRequest)
 			err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
 		}
-		fmt.Println(listingID)
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(hresp{Message: fmt.Sprintf("success added a listing!")})
+		json.NewEncoder(w).Encode(hresp{Message: fmt.Sprintf("success. added a listing with id %d!", listingID)})
 		return
 	}
 }
