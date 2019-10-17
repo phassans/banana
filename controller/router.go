@@ -132,6 +132,13 @@ func NewRESTRouter(engines model.Engine) http.Handler {
 		}
 
 		for _, endpoint := range addEndpoints {
+			if endpoint.GetPath() == "/listing/add" {
+				r.Group(func(r chi.Router) {
+					r.Post(endpoint.GetPath(), rtr.newListingImageHandler(endpoint))
+				})
+				continue
+			}
+
 			if endpoint.GetPath() == "/hhsubmit" {
 				r.Group(func(r chi.Router) {
 					r.Post(endpoint.GetPath(), rtr.newImageHandler(endpoint))
