@@ -10,8 +10,8 @@ import (
 
 type (
 	listingAllRequest struct {
-		BusinessID int    `json:"businessId"`
-		Status     string `json:"status"`
+		BusinessID int `json:"businessId"`
+		//Status     string `json:"status"`
 	}
 
 	listingAllResult struct {
@@ -31,19 +31,19 @@ func (r listingAllEndpoint) Execute(ctx context.Context, rtr *router, requestI i
 		return nil, err
 	}
 
-	result, err := rtr.engines.GetListingsByBusinessID(request.BusinessID, request.Status)
+	result, err := rtr.engines.GetListingsByBusinessID(request.BusinessID, "")
 	return listingAllResult{Result: result, Error: NewAPIError(err)}, err
 }
 
 func (r listingAllEndpoint) Validate(request interface{}) error {
 	input := request.(listingAllRequest)
 
-	if input.Status != "all" &&
+	/*if input.Status != "all" &&
 		input.Status != "active" &&
 		input.Status != "scheduled" &&
 		input.Status != "ended" {
 		return helper.ValidationError{Message: fmt.Sprint("listing all failed, invalid 'status'")}
-	}
+	}*/
 
 	if input.BusinessID == 0 {
 		return helper.ValidationError{Message: fmt.Sprint("listing all failed, missing businessId")}
