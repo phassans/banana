@@ -39,6 +39,8 @@ type (
 		// GetListingByID returns listing based on ID
 		GetListingByID(listingID int, businessID int, listingDateID int) (shared.Listing, error)
 
+		GetListingByIDAdmin(listingID int) (shared.Listing, error)
+
 		// GetListingInfo returns listing info
 		GetListingInfo(listingID int, phoneID string, latitude float64, longitude float64, location string) (shared.Listing, error)
 
@@ -401,6 +403,55 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 		&listing.BusinessName,
 		&listing.ListingDateID,
 		&listing.ListingDate,
+		&listing.ImageLink,
+	)
+	if err != nil {
+		return shared.Listing{}, helper.DatabaseError{DBError: err.Error()}
+	}
+
+	listing.ImageLink = optimizeImage(listing.ImageLink)
+	listing.ListingImages = []string{optimizeImage(listing.ImageLink)}
+	listing.EndDate = sqlEndDate.String
+	listing.RecurringEndDate = sqlRecurringEndDate.String
+	listing.ListingCreateDate = sqlCreateDate.String
+
+	return listing, nil
+}
+
+func (l *listingEngine) GetListingByIDAdmin(listingID int) (shared.Listing, error) {
+	selectFields := fmt.Sprintf("%s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingImageFields)
+
+	var whereClause bytes.Buffer
+	whereClause.WriteString(fmt.Sprintf(" WHERE listing.listing_id = %d", listingID))
+	query := fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListingAdmin, whereClause.String())
+
+	//fmt.Println("GetListingByID ", query)
+
+	rows := l.sql.QueryRow(query)
+
+	var listing shared.Listing
+	var sqlEndDate sql.NullString
+	var sqlRecurringEndDate sql.NullString
+	var sqlCreateDate sql.NullString
+	err := rows.Scan(
+		&listing.Title,
+		&listing.OldPrice,
+		&listing.NewPrice,
+		&listing.Discount,
+		&listing.DiscountDescription,
+		&listing.Description,
+		&listing.StartDate,
+		&sqlEndDate,
+		&listing.StartTime,
+		&listing.EndTime,
+		&listing.MultipleDays,
+		&listing.Recurring,
+		&sqlRecurringEndDate,
+		&listing.Type,
+		&listing.BusinessID,
+		&listing.ListingID,
+		&sqlCreateDate,
+		&listing.BusinessName,
 		&listing.ImageLink,
 	)
 	if err != nil {
