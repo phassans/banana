@@ -160,46 +160,11 @@ func ValidateFields(images []*multipart.FileHeader, r url.Values) error {
 		return helper.ValidationError{Message: fmt.Sprint("submit happy hour failed, missing images!")}
 	}
 
-	for field, values := range r {
-		for _, value := range values {
-			if field == "businessId" {
-				bid, err := strconv.Atoi(value)
-				if err != nil {
-					return err
-				}
-				if bid == 0 {
-					return helper.ValidationError{Message: fmt.Sprint("listing add failed, invalid business ID")}
-				}
-			} else if field == "title" {
-				if value == "" {
-					return helper.ValidationError{Message: fmt.Sprint("listing add failed, missing title")}
-				}
-			} else if field == "discountDescription" {
-				if value == "" {
-					return helper.ValidationError{Message: fmt.Sprint("listing add failed, missing discountDescription")}
-				}
-			} else if field == "startDate" {
-				if value == "" {
-					return helper.ValidationError{Message: fmt.Sprint("listing add  failed, missing startDate")}
-				}
-			} else if field == "recurringEndDate" {
-				if value == "" {
-					return helper.ValidationError{Message: fmt.Sprint("listing add  failed, missing recurringEndDate")}
-				}
-			} else if field == "recurringDays" {
-				if len(values) == 0 {
-					return helper.ValidationError{Message: fmt.Sprint("listing add  failed, missing recurring days")}
-				}
-				break
-			} else if field == "startTime" {
-				if value == "" {
-					return helper.ValidationError{Message: fmt.Sprint("listing add  failed, missing startTime")}
-				}
-			} else if field == "endTime" {
-				if value == "" {
-					return helper.ValidationError{Message: fmt.Sprint("listing add  failed, missing endTime")}
-				}
-			}
+	fields := []string{"businessId", "title", "discountDescription", "startDate", "recurringEndDate", "recurringDays", "startTime", "endTime"}
+
+	for _, field := range fields {
+		if r.Get(field) == "" {
+			return helper.ValidationError{Message: fmt.Sprintf("listing add failed, missing %s", field)}
 		}
 	}
 
