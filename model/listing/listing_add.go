@@ -58,13 +58,13 @@ func (l *listingEngine) AddListing(listing *shared.Listing) (int, error) {
 		l.logger.Info().Msg("no image link")
 	}
 
-	if listing.Recurring {
-		for _, day := range listing.RecurringDays {
-			if err := l.AddRecurring(listingID, day); err != nil {
-				return 0, err
-			}
+	//if listing.Recurring {
+	for _, day := range listing.RecurringDays {
+		if err := l.AddRecurring(listingID, day); err != nil {
+			return 0, err
 		}
 	}
+	//}
 
 	if len(listing.DietaryRestrictions) > 0 {
 		for _, restriction := range listing.DietaryRestrictions {

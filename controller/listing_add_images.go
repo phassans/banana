@@ -55,6 +55,14 @@ func (rtr *router) newListingImageHandler(endpoint postEndpoint) http.HandlerFun
 					l.StartTime = value
 				} else if field == "endTime" {
 					l.EndTime = value
+				} else if field == "recurring" {
+					b, err := strconv.ParseBool(value)
+					if err != nil {
+						w.WriteHeader(http.StatusInternalServerError)
+						err = json.NewEncoder(w).Encode(hresp{Error: NewAPIError(err)})
+						return
+					}
+					l.Recurring = b
 				}
 			}
 		}
