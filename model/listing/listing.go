@@ -419,6 +419,23 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 }
 
 func (l *listingEngine) GetListingByIDAdmin(listingID int) (shared.Listing, error) {
+	res, err := l.doGetListingByIDAdmin(listingID)
+	if err != nil {
+		return shared.Listing{}, err
+	}
+
+	// append days
+	days, err := l.GetRecurringListing(listingID)
+	if err != nil {
+		return shared.Listing{}, err
+	}
+
+	res.RecurringDays = days
+
+	return res, nil
+}
+
+func (l *listingEngine) doGetListingByIDAdmin(listingID int) (shared.Listing, error) {
 	selectFields := fmt.Sprintf("%s, %s, %s", common.ListingFields, common.ListingBusinessFields, common.ListingImageFields)
 
 	var whereClause bytes.Buffer
