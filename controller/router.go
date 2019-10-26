@@ -140,6 +140,13 @@ func NewRESTRouter(engines model.Engine) http.Handler {
 				continue
 			}
 
+			if endpoint.GetPath() == "/listing/edit" {
+				r.Group(func(r chi.Router) {
+					r.Post(endpoint.GetPath(), rtr.newListingEditImageHandler(endpoint))
+				})
+				continue
+			}
+
 			if endpoint.GetPath() == "/hhsubmit" {
 				r.Group(func(r chi.Router) {
 					r.Post(endpoint.GetPath(), rtr.newImageHandler(endpoint))
