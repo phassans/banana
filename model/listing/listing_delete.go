@@ -3,6 +3,7 @@ package listing
 import "github.com/phassans/banana/helper"
 
 func (f *listingEngine) DeleteListing(listingID int) error {
+	f.logger.Error().Msgf("DeleteListing listingID: %d", listingID)
 
 	listingInfo, err := f.GetListingByID(listingID, 0, 0)
 	if err != nil {
@@ -11,6 +12,7 @@ func (f *listingEngine) DeleteListing(listingID int) error {
 	}
 
 	if listingInfo.ListingID == 0 {
+		f.logger.Error().Msgf("returning as listing could not be found for id: %d", listingID)
 		return helper.ListingDoesNotExist{ListingID: listingID}
 	}
 

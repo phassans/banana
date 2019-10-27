@@ -374,7 +374,7 @@ func (l *listingEngine) GetListingByID(listingID int, businessID int, listingDat
 	}
 	query := fmt.Sprintf("%s %s %s;", selectFields, common.FromClauseListing, whereClause.String())
 
-	//fmt.Println("GetListingByID ", query)
+	fmt.Println("GetListingByID ", query)
 
 	rows := l.sql.QueryRow(query)
 
