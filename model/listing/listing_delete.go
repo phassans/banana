@@ -5,10 +5,10 @@ import "github.com/phassans/banana/helper"
 func (f *listingEngine) DeleteListing(listingID int) error {
 	f.logger.Error().Msgf("DeleteListing listingID: %d", listingID)
 
-	listingInfo, err := f.GetListingByID(listingID, 0, 0)
+	listingInfo, err := f.GetListingByIDAdmin(listingID)
 	if err != nil {
 		f.logger.Error().Msgf("GetListingByID returned with err: %s", err)
-		return nil
+		return err
 	}
 
 	if listingInfo.ListingID == 0 {
@@ -18,27 +18,27 @@ func (f *listingEngine) DeleteListing(listingID int) error {
 
 	if err := f.deleteListingImage(listingID); err != nil {
 		f.logger.Error().Msgf("deleteListingImage returned with err: %s", err)
-		return nil
+		// return nil do not return error
 	}
 
 	if err := f.deleteListingDietaryRestriction(listingID); err != nil {
 		f.logger.Error().Msgf("deleteListingDietaryRestriction returned with err: %s", err)
-		return nil
+		// return nil do not return error
 	}
 
 	if err := f.deleteListingDate(listingID); err != nil {
 		f.logger.Error().Msgf("deleteListingDate returned with err: %s", err)
-		return nil
+		// return nil do not return error
 	}
 
 	if err := f.deleteListingRecurring(listingID); err != nil {
 		f.logger.Error().Msgf("deleteListingRecurring returned with err: %s", err)
-		return nil
+		// return nil do not return error
 	}
 
 	if err := f.deleteListing(listingID); err != nil {
 		f.logger.Error().Msgf("deleteListing returned with err: %s", err)
-		return nil
+		return err
 	}
 
 	f.logger.Info().Msgf("successfully delete listing: %d", listingID)
