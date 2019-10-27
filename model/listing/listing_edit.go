@@ -6,6 +6,8 @@ import (
 )
 
 func (l *listingEngine) ListingEdit(listing *shared.Listing) error {
+	l.logger.Info().Msgf("editing listing: %d for business:%d", listing.ListingID, listing.BusinessID)
+
 	listingInfo, err := l.GetListingByID(listing.ListingID, listing.BusinessID, 0)
 	if err != nil {
 		return err

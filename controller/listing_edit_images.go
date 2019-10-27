@@ -81,7 +81,7 @@ func (rtr *router) newListingEditImageHandler(endpoint postEndpoint) http.Handle
 		logger := shared.GetLogger()
 		logger = logger.With().
 			Str("endpoint", endpoint.GetPath()).Logger()
-		logger.Info().Msgf("submit happy hour request")
+		logger.Info().Msgf("listing edit request")
 
 		if err := ValidateEditFields(images, r.Form); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
