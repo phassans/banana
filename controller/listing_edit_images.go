@@ -153,6 +153,9 @@ func (rtr *router) newListingEditImageHandler(endpoint postEndpoint) http.Handle
 			wg.Wait()
 		}
 
+		// make it always recurring
+		l.Recurring = true
+
 		err = rtr.engines.ListingEdit(&l)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

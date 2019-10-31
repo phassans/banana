@@ -143,6 +143,9 @@ func (rtr *router) newListingImageHandler(endpoint postEndpoint) http.HandlerFun
 		}
 		wg.Wait()
 
+		// make it always recurring
+		l.Recurring = true
+
 		listingID, err := rtr.engines.AddListing(&l)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
