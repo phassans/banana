@@ -452,7 +452,7 @@ func (l *listingEngine) getListings(listingType []string, keywords string, futur
 			"FROM (%s, "+
 			"to_tsvector('english', business.name) || "+
 			"to_tsvector('english', listing.title) || "+
-			"to_tsvector('english', business_cuisine.cuisine) || "+
+			//"to_tsvector('english', business_cuisine.cuisine) || "+
 			"to_tsvector('english', listing.description) as document "+
 			"%s %s ) p_search "+
 			"WHERE p_search.document @@ to_tsquery('english', '%s');", selectFields, common.FromClauseListingWithAddress, whereClause, searchKeywords)
