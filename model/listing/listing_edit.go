@@ -24,10 +24,12 @@ func (l *listingEngine) ListingEdit(listing *shared.Listing) error {
 	l.logger.Info().Msgf("editListingInfo success for listing: %d", listing.ListingID)
 
 	// edit listing image
-	if err := l.editListingImage(listing); err != nil {
-		return err
+	if listing.ImageLink != "" {
+		if err := l.editListingImage(listing); err != nil {
+			return err
+		}
+		l.logger.Info().Msgf("editListingImage success for listing: %d", listing.ListingID)
 	}
-	l.logger.Info().Msgf("editListingImage success for listing: %d", listing.ListingID)
 
 	// edit recurring days
 	if err := l.editRecurringDays(listing); err != nil {
