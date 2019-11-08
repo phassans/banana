@@ -10,7 +10,7 @@ import (
 	"github.com/phassans/banana/shared"
 )
 
-func (b *businessEngine) BusinessDelete(businessID int) error {
+func (b *businessEngine) BusinessDelete(businessID int, userID int) error {
 
 	listings, err := b.GetListingsByBusinessID(businessID)
 	if err != nil {
@@ -34,6 +34,10 @@ func (b *businessEngine) BusinessDelete(businessID int) error {
 	}
 
 	if err := b.deleteBusinessAddressFromBusinessID(businessID); err != nil {
+		return err
+	}
+
+	if err := b.deleteBusinessUserFromID(businessID, userID); err != nil {
 		return err
 	}
 
@@ -65,6 +69,14 @@ func (b *businessEngine) deleteBusinessFromID(businessID int) error {
 	b.logger.Info().Msgf("deleting business with query: %s and business_id: %d", sqlStatement, businessID)
 
 	_, err := b.sql.Exec(sqlStatement, businessID)
+	return err
+}
+
+func (b *businessEngine) deleteBusinessUserFromID(businessID int, userID int) error {
+	sqlStatement := `DELETE FROM user_to_business WHERE business_id = $1 AND user_id=$2;`
+	b.logger.Info().Msgf("deleting business with query: %s and business_id: %d", sqlStatement, businessID)
+
+	_, err := b.sql.Exec(sqlStatement, businessID, userID)
 	return err
 }
 

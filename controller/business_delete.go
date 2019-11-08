@@ -10,6 +10,7 @@ import (
 type (
 	deleteBusinessRequest struct {
 		BusinessID int `json:"businessId"`
+		UserID     int `json:"UserId"`
 	}
 
 	deleteBusinessResponse struct {
@@ -29,7 +30,7 @@ func (r deleteBusinessEndpoint) Execute(ctx context.Context, rtr *router, reques
 		return nil, err
 	}
 
-	err := rtr.engines.BusinessDelete(request.BusinessID)
+	err := rtr.engines.BusinessDelete(request.BusinessID, request.UserID)
 	result := deleteBusinessResponse{deleteBusinessRequest: request, Error: NewAPIError(err)}
 	return result, err
 }
