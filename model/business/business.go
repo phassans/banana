@@ -41,7 +41,7 @@ type BusinessEngine interface {
 	GetBusinessInfo(businessID int) (shared.BusinessInfo, error)
 
 	// GetAllBusiness returns all business
-	GetAllBusiness() ([]shared.BusinessD, error)
+	GetAllBusiness(userID int) ([]shared.BusinessD, error)
 
 	// BusinessEdit is to edit business info
 	BusinessEdit(
@@ -69,8 +69,9 @@ func NewBusinessEngine(psql *sql.DB, logger zerolog.Logger, userEngine user.User
 	return &businessEngine{psql, logger, userEngine}
 }
 
-func (b *businessEngine) GetAllBusiness() ([]shared.BusinessD, error) {
-	rows, err := b.sql.Query("SELECT business.business_id, name, phone, website,street,city,postal_code FROM business INNER JOIN business_address on business.business_id=business_address.business_id;")
+func (b *businessEngine) GetAllBusiness(userID int) ([]shared.BusinessD, error) {
+	qry := fmt.Sprintf("SELECT business.business_id, name, phone, website,street,city,postal_code FROM business INNER JOIN business_address on business.business_id=business_address.business_id INNER JOIN user_to_business on business.business_id=user_to_business.business_id where user_id = %d;", userID)
+	rows, err := b.sql.Query(qry)
 	if err != nil {
 		return nil, helper.DatabaseError{DBError: err.Error()}
 	}
