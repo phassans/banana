@@ -37,8 +37,9 @@ func (b BusinessError) Error() string {
 
 // DuplicateEntity ...
 type DuplicateEntity struct {
-	Name string `json:"name,omitempty"`
-	ID   int    `json:"id,omitempty"`
+	Message string `json:"message,omitempty"`
+	Name    string `json:"name,omitempty"`
+	ID      int    `json:"id,omitempty"`
 }
 
 func (e DuplicateEntity) Error() string {
@@ -49,29 +50,35 @@ func (e DuplicateEntity) Error() string {
 // DatabaseError ...
 type DatabaseError struct {
 	DBError string `json:"dbError,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 func (e DatabaseError) Error() string {
+	e.Message = e.DBError
 	b, _ := json.Marshal(e)
 	return fmt.Sprintf("database error: %s", string(b))
 }
 
 // BusinessDoesNotExist ...
 type BusinessDoesNotExist struct {
+	Message      string `json:"message,omitempty"`
 	BusinessName string `json:"name,omitempty"`
 }
 
 func (e BusinessDoesNotExist) Error() string {
+	e.Message = fmt.Sprintf("business does not exist: %s", e.BusinessName)
 	b, _ := json.Marshal(e)
 	return fmt.Sprintf("business does not exist: %s", string(b))
 }
 
 // ListingDoesNotExist ...
 type ListingDoesNotExist struct {
-	ListingID int `json:"listingId,omitempty"`
+	Message   string `json:"message,omitempty"`
+	ListingID int    `json:"listingId,omitempty"`
 }
 
 func (e ListingDoesNotExist) Error() string {
+	e.Message = fmt.Sprintf("listingId does not exist: %d", e.ListingID)
 	b, _ := json.Marshal(e)
 	return fmt.Sprintf("listingId does not exist: %s", string(b))
 }
