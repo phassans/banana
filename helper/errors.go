@@ -37,9 +37,9 @@ func (b BusinessError) Error() string {
 
 // DuplicateEntity ...
 type DuplicateEntity struct {
-	Message string `json:"message,omitempty"`
 	Name    string `json:"name,omitempty"`
 	ID      int    `json:"id,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 func (e DuplicateEntity) Error() string {
@@ -61,8 +61,8 @@ func (e DatabaseError) Error() string {
 
 // BusinessDoesNotExist ...
 type BusinessDoesNotExist struct {
-	Message      string `json:"message,omitempty"`
 	BusinessName string `json:"name,omitempty"`
+	Message      string `json:"message,omitempty"`
 }
 
 func (e BusinessDoesNotExist) Error() string {
@@ -73,8 +73,8 @@ func (e BusinessDoesNotExist) Error() string {
 
 // ListingDoesNotExist ...
 type ListingDoesNotExist struct {
-	Message   string `json:"message,omitempty"`
 	ListingID int    `json:"listingId,omitempty"`
+	Message   string `json:"message,omitempty"`
 }
 
 func (e ListingDoesNotExist) Error() string {
