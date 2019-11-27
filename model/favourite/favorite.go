@@ -58,7 +58,8 @@ func (f *favoriteEngine) AddFavorite(phoneID string, listingID int, listingDateI
 }
 
 func (f *favoriteEngine) DeleteFavorite(phoneID string, listingID int, listingDateID int) error {
-	sqlStatement := `DELETE FROM favorites WHERE phone_id = $1 AND listing_id = $2 AND listing_date_id=$3;`
+	//sqlStatement := `DELETE FROM favorites WHERE phone_id = $1 AND listing_id = $2 AND listing_date_id=$3;`
+	sqlStatement := `DELETE FROM favorites WHERE phone_id = $1 AND listing_id = $2;`
 	//f.logger.Info().Msgf("deleting favorites with query: %s and listing: %d", sqlStatement, listingID)
 
 	_, err := f.sql.Exec(sqlStatement, phoneID, listingID, listingDateID)

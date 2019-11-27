@@ -48,11 +48,11 @@ func (r reportInaccurateEndpoint) Validate(request interface{}) error {
 	req := request.(reportInaccurateRequest)
 
 	if strings.TrimSpace(req.PhoneID) == "" {
-		return helper.ValidationError{Message: fmt.Sprint("favorite add failed, please provide 'phoneId'")}
+		return helper.ValidationError{Message: fmt.Sprint("report inaccurate failed, please provide 'phoneId'")}
 	}
 
 	if req.ListingID == 0 {
-		return helper.ValidationError{Message: fmt.Sprint("favorite add failed, please provide 'listingId'")}
+		return helper.ValidationError{Message: fmt.Sprint("report inaccurate failed, please provide 'listingId'")}
 	}
 
 	return nil
